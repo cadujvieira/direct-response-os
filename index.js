@@ -191,6 +191,98 @@ app.get("/api/summary", async (req, res) => {
   }
 });
 
+app.post("/track/click", async (req, res) => {
+  try {
+    const {
+      click_id,
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_content,
+      utm_term,
+      campaign_id,
+      adset_id,
+      ad_id,
+      page_url,
+      referrer
+    } = req.body;
+
+    if (!click_id) {
+      return res.status(400).json({
+        ok: false,
+        error: "click_id obrigatorio"
+      });
+    }
+
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.socket.remoteAddress ||
+      "";
+
+    const userAgent = req.headers["user-agent"] || "";
+
+    await pool.query(`
+      INSERT INTO dr_clicks (
+        click_id,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_content,
+        utm_term,
+        campaign_id,
+        adset_id,
+        ad_id,
+        page_url,
+        referrer,
+        user_agent,
+        ip_hash
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+      )
+      ON CONFLICT (click_id)
+      DO UPDATE SET
+        utm_source = EXCLUDED.utm_source,
+        utm_medium = EXCLUDED.utm_medium,
+        utm_campaign = EXCLUDED.utm_campaign,
+        utm_content = EXCLUDED.utm_content,
+        utm_term = EXCLUDED.utm_term,
+        campaign_id = EXCLUDED.campaign_id,
+        adset_id = EXCLUDED.adset_id,
+        ad_id = EXCLUDED.ad_id,
+        page_url = EXCLUDED.page_url,
+        referrer = EXCLUDED.referrer,
+        user_agent = EXCLUDED.user_agent,
+        ip_hash = EXCLUDED.ip_hash
+    `, [
+      click_id,
+      utm_source || null,
+      utm_medium || null,
+      utm_campaign || null,
+      utm_content || null,
+      utm_term || null,
+      campaign_id || null,
+      adset_id || null,
+      ad_id || null,
+      page_url || null,
+      referrer || null,
+      userAgent,
+      hashIp(ip)
+    ]);
+
+    res.json({
+      ok: true,
+      click_id
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 async function start() {
 
   try {
