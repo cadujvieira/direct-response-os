@@ -155,6 +155,42 @@ app.get("/health", (req, res) => {
 
 });
 
+app.get("/api/summary", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM dr_clicks)::int AS clicks,
+        (SELECT COUNT(*) FROM dr_leads)::int AS leads,
+        (
+          SELECT COUNT(*)
+          FROM dr_events
+          WHERE event_name = 'checkout_started'
+        )::int AS checkouts,
+        (
+          SELECT COUNT(*)
+          FROM dr_events
+          WHERE event_name = 'purchase'
+        )::int AS purchases,
+        (
+          SELECT COALESCE(SUM(value), 0)
+          FROM dr_events
+          WHERE event_name = 'purchase'
+        )::numeric AS revenue
+    `);
+
+    res.json({
+      ok: true,
+      summary: result.rows[0]
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 async function start() {
 
   try {
