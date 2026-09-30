@@ -131,6 +131,42 @@ await pool.query(`
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS dr_ad_spend (
+      id SERIAL PRIMARY KEY,
+
+      spend_date DATE NOT NULL,
+      source TEXT DEFAULT 'meta',
+
+      campaign_id TEXT,
+      campaign_name TEXT,
+
+      adset_id TEXT,
+      adset_name TEXT,
+
+      ad_id TEXT,
+      ad_name TEXT,
+
+      spend NUMERIC DEFAULT 0,
+      impressions INTEGER DEFAULT 0,
+      clicks INTEGER DEFAULT 0,
+
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS dr_ad_spend_unique_scope
+    ON dr_ad_spend (
+      spend_date,
+      LOWER(COALESCE(source, '')),
+      COALESCE(campaign_id, ''),
+      COALESCE(adset_id, ''),
+      COALESCE(ad_id, '')
+    );
+  `);
+
 }
 
 app.get("/", async (req, res) => {
