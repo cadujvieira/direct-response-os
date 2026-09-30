@@ -283,6 +283,81 @@ app.post("/track/click", async (req, res) => {
   }
 });
 
+app.post("/track/lead", async (req, res) => {
+  try {
+    const {
+      click_id,
+      nome,
+      email,
+      telefone,
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_content
+    } = req.body;
+
+    if (!email && !telefone) {
+      return res.status(400).json({
+        ok: false,
+        error: "email ou telefone obrigatorio"
+      });
+    }
+
+    let click = {};
+
+    if (click_id) {
+      const clickResult = await pool.query(`
+        SELECT
+          utm_source,
+          utm_medium,
+          utm_campaign,
+          utm_content
+        FROM dr_clicks
+        WHERE click_id = $1
+        LIMIT 1
+      `, [click_id]);
+
+      click = clickResult.rows[0] || {};
+    }
+
+    const result = await pool.query(`
+      INSERT INTO dr_leads (
+        click_id,
+        nome,
+        email,
+        telefone,
+        status,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_content
+      )
+      VALUES ($1,$2,$3,$4,'lead',$5,$6,$7,$8)
+      RETURNING id, click_id, nome, email, telefone, status
+    `, [
+      click_id || null,
+      nome || null,
+      email ? email.trim().toLowerCase() : null,
+      telefone || null,
+      utm_source || click.utm_source || null,
+      utm_medium || click.utm_medium || null,
+      utm_campaign || click.utm_campaign || null,
+      utm_content || click.utm_content || null
+    ]);
+
+    res.json({
+      ok: true,
+      lead: result.rows[0]
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 async function start() {
 
   try {
