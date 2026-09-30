@@ -155,6 +155,28 @@
       color: var(--green);
     }
 
+    .invest .metric-value {
+      color: var(--yellow);
+    }
+
+    .media-metrics {
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 0;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 1000px) {
+      .media-metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .media-metrics {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .layout {
       display: grid;
       grid-template-columns: 1.4fr 0.8fr;
@@ -304,7 +326,7 @@
     .campaign-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 820px;
+      min-width: 1100px;
     }
 
     .campaign-table th,
@@ -424,6 +446,34 @@
 
     </section>
 
+    <section class="metrics media-metrics">
+
+      <div class="card invest">
+        <div class="metric-label">Investimento</div>
+        <div class="metric-value" id="spend">R$ 0</div>
+        <div class="metric-sub">Gasto em mídia paga</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">CPL</div>
+        <div class="metric-value" id="cpl">—</div>
+        <div class="metric-sub">Custo por lead</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">CPA</div>
+        <div class="metric-value" id="cpa">—</div>
+        <div class="metric-sub">Custo por compra</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">ROAS</div>
+        <div class="metric-value" id="roas">—</div>
+        <div class="metric-sub">Retorno sobre o investimento</div>
+      </div>
+
+    </section>
+
     <section class="layout">
 
       <div class="panel">
@@ -518,17 +568,22 @@
           <tr>
             <th>Campanha</th>
             <th>Cliques</th>
+            <th>Impressões</th>
             <th>Leads</th>
             <th>Checkouts</th>
             <th>Vendas</th>
             <th>Conv.</th>
             <th>Receita</th>
+            <th>Investimento</th>
+            <th>CPL</th>
+            <th>CPA</th>
+            <th>ROAS</th>
           </tr>
         </thead>
 
         <tbody id="campaignTableBody">
           <tr>
-            <td colspan="7" class="table-loading">
+            <td colspan="12" class="table-loading">
               Carregando campanhas...
             </td>
           </tr>
@@ -563,6 +618,19 @@
       });
     }
 
+    function formatRoas(value) {
+      if (value == null) return "—";
+      return Number(value).toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + "x";
+    }
+
+    function formatCurrency(value) {
+      if (value == null) return "—";
+      return formatMoney(value);
+    }
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -593,7 +661,7 @@ async function loadCampaigns() {
     if (campaigns.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="table-loading">
+          <td colspan="12" class="table-loading">
             Nenhuma campanha encontrada.
           </td>
         </tr>
@@ -603,10 +671,12 @@ async function loadCampaigns() {
 
     tbody.innerHTML = campaigns.map((row) => {
       const clicks = Number(row.clicks || 0);
+      const impressions = Number(row.impressions || 0);
       const leads = Number(row.leads || 0);
       const checkouts = Number(row.checkouts || 0);
       const purchases = Number(row.purchases || 0);
       const revenue = Number(row.revenue || 0);
+      const spend = Number(row.spend || 0);
 
       const conversion = percentage(purchases, clicks);
 
@@ -616,7 +686,8 @@ async function loadCampaigns() {
             ${escapeHtml(row.campaign || "Sem campanha")}
           </td>
 
-          <td>${clicks}</td>
+          <td>${clicks.toLocaleString("pt-BR")}</td>
+          <td>${impressions.toLocaleString("pt-BR")}</td>
           <td>${leads}</td>
           <td>${checkouts}</td>
           <td>${purchases}</td>
@@ -628,6 +699,11 @@ async function loadCampaigns() {
           <td class="campaign-revenue">
             ${formatMoney(revenue)}
           </td>
+
+          <td>${spend > 0 ? formatMoney(spend) : "—"}</td>
+          <td>${formatCurrency(row.cpl)}</td>
+          <td>${formatCurrency(row.cpa)}</td>
+          <td>${formatRoas(row.roas)}</td>
         </tr>
       `;
     }).join("");
@@ -637,7 +713,7 @@ async function loadCampaigns() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="table-loading">
+        <td colspan="12" class="table-loading">
           Erro ao carregar campanhas.
         </td>
       </tr>
@@ -669,6 +745,11 @@ async function loadCampaigns() {
         document.getElementById("checkouts").textContent = checkouts;
         document.getElementById("purchases").textContent = purchases;
         document.getElementById("revenue").textContent = formatMoney(revenue);
+
+        document.getElementById("spend").textContent = formatMoney(summary.spend);
+        document.getElementById("cpl").textContent = formatCurrency(summary.cpl);
+        document.getElementById("cpa").textContent = formatCurrency(summary.cpa);
+        document.getElementById("roas").textContent = formatRoas(summary.roas);
 
         document.getElementById("funnelClicks").textContent = clicks;
         document.getElementById("funnelLeads").textContent = leads;
