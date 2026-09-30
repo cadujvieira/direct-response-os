@@ -459,7 +459,7 @@
     .campaign-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1200px;
+      min-width: 1450px;
     }
 
     .campaign-table th,
@@ -472,7 +472,9 @@
     }
 
     .campaign-table th:first-child,
-    .campaign-table td:first-child {
+    .campaign-table td:first-child,
+    .campaign-table .identity-head,
+    .campaign-table .identity-cell {
       text-align: left;
     }
 
@@ -515,6 +517,40 @@
       text-align: center !important;
       color: var(--muted) !important;
       padding: 28px !important;
+    }
+
+    .performance-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .breakdown-tabs {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .breakdown-btn {
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 11px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .breakdown-btn.active {
+      background: #20242b;
+      color: var(--text);
     }
 
   </style>
@@ -716,9 +752,17 @@
 
 <section class="campaign-section">
 
-  <div class="section-title campaign-title">
-    <h2>Performance por campanha</h2>
-    <span class="updated">Origem → Conversão → Receita</span>
+  <div class="section-title campaign-title performance-head">
+    <div>
+      <h2 id="performanceTitle">Performance por campanha</h2>
+      <span class="updated">Origem → Conversão → Receita</span>
+    </div>
+
+    <div class="breakdown-tabs" aria-label="Nível de detalhamento">
+      <button class="breakdown-btn active" type="button" data-level="campaign">Campanhas</button>
+      <button class="breakdown-btn" type="button" data-level="adset">Conjuntos</button>
+      <button class="breakdown-btn" type="button" data-level="ad">Anúncios</button>
+    </div>
   </div>
 
   <div class="panel campaign-panel">
@@ -726,28 +770,12 @@
     <div class="table-wrap">
       <table class="campaign-table">
 
-        <thead>
-          <tr>
-            <th>Campanha</th>
-            <th>Cliques rastreados</th>
-            <th>Cliques mídia</th>
-            <th>Impressões</th>
-            <th>Leads</th>
-            <th>Checkouts</th>
-            <th>Vendas</th>
-            <th>Conv.</th>
-            <th>Receita</th>
-            <th>Investimento</th>
-            <th>CPL</th>
-            <th>CPA</th>
-            <th>ROAS</th>
-          </tr>
-        </thead>
+        <thead id="performanceTableHead"></thead>
 
-        <tbody id="campaignTableBody">
+        <tbody id="performanceTableBody">
           <tr>
             <td colspan="13" class="table-loading">
-              Carregando campanhas...
+              Carregando performance...
             </td>
           </tr>
         </tbody>
@@ -956,35 +984,117 @@ function initPeriodControls() {
   updatePeriodUi();
 }
 
-async function loadCampaigns() {
-  const tbody = document.getElementById("campaignTableBody");
+const performanceState = {
+  level: "campaign"
+};
+
+const performanceConfigs = {
+  campaign: {
+    endpoint: "/api/campaigns",
+    listKey: "campaigns",
+    title: "Performance por campanha",
+    identityHeaders: ["Campanha"],
+    identityCells: (row) => [
+      row.campaign || "Sem campanha"
+    ]
+  },
+  adset: {
+    endpoint: "/api/adsets",
+    listKey: "adsets",
+    title: "Performance por conjunto",
+    identityHeaders: ["Conjunto", "Campanha"],
+    identityCells: (row) => [
+      row.adset || "Sem conjunto",
+      row.campaign || "Sem campanha"
+    ]
+  },
+  ad: {
+    endpoint: "/api/ads",
+    listKey: "ads",
+    title: "Performance por anúncio",
+    identityHeaders: ["Anúncio", "Conjunto", "Campanha"],
+    identityCells: (row) => [
+      row.ad || "Sem anúncio",
+      row.adset || "Sem conjunto",
+      row.campaign || "Sem campanha"
+    ]
+  }
+};
+
+function performanceMetricHeaders() {
+  return [
+    "Cliques rastreados",
+    "Cliques mídia",
+    "Impressões",
+    "Leads",
+    "Checkouts",
+    "Vendas",
+    "Conv.",
+    "Receita",
+    "Investimento",
+    "CPL",
+    "CPA",
+    "ROAS"
+  ];
+}
+
+function renderPerformanceHead(config) {
+  const headers = [
+    ...config.identityHeaders,
+    ...performanceMetricHeaders()
+  ];
+
+  document.getElementById("performanceTableHead").innerHTML =
+    "<tr>" +
+    headers.map((label, index) =>
+      `<th class="${index < config.identityHeaders.length ? "identity-head" : ""}">${escapeHtml(label)}</th>`
+    ).join("") +
+    "</tr>";
+
+  document.getElementById("performanceTitle").textContent = config.title;
+}
+
+async function loadPerformance() {
+  const tbody = document.getElementById("performanceTableBody");
+  const config = performanceConfigs[performanceState.level];
+  const colspan = config.identityHeaders.length + performanceMetricHeaders().length;
+
+  renderPerformanceHead(config);
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="${colspan}" class="table-loading">
+        Carregando performance...
+      </td>
+    </tr>
+  `;
 
   try {
-    const response = await fetch(buildReportUrl("/api/campaigns"), {
+    const response = await fetch(buildReportUrl(config.endpoint), {
       cache: "no-store"
     });
 
     if (!response.ok) {
-      throw new Error("Erro ao carregar campanhas");
+      throw new Error("Erro ao carregar performance");
     }
 
     const data = await response.json();
-    const campaigns = Array.isArray(data.campaigns)
-      ? data.campaigns
+    const rows = Array.isArray(data[config.listKey])
+      ? data[config.listKey]
       : [];
 
-    if (campaigns.length === 0) {
+    if (rows.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="13" class="table-loading">
-            Nenhuma campanha encontrada.
+          <td colspan="${colspan}" class="table-loading">
+            Nenhum dado encontrado neste período.
           </td>
         </tr>
       `;
       return;
     }
 
-    tbody.innerHTML = campaigns.map((row) => {
+    tbody.innerHTML = rows.map((row) => {
       const clicks = Number(row.clicks || 0);
       const mediaClicks = Number(row.media_clicks || 0);
       const impressions = Number(row.impressions || 0);
@@ -993,30 +1103,25 @@ async function loadCampaigns() {
       const purchases = Number(row.purchases || 0);
       const revenue = Number(row.revenue || 0);
       const spend = Number(row.spend || 0);
-
       const conversion = percentage(purchases, clicks);
+
+      const identityHtml = config.identityCells(row)
+        .map((value, index) =>
+          `<td class="identity-cell ${index === 0 ? "campaign-name" : ""}">${escapeHtml(value)}</td>`
+        )
+        .join("");
 
       return `
         <tr>
-          <td class="campaign-name">
-            ${escapeHtml(row.campaign || "Sem campanha")}
-          </td>
-
+          ${identityHtml}
           <td>${clicks.toLocaleString("pt-BR")}</td>
           <td>${mediaClicks.toLocaleString("pt-BR")}</td>
           <td>${impressions.toLocaleString("pt-BR")}</td>
-          <td>${leads}</td>
-          <td>${checkouts}</td>
-          <td>${purchases}</td>
-
-          <td class="campaign-conversion">
-            ${formatPercent(conversion)}
-          </td>
-
-          <td class="campaign-revenue">
-            ${formatMoney(revenue)}
-          </td>
-
+          <td>${leads.toLocaleString("pt-BR")}</td>
+          <td>${checkouts.toLocaleString("pt-BR")}</td>
+          <td>${purchases.toLocaleString("pt-BR")}</td>
+          <td class="campaign-conversion">${formatPercent(conversion)}</td>
+          <td class="campaign-revenue">${formatMoney(revenue)}</td>
           <td>${spend > 0 ? formatMoney(spend) : "—"}</td>
           <td>${formatCurrency(row.cpl)}</td>
           <td>${formatCurrency(row.cpa)}</td>
@@ -1030,12 +1135,28 @@ async function loadCampaigns() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="13" class="table-loading">
-          Erro ao carregar campanhas.
+        <td colspan="${colspan}" class="table-loading">
+          Erro ao carregar performance.
         </td>
       </tr>
     `;
   }
+}
+
+function initBreakdownControls() {
+  document.querySelectorAll(".breakdown-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      performanceState.level = button.dataset.level;
+
+      document.querySelectorAll(".breakdown-btn").forEach((item) => {
+        item.classList.toggle("active", item === button);
+      });
+
+      loadPerformance();
+    });
+  });
+
+  renderPerformanceHead(performanceConfigs[performanceState.level]);
 }
 
     async function loadDashboard() {
@@ -1116,11 +1237,12 @@ async function loadCampaigns() {
     function refreshAll() {
       return Promise.allSettled([
         loadDashboard(),
-        loadCampaigns()
+        loadPerformance()
       ]);
     }
 
     initPeriodControls();
+    initBreakdownControls();
     refreshAll();
 
     setInterval(refreshAll, 30000);

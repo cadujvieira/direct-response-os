@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
 const { Pool } = require("pg");
+const { createBreakdownService } = require("./breakdowns");
 
 const app = express();
 
@@ -20,6 +21,8 @@ const pool = new Pool({
       ? { rejectUnauthorized: false }
       : false
 });
+
+const breakdowns = createBreakdownService(pool);
 
 function hashIp(ip) {
   return crypto
@@ -916,6 +919,46 @@ app.get("/api/campaigns", async (req, res) => {
       campaigns: result.rows
     });
 
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+
+    res.status(statusCode).json({
+      ok: false,
+      error: statusCode === 400 ? error.message : "erro interno"
+    });
+  }
+});
+
+app.get("/api/adsets", async (req, res) => {
+  try {
+    const { from, to } = parseReportRange(req.query);
+    const rows = await breakdowns.getAdsetRows(from, to);
+
+    res.json({
+      ok: true,
+      range: { from, to },
+      adsets: rows
+    });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+
+    res.status(statusCode).json({
+      ok: false,
+      error: statusCode === 400 ? error.message : "erro interno"
+    });
+  }
+});
+
+app.get("/api/ads", async (req, res) => {
+  try {
+    const { from, to } = parseReportRange(req.query);
+    const rows = await breakdowns.getAdRows(from, to);
+
+    res.json({
+      ok: true,
+      range: { from, to },
+      ads: rows
+    });
   } catch (error) {
     const statusCode = error.statusCode || 500;
 
