@@ -11,14 +11,54 @@ const {
   secretMatches,
   runMetaSync
 } = require("./metaAds");
+const {
+  buildSessionCookie,
+  buildClearCookie,
+  initAuthDb,
+  getAuthStatus,
+  ensureBootstrapAdmin,
+  authenticate,
+  createSession,
+  destroySession,
+  getUserFromRequest,
+  createUser,
+  listUsers,
+  updateUser,
+  resetUserPassword,
+  createAuthService
+} = require("./auth");
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "same-origin");
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  );
+
+  if (
+    req.path === "/dashboard" ||
+    req.path === "/login" ||
+    req.path.startsWith("/api/") ||
+    req.path.startsWith("/auth/") ||
+    req.path.startsWith("/integrations/")
+  ) {
+    res.setHeader("Cache-Control", "no-store");
+  }
+
+  next();
+});
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -29,6 +69,7 @@ const pool = new Pool({
 });
 
 const breakdowns = createBreakdownService(pool);
+const auth = createAuthService(pool, process.env);
 
 function hashIp(ip) {
   return crypto
@@ -270,7 +311,257 @@ app.get("/health", (req, res) => {
 
 });
 
-app.get("/api/summary", async (req, res) => {
+app.get("/login", async (req, res) => {
+  try {
+    const user = await getUserFromRequest(pool, req);
+
+    if (user) {
+      return res.redirect("/dashboard");
+    }
+  } catch (error) {
+    // A tela de login continua disponível mesmo se a sessão falhar.
+  }
+
+  res.sendFile(__dirname + "/login.html");
+});
+
+app.get("/auth/status", async (req, res) => {
+  try {
+    const status = await getAuthStatus(pool);
+
+    res.json({
+      ok: true,
+      ready: status.ready
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: "erro interno"
+    });
+  }
+});
+
+app.post("/auth/login", async (req, res) => {
+  if (!req.is("application/json")) {
+    return res.status(415).json({
+      ok: false,
+      error: "content-type invalido"
+    });
+  }
+
+  const email = String(req.body?.email || "").trim();
+  const password = String(req.body?.password || "");
+
+  if (auth.limiter.isBlocked(req, email)) {
+    return res.status(429).json({
+      ok: false,
+      error: "muitas tentativas. tente novamente em alguns minutos"
+    });
+  }
+
+  try {
+    const user = await authenticate(pool, email, password);
+
+    if (!user) {
+      auth.limiter.fail(req, email);
+
+      return res.status(401).json({
+        ok: false,
+        error: "email ou senha invalidos"
+      });
+    }
+
+    auth.limiter.success(req, email);
+
+    const session = await createSession(pool, user.id);
+
+    res.setHeader(
+      "Set-Cookie",
+      buildSessionCookie(session.token, auth.production)
+    );
+
+    res.json({
+      ok: true,
+      user
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: "erro interno"
+    });
+  }
+});
+
+app.post("/auth/logout", async (req, res) => {
+  try {
+    await destroySession(pool, req);
+  } catch (error) {
+    // O cookie local ainda deve ser limpo.
+  }
+
+  res.setHeader(
+    "Set-Cookie",
+    buildClearCookie(auth.production)
+  );
+
+  res.json({
+    ok: true
+  });
+});
+
+app.get("/api/me", auth.requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    user: req.user,
+    operation: {
+      market: "Brasil",
+      country_code: "BR",
+      currency: "BRL",
+      timezone: "America/Sao_Paulo",
+      locale: "pt-BR"
+    },
+    integrations: {
+      meta_ads_configured:
+        getMetaStatus(process.env).configured
+    }
+  });
+});
+
+app.get("/api/admin/users", auth.requireAdmin, async (req, res) => {
+  try {
+    const users = await listUsers(pool);
+
+    res.json({
+      ok: true,
+      users
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: "erro interno"
+    });
+  }
+});
+
+app.post("/api/admin/users", auth.requireAdmin, async (req, res) => {
+  try {
+    const user = await createUser(pool, {
+      name: req.body?.name,
+      email: req.body?.email,
+      password: req.body?.password,
+      role: req.body?.role
+    });
+
+    res.status(201).json({
+      ok: true,
+      user
+    });
+  } catch (error) {
+    const statusCode =
+      [400, 409].includes(error.statusCode)
+        ? error.statusCode
+        : 500;
+
+    res.status(statusCode).json({
+      ok: false,
+      error:
+        statusCode === 500
+          ? "erro interno"
+          : error.message
+    });
+  }
+});
+
+app.patch(
+  "/api/admin/users/:id",
+  auth.requireAdmin,
+  async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+
+      if (
+        targetId === req.user.id &&
+        req.body?.is_active === false
+      ) {
+        return res.status(400).json({
+          ok: false,
+          error: "voce nao pode desativar seu proprio acesso"
+        });
+      }
+
+      if (
+        targetId === req.user.id &&
+        req.body?.role === "viewer"
+      ) {
+        return res.status(400).json({
+          ok: false,
+          error: "voce nao pode remover seu proprio acesso de administrador"
+        });
+      }
+
+      const user = await updateUser(
+        pool,
+        targetId,
+        {
+          is_active: req.body?.is_active,
+          role: req.body?.role,
+          name: req.body?.name
+        }
+      );
+
+      res.json({
+        ok: true,
+        user
+      });
+    } catch (error) {
+      const statusCode =
+        [400, 404].includes(error.statusCode)
+          ? error.statusCode
+          : 500;
+
+      res.status(statusCode).json({
+        ok: false,
+        error:
+          statusCode === 500
+            ? "erro interno"
+            : error.message
+      });
+    }
+  }
+);
+
+app.post(
+  "/api/admin/users/:id/password",
+  auth.requireAdmin,
+  async (req, res) => {
+    try {
+      await resetUserPassword(
+        pool,
+        req.params.id,
+        req.body?.password
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      const statusCode =
+        [400, 404].includes(error.statusCode)
+          ? error.statusCode
+          : 500;
+
+      res.status(statusCode).json({
+        ok: false,
+        error:
+          statusCode === 500
+            ? "erro interno"
+            : error.message
+      });
+    }
+  }
+);
+
+app.get("/api/summary", auth.requireAuth, async (req, res) => {
   try {
     const { from, to } = parseReportRange(req.query);
 
@@ -705,7 +996,7 @@ app.post("/track/purchase", async (req, res) => {
   }
 });
 
-app.get("/api/campaigns", async (req, res) => {
+app.get("/api/campaigns", auth.requireAuth, async (req, res) => {
   try {
     const { from, to } = parseReportRange(req.query);
 
@@ -935,7 +1226,7 @@ app.get("/api/campaigns", async (req, res) => {
   }
 });
 
-app.get("/api/adsets", async (req, res) => {
+app.get("/api/adsets", auth.requireAuth, async (req, res) => {
   try {
     const { from, to } = parseReportRange(req.query);
     const rows = await breakdowns.getAdsetRows(from, to);
@@ -955,7 +1246,7 @@ app.get("/api/adsets", async (req, res) => {
   }
 });
 
-app.get("/api/ads", async (req, res) => {
+app.get("/api/ads", auth.requireAuth, async (req, res) => {
   try {
     const { from, to } = parseReportRange(req.query);
     const rows = await breakdowns.getAdRows(from, to);
@@ -975,7 +1266,7 @@ app.get("/api/ads", async (req, res) => {
   }
 });
 
-app.get("/integrations/meta/status", (req, res) => {
+app.get("/integrations/meta/status", auth.requireAdmin, (req, res) => {
   res.json({
     ok: true,
     ...getMetaStatus(process.env)
@@ -1047,7 +1338,7 @@ app.post("/integrations/meta/sync", async (req, res) => {
   }
 });
 
-app.post("/track/spend", async (req, res) => {
+app.post("/track/spend", auth.requireAdmin, async (req, res) => {
   try {
     const normalized = normalizeSpendInput(
       req.body || {},
@@ -1070,7 +1361,7 @@ app.post("/track/spend", async (req, res) => {
   }
 });
 
-app.get("/dashboard", (req, res) => {
+app.get("/dashboard", auth.requirePageAuth, (req, res) => {
   res.sendFile(__dirname + "/dashboard.html");
 });
 
@@ -1083,6 +1374,8 @@ async function start() {
     }
 
     await initDb();
+    await initAuthDb(pool);
+    await ensureBootstrapAdmin(pool, process.env);
 
     app.listen(PORT, () => {
       console.log("Direct Response OS online na porta " + PORT);

@@ -43,7 +43,8 @@ Quando a BM estiver pronta, será necessário ter:
 - um access token adequado para leitura de anúncios/insights;
 - capacidade de leitura dos dados de Ads da conta;
 - uma versão da Graph API definida para a operação;
-- conta de anúncios em BRL no MVP atual.
+- conta de anúncios em BRL no MVP atual;
+- preferência por uma conta de anúncios dedicada a esta oferta, cuja aquisição será escalada somente no Brasil.
 
 Para operação estável, prefira um fluxo de token de longa duração ou system user adequado ao Business, em vez de um token manual temporário.
 

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
   <title>Direct Response OS</title>
 
   <style>
@@ -96,6 +97,11 @@
       border-radius: 50%;
       background: var(--green);
       box-shadow: 0 0 12px rgba(62, 227, 137, .7);
+    }
+
+    .dot.pending {
+      background: var(--yellow);
+      box-shadow: 0 0 12px rgba(245, 196, 81, .45);
     }
 
     .section-title {
@@ -397,6 +403,9 @@
     }
 
     .conversion-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-size: 13px;
       color: var(--muted);
     }
@@ -553,6 +562,426 @@
       color: var(--text);
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .operation-badge,
+    .role-badge,
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .operation-badge {
+      color: #c8f6d8;
+      border-color: rgba(62, 227, 137, 0.18);
+      background: rgba(62, 227, 137, 0.05);
+    }
+
+    .role-badge.admin {
+      color: #f6dca0;
+      border-color: rgba(245, 196, 81, 0.22);
+      background: rgba(245, 196, 81, 0.06);
+    }
+
+    .role-badge.viewer {
+      color: #bcd8ff;
+      border-color: rgba(101, 167, 255, 0.22);
+      background: rgba(101, 167, 255, 0.06);
+    }
+
+    .user-chip strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .logout-button,
+    .admin-button {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 8px 11px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .logout-button:hover,
+    .admin-button:hover {
+      border-color: #3b4350;
+      background: #1a1e25;
+    }
+
+    .metric-label,
+    .panel-head h3,
+    .section-heading-with-help {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-tip {
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid #343b46;
+      border-radius: 50%;
+      background: #171a20;
+      color: #9aa3af;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+      vertical-align: middle;
+    }
+
+    .info-tip:hover,
+    .info-tip:focus-visible {
+      color: var(--text);
+      border-color: rgba(62, 227, 137, 0.5);
+      outline: 0;
+    }
+
+    .tooltip-floating {
+      position: fixed;
+      display: none;
+      width: min(330px, calc(100vw - 28px));
+      padding: 14px 15px;
+      border: 1px solid #313844;
+      border-radius: 12px;
+      background: #161a20;
+      color: #d9dee5;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+      font-size: 12px;
+      font-weight: 450;
+      line-height: 1.6;
+      letter-spacing: 0;
+      text-align: left;
+      text-transform: none;
+      white-space: normal;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .tooltip-floating.visible {
+      display: block;
+    }
+
+    .admin-section {
+      margin-top: 30px;
+    }
+
+    .admin-intro {
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.8fr) minmax(480px, 1.6fr);
+      gap: 18px;
+    }
+
+    .admin-card {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel);
+    }
+
+    .admin-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .admin-card-copy {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .admin-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .admin-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .admin-field label {
+      color: #aeb6c1;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .admin-input,
+    .admin-select {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      outline: 0;
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .admin-input:focus,
+    .admin-select:focus {
+      border-color: rgba(62, 227, 137, 0.5);
+      box-shadow: 0 0 0 3px rgba(62, 227, 137, 0.06);
+    }
+
+    .admin-primary {
+      min-height: 42px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--green);
+      color: #07120b;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .admin-primary:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .admin-message {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .admin-message.error {
+      color: var(--red);
+    }
+
+    .users-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .users-table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    .users-table th,
+    .users-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .users-table th {
+      color: var(--muted);
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .users-table td {
+      color: #d4d9e0;
+    }
+
+    .user-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 650;
+    }
+
+    .user-status::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .user-status.inactive {
+      color: #818997;
+    }
+
+    .user-status.inactive::before {
+      background: #555d69;
+    }
+
+    .table-action {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: #171a20;
+      color: #cfd5dd;
+      padding: 6px 8px;
+      font: inherit;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .table-action + .table-action {
+      margin-left: 5px;
+    }
+
+    .integration-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .integration-row:last-child {
+      border-bottom: 0;
+    }
+
+    .integration-name {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .integration-copy {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .integration-state {
+      flex: 0 0 auto;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .integration-state.ok {
+      color: #bdf3cf;
+      border-color: rgba(62, 227, 137, 0.22);
+      background: rgba(62, 227, 137, 0.05);
+    }
+
+    @media (max-width: 1000px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .header-actions {
+        justify-content: flex-start;
+      }
+
+      .operation-badge,
+      .role-badge,
+      .user-chip {
+        min-height: 30px;
+        padding: 7px 9px;
+      }
+    }
+
+    .admin-dialog {
+      width: min(430px, calc(100vw - 28px));
+      padding: 0;
+      border: 1px solid #343b46;
+      border-radius: 16px;
+      background: #12151a;
+      color: var(--text);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .admin-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(3px);
+    }
+
+    .dialog-body {
+      padding: 22px;
+    }
+
+    .dialog-title {
+      margin-bottom: 7px;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .dialog-copy {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .dialog-field {
+      display: grid;
+      gap: 6px;
+      margin-top: 18px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .dialog-button {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: #181c22;
+      color: var(--text);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .dialog-button.primary {
+      border-color: var(--green);
+      background: var(--green);
+      color: #07120b;
+    }
+
   </style>
 </head>
 
@@ -570,18 +999,77 @@
         </div>
       </div>
 
-      <div class="status">
-        <span class="dot"></span>
-        Tracking online
+      <div class="header-actions">
+        <div class="operation-badge">
+          Brasil • BRL
+          <button
+            class="info-tip"
+            type="button"
+            data-help="Esta operação comercializa a oferta somente no Brasil. Os valores do painel são exibidos em reais (BRL) e os períodos seguem o fuso America/Sao_Paulo. O conteúdo da oferta pode ensinar expansão internacional, mas a aquisição desta operação é brasileira."
+            aria-label="Entenda o mercado da operação"
+          >?</button>
+        </div>
+
+        <div class="status">
+          <span class="dot"></span>
+          Tracking online
+          <button
+            class="info-tip"
+            type="button"
+            data-help="Indica que o Direct Response OS está ativo e disponível para receber eventos da operação. Isso não significa, sozinho, que cada integração externa esteja configurada."
+            aria-label="Entenda o status do tracking"
+          >?</button>
+        </div>
+
+        <div class="status" id="mediaStatusBadge">
+          <span class="dot pending" id="mediaStatusDot"></span>
+          <span id="mediaStatusText">Mídia: verificando...</span>
+          <button
+            class="info-tip"
+            type="button"
+            data-help="Mostra se os dados de mídia paga já estão sendo sincronizados automaticamente. Enquanto a Meta Ads estiver pendente, investimento, CPL, CPA e ROAS podem ficar sem dados de mídia."
+            aria-label="Entenda o status da mídia"
+          >?</button>
+        </div>
+
+        <div class="user-chip">
+          <strong id="userName">Carregando...</strong>
+        </div>
+
+        <div class="role-badge viewer" id="roleBadge">
+          Somente leitura
+        </div>
+
+        <button class="logout-button" id="logoutButton" type="button">
+          Sair
+        </button>
       </div>
     </header>
 
     <div class="section-title">
-      <h2>Visão geral</h2>
+      <div class="section-heading-with-help">
+        <h2>Visão geral</h2>
+        <button
+          class="info-tip"
+          type="button"
+          data-help="Resumo executivo da oferta no período selecionado. Aqui você acompanha aquisição, avanço no funil, vendas, receita e eficiência da mídia."
+          aria-label="Entenda a visão geral"
+        >?</button>
+      </div>
       <span class="updated" id="updatedAt">Carregando...</span>
     </div>
 
     <div class="period-toolbar" aria-label="Filtro de período">
+      <div class="section-heading-with-help">
+        <span style="font-size:11px;color:var(--muted);font-weight:700;">Período</span>
+        <button
+          class="info-tip"
+          type="button"
+          data-help="O filtro de período altera todos os indicadores e a tabela de performance ao mesmo tempo. As datas seguem o fuso America/Sao_Paulo para manter a leitura consistente da operação brasileira."
+          aria-label="Entenda o filtro de período"
+        >?</button>
+      </div>
+
       <div class="period-presets">
         <button class="period-btn active" type="button" data-period="all">Tudo</button>
         <button class="period-btn" type="button" data-period="today">Hoje</button>
@@ -613,31 +1101,31 @@
     <section class="metrics">
 
       <div class="card">
-        <div class="metric-label">Cliques</div>
+        <div class="metric-label">Cliques <button class="info-tip" type="button" data-help="Quantidade de entradas rastreadas na oferta dentro do período selecionado. É a base do funil e pode diferir dos cliques reportados pela plataforma de mídia." aria-label="O que são cliques?">?</button></div>
         <div class="metric-value" id="clicks">0</div>
         <div class="metric-sub">Entradas rastreadas</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">Leads</div>
+        <div class="metric-label">Leads <button class="info-tip" type="button" data-help="Pessoas identificadas que avançaram para a etapa de lead da oferta. O painel considera os registros recebidos pelo tracking, com proteção contra duplicidade de e-mail e telefone." aria-label="O que são leads?">?</button></div>
         <div class="metric-value" id="leads">0</div>
         <div class="metric-sub">Leads únicos</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">Checkouts</div>
+        <div class="metric-label">Checkouts <button class="info-tip" type="button" data-help="Quantidade de vezes em que um lead iniciou a etapa de pagamento. Ajuda a identificar perda entre interesse e compra." aria-label="O que são checkouts?">?</button></div>
         <div class="metric-value" id="checkouts">0</div>
         <div class="metric-sub">Checkouts iniciados</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">Vendas</div>
+        <div class="metric-label">Vendas <button class="info-tip" type="button" data-help="Compras aprovadas e rastreadas no período. O sistema usa identificadores de pedido/evento para evitar contar a mesma venda duas vezes." aria-label="O que são vendas?">?</button></div>
         <div class="metric-value" id="purchases">0</div>
         <div class="metric-sub">Compras aprovadas</div>
       </div>
 
       <div class="card revenue">
-        <div class="metric-label">Receita</div>
+        <div class="metric-label">Receita <button class="info-tip" type="button" data-help="Valor total das compras rastreadas no período, exibido em reais. Reembolsos e outras regras financeiras serão tratados como eventos específicos quando a plataforma de pagamento estiver integrada." aria-label="O que é receita?">?</button></div>
         <div class="metric-value" id="revenue">R$ 0</div>
         <div class="metric-sub">Receita rastreada</div>
       </div>
@@ -647,25 +1135,25 @@
     <section class="metrics media-metrics">
 
       <div class="card invest">
-        <div class="metric-label">Investimento</div>
+        <div class="metric-label">Investimento <button class="info-tip" type="button" data-help="Total gasto em mídia paga no período. Quando a Meta Ads estiver autorizada, esse valor será sincronizado automaticamente por campanha, conjunto e anúncio." aria-label="O que é investimento?">?</button></div>
         <div class="metric-value" id="spend">R$ 0</div>
         <div class="metric-sub">Gasto em mídia paga</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">CPL</div>
+        <div class="metric-label">CPL <button class="info-tip" type="button" data-help="Custo por Lead. É calculado dividindo o investimento em mídia pelo número de leads. Quanto menor, mais barato está sendo adquirir um lead, mas deve ser analisado junto com a qualidade e as vendas." aria-label="O que é CPL?">?</button></div>
         <div class="metric-value" id="cpl">—</div>
         <div class="metric-sub">Custo por lead</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">CPA</div>
+        <div class="metric-label">CPA <button class="info-tip" type="button" data-help="Custo por Aquisição. É o investimento em mídia dividido pelo número de compras. Mostra quanto custa, em média, gerar uma venda." aria-label="O que é CPA?">?</button></div>
         <div class="metric-value" id="cpa">—</div>
         <div class="metric-sub">Custo por compra</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">ROAS</div>
+        <div class="metric-label">ROAS <button class="info-tip" type="button" data-help="Retorno sobre investimento em anúncios. Receita dividida pelo investimento em mídia. Exemplo: ROAS 3,00x significa R$ 3 de receita rastreada para cada R$ 1 investido." aria-label="O que é ROAS?">?</button></div>
         <div class="metric-value" id="roas">—</div>
         <div class="metric-sub">Retorno sobre o investimento</div>
       </div>
@@ -676,7 +1164,7 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h3>Funil de conversão</h3>
+          <h3>Funil de conversão <button class="info-tip" type="button" data-help="Mostra quantas pessoas avançaram por cada etapa principal: clique, lead, checkout e compra. As barras usam cliques como base visual." aria-label="Entenda o funil de conversão">?</button></h3>
           <p>Do clique até a compra.</p>
         </div>
 
@@ -719,29 +1207,29 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h3>Conversões</h3>
+          <h3>Conversões <button class="info-tip" type="button" data-help="Percentuais de avanço entre as etapas do funil. Eles ajudam a localizar onde a oferta está perdendo eficiência, por exemplo entre lead e checkout ou entre checkout e venda." aria-label="Entenda as conversões">?</button></h3>
           <p>Eficiência entre as etapas do funil.</p>
         </div>
 
         <div class="conversions">
 
           <div class="conversion-item">
-            <span class="conversion-label">Clique → Lead</span>
+            <span class="conversion-label">Clique → Lead <button class="info-tip" type="button" data-help="Percentual de cliques rastreados que viraram leads. Fórmula: leads ÷ cliques rastreados." aria-label="Entenda Clique para Lead">?</button></span>
             <span class="conversion-value" id="convLead">0%</span>
           </div>
 
           <div class="conversion-item">
-            <span class="conversion-label">Lead → Checkout</span>
+            <span class="conversion-label">Lead → Checkout <button class="info-tip" type="button" data-help="Percentual de leads que iniciaram o checkout. Fórmula: checkouts ÷ leads." aria-label="Entenda Lead para Checkout">?</button></span>
             <span class="conversion-value" id="convCheckout">0%</span>
           </div>
 
           <div class="conversion-item">
-            <span class="conversion-label">Checkout → Venda</span>
+            <span class="conversion-label">Checkout → Venda <button class="info-tip" type="button" data-help="Percentual de checkouts iniciados que se transformaram em compra aprovada. Fórmula: vendas ÷ checkouts." aria-label="Entenda Checkout para Venda">?</button></span>
             <span class="conversion-value" id="convSale">0%</span>
           </div>
 
           <div class="conversion-item">
-            <span class="conversion-label">Clique → Venda</span>
+            <span class="conversion-label">Clique → Venda <button class="info-tip" type="button" data-help="Conversão total do tráfego rastreado em compra. Fórmula: vendas ÷ cliques rastreados." aria-label="Entenda Clique para Venda">?</button></span>
             <span class="conversion-value" id="convTotal">0%</span>
           </div>
 
@@ -754,7 +1242,7 @@
 
   <div class="section-title campaign-title performance-head">
     <div>
-      <h2 id="performanceTitle">Performance por campanha</h2>
+      <div class="section-heading-with-help"><h2 id="performanceTitle">Performance por campanha</h2><button class="info-tip" type="button" data-help="Detalhamento da performance de aquisição. Você pode alternar entre campanha, conjunto e anúncio para entender exatamente onde estão cliques, leads, vendas, receita, investimento, CPL, CPA e ROAS." aria-label="Entenda a tabela de performance">?</button></div>
       <span class="updated">Origem → Conversão → Receita</span>
     </div>
 
@@ -787,7 +1275,204 @@
 
 </section>
 
+<section class="admin-section" id="adminSection" hidden>
+  <div class="section-title">
+    <div class="section-heading-with-help">
+      <h2>Administração</h2>
+      <button
+        class="info-tip"
+        type="button"
+        data-help="Área exclusiva do administrador. Aqui ficam os comandos que alteram acessos e integrações. Usuários de cliente não enxergam esta seção e permanecem em modo somente leitura."
+        aria-label="Entenda a área de administração"
+      >?</button>
+    </div>
+    <span class="updated">Acesso restrito</span>
   </div>
+
+  <p class="admin-intro">
+    Separe operação e visualização: administradores controlam o sistema;
+    clientes acompanham os dados sem permissão para alterar a oferta.
+  </p>
+
+  <div class="admin-grid">
+    <div>
+      <div class="admin-card">
+        <h3>
+          Novo acesso
+          <button
+            class="info-tip"
+            type="button"
+            data-help="Crie um login individual para cada cliente ou membro da equipe. O perfil Cliente é somente leitura. O perfil Administrador pode gerenciar usuários e integrações."
+            aria-label="Entenda os tipos de acesso"
+          >?</button>
+        </h3>
+        <p class="admin-card-copy">
+          Use um acesso individual por pessoa. Evite compartilhar a mesma senha.
+        </p>
+
+        <form class="admin-form" id="createUserForm">
+          <div class="admin-field">
+            <label for="newUserName">Nome</label>
+            <input class="admin-input" id="newUserName" required />
+          </div>
+
+          <div class="admin-field">
+            <label for="newUserEmail">E-mail</label>
+            <input
+              class="admin-input"
+              id="newUserEmail"
+              type="email"
+              autocomplete="off"
+              required
+            />
+          </div>
+
+          <div class="admin-field">
+            <label for="newUserPassword">Senha inicial</label>
+            <input
+              class="admin-input"
+              id="newUserPassword"
+              type="password"
+              minlength="10"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+
+          <div class="admin-field">
+            <label for="newUserRole">Permissão</label>
+            <select class="admin-select" id="newUserRole">
+              <option value="viewer">Cliente — somente leitura</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+
+          <button class="admin-primary" id="createUserButton" type="submit">
+            Criar acesso
+          </button>
+
+          <div class="admin-message" id="createUserMessage"></div>
+        </form>
+      </div>
+
+      <div class="admin-card" style="margin-top: 18px;">
+        <h3>
+          Integrações
+          <button
+            class="info-tip"
+            type="button"
+            data-help="Mostra o estado das fontes externas que abastecem o Direct Response OS. A Meta Ads será autorizada depois que a BM e a conta de anúncios da operação estiverem prontas."
+            aria-label="Entenda as integrações"
+          >?</button>
+        </h3>
+        <p class="admin-card-copy">
+          Status técnico das fontes de dados da operação.
+        </p>
+
+        <div class="integration-row">
+          <div>
+            <div class="integration-name">Tracking próprio</div>
+            <div class="integration-copy">
+              Clique, lead, checkout e compra.
+            </div>
+          </div>
+          <span class="integration-state ok">Ativo</span>
+        </div>
+
+        <div class="integration-row">
+          <div>
+            <div class="integration-name">Meta Ads</div>
+            <div class="integration-copy" id="metaIntegrationCopy">
+              Aguardando configuração.
+            </div>
+          </div>
+          <span class="integration-state" id="metaIntegrationState">
+            Pendente
+          </span>
+        </div>
+
+        <div class="integration-row">
+          <div>
+            <div class="integration-name">Mercado da oferta</div>
+            <div class="integration-copy">
+              Aquisição e vendas desta operação.
+            </div>
+          </div>
+          <span class="integration-state ok">Brasil</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h3>
+        Usuários e permissões
+        <button
+          class="info-tip"
+          type="button"
+          data-help="Lista quem pode acessar o painel. Você pode ativar ou desativar acessos e redefinir senhas. Desativar um usuário encerra as sessões dele."
+          aria-label="Entenda a gestão de usuários"
+        >?</button>
+      </h3>
+      <p class="admin-card-copy">
+        Clientes devem permanecer como somente leitura.
+      </p>
+
+      <div class="users-wrap">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>Permissão</th>
+              <th>Status</th>
+              <th>Último acesso</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="5">Carregando usuários...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+  </div>
+
+  <div class="tooltip-floating" id="tooltipFloating" role="tooltip"></div>
+
+  <dialog class="admin-dialog" id="adminDialog">
+    <div class="dialog-body">
+      <h3 class="dialog-title" id="adminDialogTitle">Confirmar ação</h3>
+      <p class="dialog-copy" id="adminDialogCopy"></p>
+
+      <div class="dialog-field" id="adminDialogPasswordWrap" hidden>
+        <label for="adminDialogPassword">Nova senha</label>
+        <input
+          class="admin-input"
+          id="adminDialogPassword"
+          type="password"
+          minlength="10"
+          autocomplete="new-password"
+        />
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <button class="dialog-button" id="adminDialogCancel" type="button">
+        Cancelar
+      </button>
+      <button
+        class="dialog-button primary"
+        id="adminDialogConfirm"
+        type="button"
+      >
+        Confirmar
+      </button>
+    </div>
+  </dialog>
 
   <script>
     function percentage(value, total) {
@@ -830,6 +1515,208 @@ function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#039;"
   })[char]);
+}
+
+const appState = {
+  user: null
+};
+
+async function apiFetch(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    credentials: "same-origin"
+  });
+
+  if (response.status === 401) {
+    window.location.href = "/login";
+    throw new Error("sessao expirada");
+  }
+
+  return response;
+}
+
+function helpIcon(text, label = "Saiba mais") {
+  return `
+    <button
+      class="info-tip"
+      type="button"
+      data-help="${escapeHtml(text)}"
+      aria-label="${escapeHtml(label)}"
+    >?</button>
+  `;
+}
+
+function showTooltip(button) {
+  const tooltip = document.getElementById("tooltipFloating");
+  const text = button?.dataset?.help;
+
+  if (!tooltip || !text) return;
+
+  tooltip.textContent = text;
+  tooltip.classList.add("visible");
+  tooltip.style.left = "14px";
+  tooltip.style.top = "14px";
+
+  const buttonRect = button.getBoundingClientRect();
+  const tooltipRect = tooltip.getBoundingClientRect();
+
+  let left =
+    buttonRect.left +
+    (buttonRect.width / 2) -
+    (tooltipRect.width / 2);
+
+  left = Math.max(
+    14,
+    Math.min(
+      left,
+      window.innerWidth - tooltipRect.width - 14
+    )
+  );
+
+  let top = buttonRect.bottom + 9;
+
+  if (
+    top + tooltipRect.height >
+    window.innerHeight - 14
+  ) {
+    top = buttonRect.top - tooltipRect.height - 9;
+  }
+
+  top = Math.max(14, top);
+
+  tooltip.style.left = left + "px";
+  tooltip.style.top = top + "px";
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById("tooltipFloating");
+
+  if (tooltip) {
+    tooltip.classList.remove("visible");
+  }
+}
+
+function initTooltips() {
+  document.addEventListener("mouseover", (event) => {
+    const button = event.target.closest(".info-tip");
+    if (button) showTooltip(button);
+  });
+
+  document.addEventListener("mouseout", (event) => {
+    const button = event.target.closest(".info-tip");
+    if (button) hideTooltip();
+  });
+
+  document.addEventListener("focusin", (event) => {
+    const button = event.target.closest(".info-tip");
+    if (button) showTooltip(button);
+  });
+
+  document.addEventListener("focusout", (event) => {
+    const button = event.target.closest(".info-tip");
+    if (button) hideTooltip();
+  });
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".info-tip");
+
+    if (!button) {
+      hideTooltip();
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    showTooltip(button);
+  });
+
+  window.addEventListener("scroll", hideTooltip, true);
+  window.addEventListener("resize", hideTooltip);
+}
+
+function formatDateTime(value) {
+  if (!value) return "Nunca";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  });
+}
+
+async function loadCurrentUser() {
+  const response = await apiFetch("/api/me", {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("nao foi possivel carregar o usuario");
+  }
+
+  const data = await response.json();
+  const user = data.user;
+
+  appState.user = user;
+
+  document.getElementById("userName").textContent =
+    user.name || user.email;
+
+  const metaConfigured =
+    Boolean(data.integrations?.meta_ads_configured);
+  const mediaStatusText =
+    document.getElementById("mediaStatusText");
+  const mediaStatusDot =
+    document.getElementById("mediaStatusDot");
+
+  if (metaConfigured) {
+    mediaStatusText.textContent = "Mídia: sincronizada";
+    mediaStatusDot.classList.remove("pending");
+  } else {
+    mediaStatusText.textContent = "Mídia: aguardando Meta";
+    mediaStatusDot.classList.add("pending");
+  }
+
+  const roleBadge = document.getElementById("roleBadge");
+
+  if (user.role === "admin") {
+    roleBadge.className = "role-badge admin";
+    roleBadge.innerHTML =
+      "Administrador " +
+      helpIcon(
+        "Acesso administrativo. Pode criar e desativar usuários, redefinir senhas e acompanhar/configurar integrações da operação.",
+        "Entenda o acesso de administrador"
+      );
+
+    document.getElementById("adminSection").hidden = false;
+  } else {
+    roleBadge.className = "role-badge viewer";
+    roleBadge.innerHTML =
+      "Somente leitura " +
+      helpIcon(
+        "Acesso de cliente. Pode consultar todos os indicadores, filtros e detalhamentos do painel, mas não pode alterar usuários, custos ou integrações.",
+        "Entenda o acesso somente leitura"
+      );
+
+    document.getElementById("adminSection").hidden = true;
+  }
+
+  return user;
+}
+
+async function logout() {
+  try {
+    await fetch("/auth/logout", {
+      method: "POST",
+      credentials: "same-origin"
+    });
+  } finally {
+    window.location.href = "/login";
+  }
 }
 
 const reportRange = {
@@ -1038,6 +1925,39 @@ function performanceMetricHeaders() {
   ];
 }
 
+const performanceHelp = {
+  "Campanha":
+    "Campanha é o nível estratégico da mídia. Agrupa conjuntos e anúncios que compartilham o mesmo objetivo ou iniciativa.",
+  "Conjunto":
+    "Conjunto é o nível intermediário da mídia, normalmente ligado a público, posicionamento, orçamento ou estratégia de entrega.",
+  "Anúncio":
+    "Anúncio é a peça individual exibida ao público, como um criativo, vídeo, imagem ou variação de copy.",
+  "Cliques rastreados":
+    "Entradas que o Direct Response OS conseguiu identificar no funil. É a referência interna de tráfego realmente rastreado.",
+  "Cliques mídia":
+    "Cliques informados pela plataforma de anúncios. Podem ser diferentes dos cliques rastreados por causa de bloqueios, carregamento da página ou diferenças de medição.",
+  "Impressões":
+    "Quantidade de vezes que os anúncios foram exibidos. Uma mesma pessoa pode gerar mais de uma impressão.",
+  "Leads":
+    "Pessoas identificadas pelo tracking que avançaram para a etapa de lead.",
+  "Checkouts":
+    "Inícios de checkout atribuídos a este nível da mídia.",
+  "Vendas":
+    "Compras aprovadas atribuídas ao clique rastreado.",
+  "Conv.":
+    "Conversão de clique rastreado para venda. É calculada como vendas divididas por cliques rastreados.",
+  "Receita":
+    "Receita rastreada das vendas atribuídas a este nível da mídia.",
+  "Investimento":
+    "Valor gasto em anúncios no período selecionado.",
+  "CPL":
+    "Custo por Lead: investimento dividido pela quantidade de leads.",
+  "CPA":
+    "Custo por Aquisição: investimento dividido pela quantidade de vendas.",
+  "ROAS":
+    "Retorno sobre investimento em anúncios: receita dividida pelo investimento. Exemplo: 3,00x representa R$ 3 de receita para cada R$ 1 investido."
+};
+
 function renderPerformanceHead(config) {
   const headers = [
     ...config.identityHeaders,
@@ -1047,7 +1967,15 @@ function renderPerformanceHead(config) {
   document.getElementById("performanceTableHead").innerHTML =
     "<tr>" +
     headers.map((label, index) =>
-      `<th class="${index < config.identityHeaders.length ? "identity-head" : ""}">${escapeHtml(label)}</th>`
+      `<th class="${index < config.identityHeaders.length ? "identity-head" : ""}">
+        <span class="section-heading-with-help">
+          <span>${escapeHtml(label)}</span>
+          ${helpIcon(
+            performanceHelp[label] || "Indicador de performance da operação.",
+            "Entenda " + label
+          )}
+        </span>
+      </th>`
     ).join("") +
     "</tr>";
 
@@ -1070,7 +1998,7 @@ async function loadPerformance() {
   `;
 
   try {
-    const response = await fetch(buildReportUrl(config.endpoint), {
+    const response = await apiFetch(buildReportUrl(config.endpoint), {
       cache: "no-store"
     });
 
@@ -1159,9 +2087,411 @@ function initBreakdownControls() {
   renderPerformanceHead(performanceConfigs[performanceState.level]);
 }
 
+const adminState = {
+  users: [],
+  confirmHandler: null
+};
+
+function setAdminMessage(message = "", isError = false) {
+  const element = document.getElementById("createUserMessage");
+  element.textContent = message;
+  element.classList.toggle("error", isError);
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById("usersTableBody");
+  adminState.users = users;
+
+  if (!users.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5">Nenhum usuário cadastrado.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = users.map((user) => {
+    const isSelf =
+      appState.user &&
+      Number(appState.user.id) === Number(user.id);
+
+    const roleLabel =
+      user.role === "admin"
+        ? "Administrador"
+        : "Cliente";
+
+    const statusLabel =
+      user.is_active
+        ? "Ativo"
+        : "Inativo";
+
+    const statusClass =
+      user.is_active
+        ? "user-status"
+        : "user-status inactive";
+
+    const toggleAccess = isSelf
+      ? ""
+      : `
+        <button
+          class="table-action"
+          type="button"
+          data-user-action="toggle-active"
+          data-user-id="${user.id}"
+        >
+          ${user.is_active ? "Desativar" : "Ativar"}
+        </button>
+      `;
+
+    const toggleRole = isSelf
+      ? ""
+      : `
+        <button
+          class="table-action"
+          type="button"
+          data-user-action="toggle-role"
+          data-user-id="${user.id}"
+        >
+          ${user.role === "admin" ? "Tornar cliente" : "Tornar admin"}
+        </button>
+      `;
+
+    return `
+      <tr>
+        <td>
+          <strong>${escapeHtml(user.name)}</strong>
+          <div style="margin-top:3px;color:#747d89;">
+            ${escapeHtml(user.email)}
+            ${isSelf ? " • você" : ""}
+          </div>
+        </td>
+        <td>${escapeHtml(roleLabel)}</td>
+        <td>
+          <span class="${statusClass}">
+            ${escapeHtml(statusLabel)}
+          </span>
+        </td>
+        <td>${escapeHtml(formatDateTime(user.last_login_at))}</td>
+        <td>
+          ${toggleAccess}
+          ${toggleRole}
+          <button
+            class="table-action"
+            type="button"
+            data-user-action="reset-password"
+            data-user-id="${user.id}"
+          >
+            Redefinir senha
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function loadUsers() {
+  const response = await apiFetch("/api/admin/users", {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("erro ao carregar usuarios");
+  }
+
+  const data = await response.json();
+  renderUsers(Array.isArray(data.users) ? data.users : []);
+}
+
+async function loadMetaIntegrationStatus() {
+  const state = document.getElementById("metaIntegrationState");
+  const copy = document.getElementById("metaIntegrationCopy");
+
+  try {
+    const response = await apiFetch(
+      "/integrations/meta/status",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("status indisponivel");
+    }
+
+    const data = await response.json();
+
+    if (data.configured) {
+      state.textContent = "Configurada";
+      state.classList.add("ok");
+      copy.textContent =
+        "Credenciais e conta de anúncios configuradas.";
+    } else {
+      state.textContent = "Pendente";
+      state.classList.remove("ok");
+      copy.textContent =
+        "Aguardando BM, conta de anúncios e autorização Meta Ads.";
+    }
+  } catch (error) {
+    state.textContent = "Indisponível";
+    state.classList.remove("ok");
+    copy.textContent =
+      "Não foi possível consultar o status da integração.";
+  }
+}
+
+function closeAdminDialog() {
+  const dialog = document.getElementById("adminDialog");
+
+  adminState.confirmHandler = null;
+
+  if (dialog.open) {
+    dialog.close();
+  }
+}
+
+function openAdminDialog({
+  title,
+  copy,
+  requirePassword = false,
+  confirmText = "Confirmar",
+  onConfirm
+}) {
+  const dialog = document.getElementById("adminDialog");
+  const passwordWrap =
+    document.getElementById("adminDialogPasswordWrap");
+  const passwordInput =
+    document.getElementById("adminDialogPassword");
+
+  document.getElementById("adminDialogTitle").textContent = title;
+  document.getElementById("adminDialogCopy").textContent = copy;
+  document.getElementById("adminDialogConfirm").textContent =
+    confirmText;
+
+  passwordWrap.hidden = !requirePassword;
+  passwordInput.value = "";
+
+  adminState.confirmHandler = async () => {
+    const password =
+      requirePassword
+        ? passwordInput.value
+        : null;
+
+    if (requirePassword && password.length < 10) {
+      passwordInput.focus();
+      return;
+    }
+
+    await onConfirm(password);
+  };
+
+  dialog.showModal();
+
+  if (requirePassword) {
+    setTimeout(() => passwordInput.focus(), 0);
+  }
+}
+
+async function patchUser(userId, payload) {
+  const response = await apiFetch(
+    "/api/admin/users/" + userId,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Não foi possível atualizar o usuário.");
+  }
+
+  await loadUsers();
+}
+
+async function resetPassword(userId, password) {
+  const response = await apiFetch(
+    "/api/admin/users/" + userId + "/password",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ password })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Não foi possível redefinir a senha.");
+  }
+}
+
+function initAdminControls() {
+  const form = document.getElementById("createUserForm");
+  const tbody = document.getElementById("usersTableBody");
+  const dialogConfirm =
+    document.getElementById("adminDialogConfirm");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const button = document.getElementById("createUserButton");
+
+    setAdminMessage("");
+    button.disabled = true;
+    button.textContent = "Criando...";
+
+    try {
+      const response = await apiFetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: document.getElementById("newUserName").value,
+          email: document.getElementById("newUserEmail").value,
+          password: document.getElementById("newUserPassword").value,
+          role: document.getElementById("newUserRole").value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Não foi possível criar o acesso.");
+      }
+
+      form.reset();
+      document.getElementById("newUserRole").value = "viewer";
+      setAdminMessage("Acesso criado com sucesso.");
+      await loadUsers();
+    } catch (error) {
+      setAdminMessage(error.message, true);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Criar acesso";
+    }
+  });
+
+  tbody.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-user-action]");
+
+    if (!button) return;
+
+    const userId = Number(button.dataset.userId);
+    const user = adminState.users.find(
+      (item) => Number(item.id) === userId
+    );
+
+    if (!user) return;
+
+    if (button.dataset.userAction === "toggle-active") {
+      openAdminDialog({
+        title: user.is_active
+          ? "Desativar acesso"
+          : "Ativar acesso",
+        copy: user.is_active
+          ? "O acesso de " + user.name + " será bloqueado e as sessões atuais serão encerradas."
+          : "O acesso de " + user.name + " voltará a funcionar.",
+        confirmText: user.is_active ? "Desativar" : "Ativar",
+        onConfirm: async () => {
+          await patchUser(user.id, {
+            is_active: !user.is_active
+          });
+          closeAdminDialog();
+        }
+      });
+      return;
+    }
+
+    if (button.dataset.userAction === "toggle-role") {
+      const nextRole =
+        user.role === "admin"
+          ? "viewer"
+          : "admin";
+
+      openAdminDialog({
+        title: "Alterar permissão",
+        copy:
+          user.name +
+          (nextRole === "admin"
+            ? " receberá comandos administrativos."
+            : " passará a ter acesso somente leitura."),
+        confirmText: "Alterar permissão",
+        onConfirm: async () => {
+          await patchUser(user.id, {
+            role: nextRole
+          });
+          closeAdminDialog();
+        }
+      });
+      return;
+    }
+
+    if (button.dataset.userAction === "reset-password") {
+      openAdminDialog({
+        title: "Redefinir senha",
+        copy:
+          "Defina uma nova senha para " +
+          user.name +
+          ". Todas as sessões atuais desse usuário serão encerradas.",
+        requirePassword: true,
+        confirmText: "Salvar nova senha",
+        onConfirm: async (password) => {
+          await resetPassword(user.id, password);
+          closeAdminDialog();
+
+          if (
+            appState.user &&
+            Number(appState.user.id) === Number(user.id)
+          ) {
+            window.location.href = "/login";
+          } else {
+            await loadUsers();
+          }
+        }
+      });
+    }
+  });
+
+  document
+    .getElementById("adminDialogCancel")
+    .addEventListener("click", closeAdminDialog);
+
+  dialogConfirm.addEventListener("click", async () => {
+    if (!adminState.confirmHandler) return;
+
+    dialogConfirm.disabled = true;
+
+    try {
+      await adminState.confirmHandler();
+    } catch (error) {
+      document.getElementById("adminDialogCopy").textContent =
+        error.message || "Não foi possível concluir a ação.";
+    } finally {
+      dialogConfirm.disabled = false;
+    }
+  });
+}
+
+async function loadAdminData() {
+  if (!appState.user || appState.user.role !== "admin") {
+    return;
+  }
+
+  await Promise.allSettled([
+    loadUsers(),
+    loadMetaIntegrationStatus()
+  ]);
+}
+
     async function loadDashboard() {
       try {
-        const response = await fetch(buildReportUrl("/api/summary"), {
+        const response = await apiFetch(buildReportUrl("/api/summary"), {
           cache: "no-store"
         });
 
@@ -1241,11 +2571,29 @@ function initBreakdownControls() {
       ]);
     }
 
-    initPeriodControls();
-    initBreakdownControls();
-    refreshAll();
+    async function boot() {
+      initTooltips();
+      initPeriodControls();
+      initBreakdownControls();
+      initAdminControls();
 
-    setInterval(refreshAll, 30000);
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", logout);
+
+      try {
+        await loadCurrentUser();
+      } catch (error) {
+        return;
+      }
+
+      await refreshAll();
+      await loadAdminData();
+
+      setInterval(refreshAll, 30000);
+    }
+
+    boot();
   </script>
 
 </body>

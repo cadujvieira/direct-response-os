@@ -90,3 +90,16 @@ git diff --check
 Also inspect `git diff` for accidental changes.
 Do not use production mutation endpoints for test data.
 Read-only production GET checks are allowed after deploy.
+
+## Access-control rules
+- The offer is acquired/sold only in Brazil. Keep BRL, pt-BR and America/Sao_Paulo as the product/reporting defaults.
+- The fact that the educational offer teaches international scaling does not make this dashboard a multi-country operation.
+- Roles are `admin` and `viewer`.
+- Viewer/client access is read-only. Never expose user-management, integration mutation, spend mutation, or other administrative controls to viewers.
+- Server-side authorization is mandatory; hiding UI controls is not sufficient.
+- Administrators may manage users and integrations.
+- Never store plaintext passwords. Auth uses scrypt password hashing and server-side sessions.
+- The first admin is bootstrapped only from environment variables; never hardcode credentials.
+- Every new KPI or non-obvious control shown to clients should include a readable Portuguese tooltip/help explanation.
+- Keep tooltip copy concise, visually readable, and understandable to a non-technical client.
+- All users in the current MVP view the same operation; multi-tenant data isolation is not implemented yet.

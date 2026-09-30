@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Direct Response OS — Acesso</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --panel: #111419;
+      --panel-2: #151920;
+      --border: #262b33;
+      --text: #f4f6f8;
+      --muted: #8d96a3;
+      --green: #68e394;
+      --green-2: #2abf67;
+      --danger: #ff7b7b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(
+          circle at 15% 20%,
+          rgba(104, 227, 148, 0.09),
+          transparent 30%
+        ),
+        radial-gradient(
+          circle at 85% 80%,
+          rgba(86, 115, 255, 0.08),
+          transparent 32%
+        ),
+        var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: min(100%, 980px);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      background: rgba(15, 18, 23, 0.94);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    .intro {
+      padding: 54px;
+      border-right: 1px solid var(--border);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(104, 227, 148, 0.07),
+          transparent 58%
+        );
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 590px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #08110c;
+      background: var(--green);
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 750;
+    }
+
+    .brand-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero {
+      margin: 64px 0 34px;
+    }
+
+    .market {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid rgba(104, 227, 148, 0.22);
+      border-radius: 999px;
+      color: #bdf4d0;
+      background: rgba(104, 227, 148, 0.07);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .market::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(104, 227, 148, 0.08);
+    }
+
+    h1 {
+      margin: 24px 0 14px;
+      max-width: 430px;
+      font-size: clamp(34px, 5vw, 54px);
+      line-height: 1.04;
+      letter-spacing: -0.045em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 430px;
+      color: #a7afba;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .bullets {
+      display: grid;
+      gap: 12px;
+      color: #c6ccd4;
+      font-size: 13px;
+    }
+
+    .bullet {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .bullet::before {
+      content: "✓";
+      color: var(--green);
+      font-weight: 800;
+    }
+    .form-side {
+      padding: 54px;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-card {
+      width: 100%;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 10px 0 8px;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    .form-copy {
+      margin: 0 0 30px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      color: #cbd0d7;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: 0;
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    input:focus {
+      border-color: rgba(104, 227, 148, 0.62);
+      box-shadow: 0 0 0 3px rgba(104, 227, 148, 0.08);
+    }
+
+    button {
+      width: 100%;
+      height: 48px;
+      margin-top: 6px;
+      border: 0;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      color: #06110a;
+      background: var(--green);
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        background 0.15s ease;
+    }
+
+    button:hover {
+      background: #7aeba1;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .message {
+      min-height: 20px;
+      margin-top: 14px;
+      color: var(--danger);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .setup-warning {
+      display: none;
+      margin: 0 0 20px;
+      padding: 13px 14px;
+      border: 1px solid rgba(255, 183, 77, 0.25);
+      border-radius: 10px;
+      color: #ffd9a1;
+      background: rgba(255, 183, 77, 0.06);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .security {
+      margin-top: 26px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: #727b87;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 820px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .intro {
+        min-height: auto;
+        padding: 34px 28px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .hero {
+        margin: 42px 0 28px;
+      }
+
+      .form-side {
+        padding: 34px 28px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <div class="brand">
+          <div class="logo">DR</div>
+          <div>
+            <div class="brand-name">Direct Response OS</div>
+            <div class="brand-sub">Performance & Conversion Intelligence</div>
+          </div>
+        </div>
+
+        <div class="hero">
+          <div class="market">Operação Brasil</div>
+          <h1>Clareza total sobre a oferta.</h1>
+          <p>
+            Acompanhe aquisição, funil, vendas, receita e mídia em um único lugar.
+            O sistema da operação trabalha em BRL e segue o fuso do Brasil.
+          </p>
+        </div>
+      </div>
+
+      <div class="bullets">
+        <div class="bullet">Clientes entram em modo somente leitura.</div>
+        <div class="bullet">Administradores controlam acessos e integrações.</div>
+        <div class="bullet">Dados da oferta ficam centralizados e auditáveis.</div>
+      </div>
+    </section>
+
+    <section class="form-side">
+      <div class="form-card">
+        <div class="eyebrow">Área segura</div>
+        <h2>Entrar no painel</h2>
+        <p class="form-copy">
+          Use o acesso fornecido pelo administrador da operação.
+        </p>
+
+        <div class="setup-warning" id="setupWarning">
+          O acesso administrador ainda não foi configurado neste ambiente.
+        </div>
+
+        <form id="loginForm">
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              placeholder="voce@empresa.com"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="password">Senha</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Sua senha"
+              required
+            />
+          </div>
+
+          <button id="submitButton" type="submit">Acessar dashboard</button>
+          <div class="message" id="message" role="alert"></div>
+        </form>
+
+        <div class="security">
+          Sessão protegida por cookie HttpOnly. Senhas não são armazenadas em
+          texto puro e os acessos de cliente não possuem permissão de alteração.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const message = document.getElementById("message");
+    const submitButton = document.getElementById("submitButton");
+    const setupWarning = document.getElementById("setupWarning");
+
+    async function loadStatus() {
+      try {
+        const response = await fetch("/auth/status", {
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.ready === false) {
+          setupWarning.style.display = "block";
+        }
+      } catch (error) {
+        // O login continua utilizável caso o status não carregue.
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      message.textContent = "";
+      submitButton.disabled = true;
+      submitButton.textContent = "Entrando...";
+
+      try {
+        const response = await fetch("/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          message.textContent =
+            data.error || "Não foi possível entrar.";
+          return;
+        }
+
+        window.location.href = "/dashboard";
+      } catch (error) {
+        message.textContent =
+          "Não foi possível conectar ao servidor.";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Acessar dashboard";
+      }
+    });
+
+    loadStatus();
+  </script>
+</body>
+</html>
