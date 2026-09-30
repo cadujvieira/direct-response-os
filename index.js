@@ -536,6 +536,103 @@ app.post("/track/purchase", async (req, res) => {
   }
 });
 
+app.get("/api/campaigns", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      WITH lead_by_click AS (
+        SELECT
+          click_id,
+          COUNT(*)::int AS leads
+        FROM dr_leads
+        WHERE click_id IS NOT NULL
+        GROUP BY click_id
+      ),
+
+      event_by_click AS (
+        SELECT
+          click_id,
+
+          COUNT(*) FILTER (
+            WHERE event_name = 'checkout_started'
+          )::int AS checkouts,
+
+          COUNT(*) FILTER (
+            WHERE event_name = 'purchase'
+          )::int AS purchases,
+
+          COALESCE(
+            SUM(value) FILTER (
+              WHERE event_name = 'purchase'
+            ),
+            0
+          )::numeric AS revenue
+
+        FROM dr_events
+        WHERE click_id IS NOT NULL
+        GROUP BY click_id
+      )
+
+      SELECT
+        COALESCE(
+          NULLIF(c.utm_campaign, ''),
+          'Sem campanha'
+        ) AS campaign,
+
+        COUNT(*)::int AS clicks,
+
+        COALESCE(
+          SUM(l.leads),
+          0
+        )::int AS leads,
+
+        COALESCE(
+          SUM(e.checkouts),
+          0
+        )::int AS checkouts,
+
+        COALESCE(
+          SUM(e.purchases),
+          0
+        )::int AS purchases,
+
+        COALESCE(
+          SUM(e.revenue),
+          0
+        )::numeric AS revenue
+
+      FROM dr_clicks c
+
+      LEFT JOIN lead_by_click l
+        ON l.click_id = c.click_id
+
+      LEFT JOIN event_by_click e
+        ON e.click_id = c.click_id
+
+      GROUP BY
+        COALESCE(
+          NULLIF(c.utm_campaign, ''),
+          'Sem campanha'
+        )
+
+      ORDER BY
+        revenue DESC,
+        purchases DESC,
+        clicks DESC
+    `);
+
+    res.json({
+      ok: true,
+      campaigns: result.rows
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 app.get("/dashboard", (req, res) => {
   res.sendFile(__dirname + "/dashboard.html");
 });
