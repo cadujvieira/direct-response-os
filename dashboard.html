@@ -283,6 +283,85 @@
         grid-template-columns: 105px 1fr 55px;
       }
     }
+
+    .campaign-section {
+      margin-top: 28px;
+    }
+
+    .campaign-title {
+      margin-bottom: 14px;
+    }
+
+    .campaign-panel {
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .campaign-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+    }
+
+    .campaign-table th,
+    .campaign-table td {
+      padding: 17px 20px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .campaign-table th:first-child,
+    .campaign-table td:first-child {
+      text-align: left;
+    }
+
+    .campaign-table th {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .campaign-table td {
+      color: #dce0e6;
+    }
+
+    .campaign-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .campaign-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .campaign-name {
+      font-weight: 650;
+      color: var(--text);
+    }
+
+    .campaign-revenue {
+      color: var(--green) !important;
+      font-weight: 700;
+    }
+
+    .campaign-conversion {
+      font-weight: 700;
+    }
+
+    .table-loading {
+      text-align: center !important;
+      color: var(--muted) !important;
+      padding: 28px !important;
+    }
+
   </style>
 </head>
 
@@ -423,6 +502,45 @@
 
     </section>
 
+<section class="campaign-section">
+
+  <div class="section-title campaign-title">
+    <h2>Performance por campanha</h2>
+    <span class="updated">Origem → Conversão → Receita</span>
+  </div>
+
+  <div class="panel campaign-panel">
+
+    <div class="table-wrap">
+      <table class="campaign-table">
+
+        <thead>
+          <tr>
+            <th>Campanha</th>
+            <th>Cliques</th>
+            <th>Leads</th>
+            <th>Checkouts</th>
+            <th>Vendas</th>
+            <th>Conv.</th>
+            <th>Receita</th>
+          </tr>
+        </thead>
+
+        <tbody id="campaignTableBody">
+          <tr>
+            <td colspan="7" class="table-loading">
+              Carregando campanhas...
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+
+</section>
+
   </div>
 
   <script>
@@ -444,6 +562,88 @@
         currency: "BRL"
       });
     }
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+async function loadCampaigns() {
+  const tbody = document.getElementById("campaignTableBody");
+
+  try {
+    const response = await fetch("/api/campaigns", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro ao carregar campanhas");
+    }
+
+    const data = await response.json();
+    const campaigns = Array.isArray(data.campaigns)
+      ? data.campaigns
+      : [];
+
+    if (campaigns.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="table-loading">
+            Nenhuma campanha encontrada.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = campaigns.map((row) => {
+      const clicks = Number(row.clicks || 0);
+      const leads = Number(row.leads || 0);
+      const checkouts = Number(row.checkouts || 0);
+      const purchases = Number(row.purchases || 0);
+      const revenue = Number(row.revenue || 0);
+
+      const conversion = percentage(purchases, clicks);
+
+      return `
+        <tr>
+          <td class="campaign-name">
+            ${escapeHtml(row.campaign || "Sem campanha")}
+          </td>
+
+          <td>${clicks}</td>
+          <td>${leads}</td>
+          <td>${checkouts}</td>
+          <td>${purchases}</td>
+
+          <td class="campaign-conversion">
+            ${formatPercent(conversion)}
+          </td>
+
+          <td class="campaign-revenue">
+            ${formatMoney(revenue)}
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error(error);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="table-loading">
+          Erro ao carregar campanhas.
+        </td>
+      </tr>
+    `;
+  }
+}
 
     async function loadDashboard() {
       try {
@@ -516,8 +716,10 @@
     }
 
     loadDashboard();
+    loadCampaigns();
 
     setInterval(loadDashboard, 30000);
+    setInterval(loadCampaigns, 30000);
   </script>
 
 </body>
