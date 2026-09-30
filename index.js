@@ -536,6 +536,10 @@ app.post("/track/purchase", async (req, res) => {
   }
 });
 
+app.get("/dashboard", (req, res) => {
+  res.sendFile(__dirname + "/dashboard.html");
+});
+
 async function start() {
 
   try {

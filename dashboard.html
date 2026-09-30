@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Direct Response OS</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #08090c;
+      --panel: #111318;
+      --panel-2: #16191f;
+      --border: #242832;
+      --text: #f5f7fa;
+      --muted: #8f96a3;
+      --green: #3ee389;
+      --green-soft: rgba(62, 227, 137, 0.10);
+      --blue: #65a7ff;
+      --yellow: #f5c451;
+      --red: #ff6b6b;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(62, 227, 137, 0.06), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 34px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: var(--green);
+      color: #06110b;
+      box-shadow: 0 0 32px rgba(62, 227, 137, 0.16);
+    }
+
+    .brand h1 {
+      font-size: 20px;
+      letter-spacing: -0.4px;
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(62, 227, 137, .7);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title h2 {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .updated {
+      font-size: 12px;
+      color: #626977;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 13px;
+    }
+
+    .metric-value {
+      font-size: 31px;
+      line-height: 1;
+      font-weight: 750;
+      letter-spacing: -1.2px;
+    }
+
+    .metric-sub {
+      margin-top: 12px;
+      color: #69707c;
+      font-size: 12px;
+    }
+
+    .revenue .metric-value {
+      color: var(--green);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-head h3 {
+      font-size: 15px;
+    }
+
+    .panel-head p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .funnel {
+      padding: 22px;
+    }
+
+    .funnel-row {
+      display: grid;
+      grid-template-columns: 135px 1fr 75px;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .funnel-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .funnel-name {
+      font-size: 13px;
+      color: #d5d9df;
+    }
+
+    .bar-track {
+      height: 9px;
+      border-radius: 999px;
+      background: #20232a;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      min-width: 4px;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), #8df7b9);
+      transition: width .5s ease;
+    }
+
+    .funnel-number {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .conversions {
+      padding: 10px 22px 18px;
+    }
+
+    .conversion-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .conversion-item:last-child {
+      border-bottom: 0;
+    }
+
+    .conversion-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .conversion-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .empty {
+      color: var(--muted);
+    }
+
+    @media (max-width: 1000px) {
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .page {
+        padding: 20px 14px;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .funnel-row {
+        grid-template-columns: 105px 1fr 55px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page">
+
+    <header>
+      <div class="brand">
+        <div class="logo">DR</div>
+
+        <div>
+          <h1>Direct Response OS</h1>
+          <p>Performance & Conversion Intelligence</p>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="dot"></span>
+        Tracking online
+      </div>
+    </header>
+
+    <div class="section-title">
+      <h2>Visão geral</h2>
+      <span class="updated" id="updatedAt">Carregando...</span>
+    </div>
+
+    <section class="metrics">
+
+      <div class="card">
+        <div class="metric-label">Cliques</div>
+        <div class="metric-value" id="clicks">0</div>
+        <div class="metric-sub">Entradas rastreadas</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Leads</div>
+        <div class="metric-value" id="leads">0</div>
+        <div class="metric-sub">Leads únicos</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Checkouts</div>
+        <div class="metric-value" id="checkouts">0</div>
+        <div class="metric-sub">Checkouts iniciados</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Vendas</div>
+        <div class="metric-value" id="purchases">0</div>
+        <div class="metric-sub">Compras aprovadas</div>
+      </div>
+
+      <div class="card revenue">
+        <div class="metric-label">Receita</div>
+        <div class="metric-value" id="revenue">R$ 0</div>
+        <div class="metric-sub">Receita rastreada</div>
+      </div>
+
+    </section>
+
+    <section class="layout">
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Funil de conversão</h3>
+          <p>Do clique até a compra.</p>
+        </div>
+
+        <div class="funnel">
+
+          <div class="funnel-row">
+            <div class="funnel-name">Cliques</div>
+            <div class="bar-track">
+              <div class="bar" id="barClicks"></div>
+            </div>
+            <div class="funnel-number" id="funnelClicks">0</div>
+          </div>
+
+          <div class="funnel-row">
+            <div class="funnel-name">Leads</div>
+            <div class="bar-track">
+              <div class="bar" id="barLeads"></div>
+            </div>
+            <div class="funnel-number" id="funnelLeads">0</div>
+          </div>
+
+          <div class="funnel-row">
+            <div class="funnel-name">Checkouts</div>
+            <div class="bar-track">
+              <div class="bar" id="barCheckouts"></div>
+            </div>
+            <div class="funnel-number" id="funnelCheckouts">0</div>
+          </div>
+
+          <div class="funnel-row">
+            <div class="funnel-name">Compras</div>
+            <div class="bar-track">
+              <div class="bar" id="barPurchases"></div>
+            </div>
+            <div class="funnel-number" id="funnelPurchases">0</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Conversões</h3>
+          <p>Eficiência entre as etapas do funil.</p>
+        </div>
+
+        <div class="conversions">
+
+          <div class="conversion-item">
+            <span class="conversion-label">Clique → Lead</span>
+            <span class="conversion-value" id="convLead">0%</span>
+          </div>
+
+          <div class="conversion-item">
+            <span class="conversion-label">Lead → Checkout</span>
+            <span class="conversion-value" id="convCheckout">0%</span>
+          </div>
+
+          <div class="conversion-item">
+            <span class="conversion-label">Checkout → Venda</span>
+            <span class="conversion-value" id="convSale">0%</span>
+          </div>
+
+          <div class="conversion-item">
+            <span class="conversion-label">Clique → Venda</span>
+            <span class="conversion-value" id="convTotal">0%</span>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <script>
+    function percentage(value, total) {
+      if (!total) return 0;
+      return (value / total) * 100;
+    }
+
+    function formatPercent(value) {
+      return value.toLocaleString("pt-BR", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      }) + "%";
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    async function loadDashboard() {
+      try {
+        const response = await fetch("/api/summary", {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao carregar summary");
+        }
+
+        const data = await response.json();
+        const summary = data.summary || {};
+
+        const clicks = Number(summary.clicks || 0);
+        const leads = Number(summary.leads || 0);
+        const checkouts = Number(summary.checkouts || 0);
+        const purchases = Number(summary.purchases || 0);
+        const revenue = Number(summary.revenue || 0);
+
+        document.getElementById("clicks").textContent = clicks;
+        document.getElementById("leads").textContent = leads;
+        document.getElementById("checkouts").textContent = checkouts;
+        document.getElementById("purchases").textContent = purchases;
+        document.getElementById("revenue").textContent = formatMoney(revenue);
+
+        document.getElementById("funnelClicks").textContent = clicks;
+        document.getElementById("funnelLeads").textContent = leads;
+        document.getElementById("funnelCheckouts").textContent = checkouts;
+        document.getElementById("funnelPurchases").textContent = purchases;
+
+        const max = Math.max(clicks, 1);
+
+        document.getElementById("barClicks").style.width = "100%";
+        document.getElementById("barLeads").style.width =
+          Math.max(percentage(leads, max), 2) + "%";
+
+        document.getElementById("barCheckouts").style.width =
+          Math.max(percentage(checkouts, max), 2) + "%";
+
+        document.getElementById("barPurchases").style.width =
+          Math.max(percentage(purchases, max), 2) + "%";
+
+        document.getElementById("convLead").textContent =
+          formatPercent(percentage(leads, clicks));
+
+        document.getElementById("convCheckout").textContent =
+          formatPercent(percentage(checkouts, leads));
+
+        document.getElementById("convSale").textContent =
+          formatPercent(percentage(purchases, checkouts));
+
+        document.getElementById("convTotal").textContent =
+          formatPercent(percentage(purchases, clicks));
+
+        document.getElementById("updatedAt").textContent =
+          "Atualizado às " +
+          new Date().toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          });
+
+      } catch (error) {
+        console.error(error);
+
+        document.getElementById("updatedAt").textContent =
+          "Erro ao carregar dados";
+      }
+    }
+
+    loadDashboard();
+
+    setInterval(loadDashboard, 30000);
+  </script>
+
+</body>
+</html>
