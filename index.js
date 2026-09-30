@@ -76,6 +76,20 @@ async function initDb() {
     );
   `);
 
+await pool.query(`
+  CREATE UNIQUE INDEX IF NOT EXISTS dr_leads_email_unique
+  ON dr_leads (LOWER(email))
+  WHERE email IS NOT NULL
+    AND TRIM(email) <> '';
+`);
+
+await pool.query(`
+  CREATE UNIQUE INDEX IF NOT EXISTS dr_leads_telefone_unique
+  ON dr_leads (regexp_replace(telefone, '[^0-9]', '', 'g'))
+  WHERE telefone IS NOT NULL
+    AND regexp_replace(telefone, '[^0-9]', '', 'g') <> '';
+`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS dr_events (
       id SERIAL PRIMARY KEY,
@@ -350,12 +364,20 @@ app.post("/track/lead", async (req, res) => {
       lead: result.rows[0]
     });
 
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: error.message
+} catch (error) {
+  if (error.code === "23505") {
+    return res.json({
+      ok: true,
+      duplicate: true
     });
   }
+
+  res.status(500).json({
+    ok: false,
+    error: error.message
+  });
+}
+
 });
 
 app.post("/track/event", async (req, res) => {
