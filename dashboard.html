@@ -118,6 +118,139 @@
       color: #626977;
     }
 
+    .period-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.018);
+    }
+
+    .period-presets,
+    .custom-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .period-btn,
+    .apply-range {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel-2);
+      color: var(--muted);
+      padding: 8px 11px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .period-btn:hover,
+    .apply-range:hover {
+      color: var(--text);
+      border-color: #39404d;
+    }
+
+    .period-btn.active {
+      color: #07120b;
+      background: var(--green);
+      border-color: var(--green);
+      font-weight: 700;
+    }
+
+    .date-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .date-input {
+      min-width: 126px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 7px 9px;
+      font: inherit;
+      font-size: 12px;
+      color-scheme: dark;
+    }
+
+    .apply-range {
+      color: var(--text);
+    }
+
+    .period-feedback {
+      margin-left: auto;
+      text-align: right;
+      font-size: 11px;
+    }
+
+    .active-period {
+      display: block;
+      color: var(--muted);
+    }
+
+    .period-error {
+      display: block;
+      margin-top: 3px;
+      color: var(--red);
+    }
+
+    .period-error:empty {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .period-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .period-feedback {
+        margin-left: 0;
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .period-presets {
+        width: 100%;
+      }
+
+      .period-btn {
+        flex: 1 1 calc(33.333% - 8px);
+      }
+
+      .custom-range {
+        width: 100%;
+        align-items: flex-end;
+      }
+
+      .date-field {
+        flex: 1 1 130px;
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .date-input {
+        width: 100%;
+      }
+
+      .apply-range {
+        min-height: 34px;
+      }
+    }
+
     .metrics {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -326,7 +459,7 @@
     .campaign-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1100px;
+      min-width: 1200px;
     }
 
     .campaign-table th,
@@ -410,6 +543,35 @@
     <div class="section-title">
       <h2>Visão geral</h2>
       <span class="updated" id="updatedAt">Carregando...</span>
+    </div>
+
+    <div class="period-toolbar" aria-label="Filtro de período">
+      <div class="period-presets">
+        <button class="period-btn active" type="button" data-period="all">Tudo</button>
+        <button class="period-btn" type="button" data-period="today">Hoje</button>
+        <button class="period-btn" type="button" data-period="yesterday">Ontem</button>
+        <button class="period-btn" type="button" data-period="7d">7 dias</button>
+        <button class="period-btn" type="button" data-period="30d">30 dias</button>
+      </div>
+
+      <div class="custom-range">
+        <label class="date-field">
+          De
+          <input class="date-input" id="fromDate" type="date" />
+        </label>
+
+        <label class="date-field">
+          Até
+          <input class="date-input" id="toDate" type="date" />
+        </label>
+
+        <button class="apply-range" id="applyRange" type="button">Aplicar</button>
+      </div>
+
+      <div class="period-feedback">
+        <span class="active-period" id="activePeriod">Período: Tudo</span>
+        <span class="period-error" id="periodError"></span>
+      </div>
     </div>
 
     <section class="metrics">
@@ -567,7 +729,8 @@
         <thead>
           <tr>
             <th>Campanha</th>
-            <th>Cliques</th>
+            <th>Cliques rastreados</th>
+            <th>Cliques mídia</th>
             <th>Impressões</th>
             <th>Leads</th>
             <th>Checkouts</th>
@@ -583,7 +746,7 @@
 
         <tbody id="campaignTableBody">
           <tr>
-            <td colspan="12" class="table-loading">
+            <td colspan="13" class="table-loading">
               Carregando campanhas...
             </td>
           </tr>
@@ -641,11 +804,163 @@ function escapeHtml(value) {
   })[char]);
 }
 
+const reportRange = {
+  from: null,
+  to: null,
+  label: "Tudo",
+  preset: "all"
+};
+
+function localDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function shiftLocalDays(date, amount) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate() + amount
+  );
+}
+
+function displayIsoDate(value) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function buildReportUrl(path) {
+  const params = new URLSearchParams();
+
+  if (reportRange.from) params.set("from", reportRange.from);
+  if (reportRange.to) params.set("to", reportRange.to);
+
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+function showPeriodError(message = "") {
+  document.getElementById("periodError").textContent = message;
+}
+
+function updatePeriodUi() {
+  document.getElementById("activePeriod").textContent =
+    "Período: " + reportRange.label;
+
+  document.getElementById("fromDate").value = reportRange.from || "";
+  document.getElementById("toDate").value = reportRange.to || "";
+
+  document.querySelectorAll(".period-btn").forEach((button) => {
+    button.classList.toggle(
+      "active",
+      button.dataset.period === reportRange.preset
+    );
+  });
+}
+
+function setReportRange(from, to, label, preset = null) {
+  if (from && to && from > to) {
+    showPeriodError("A data inicial não pode ser maior que a final.");
+    return;
+  }
+
+  reportRange.from = from || null;
+  reportRange.to = to || null;
+  reportRange.label = label || "Personalizado";
+  reportRange.preset = preset;
+
+  showPeriodError("");
+  updatePeriodUi();
+  refreshAll();
+}
+
+function selectPreset(preset) {
+  const today = new Date();
+
+  if (preset === "all") {
+    setReportRange(null, null, "Tudo", "all");
+    return;
+  }
+
+  if (preset === "today") {
+    const value = localDateString(today);
+    setReportRange(value, value, "Hoje", "today");
+    return;
+  }
+
+  if (preset === "yesterday") {
+    const value = localDateString(shiftLocalDays(today, -1));
+    setReportRange(value, value, "Ontem", "yesterday");
+    return;
+  }
+
+  if (preset === "7d") {
+    setReportRange(
+      localDateString(shiftLocalDays(today, -6)),
+      localDateString(today),
+      "Últimos 7 dias",
+      "7d"
+    );
+    return;
+  }
+
+  if (preset === "30d") {
+    setReportRange(
+      localDateString(shiftLocalDays(today, -29)),
+      localDateString(today),
+      "Últimos 30 dias",
+      "30d"
+    );
+  }
+}
+
+function initPeriodControls() {
+  document.querySelectorAll(".period-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectPreset(button.dataset.period);
+    });
+  });
+
+  document.getElementById("applyRange").addEventListener("click", () => {
+    const from = document.getElementById("fromDate").value || null;
+    const to = document.getElementById("toDate").value || null;
+
+    if (!from && !to) {
+      setReportRange(null, null, "Tudo", "all");
+      return;
+    }
+
+    if (from && to && from > to) {
+      showPeriodError("A data inicial não pode ser maior que a final.");
+      return;
+    }
+
+    let label = "Personalizado";
+
+    if (from && to) {
+      label = from === to
+        ? displayIsoDate(from)
+        : `${displayIsoDate(from)} → ${displayIsoDate(to)}`;
+    } else if (from) {
+      label = "Desde " + displayIsoDate(from);
+    } else if (to) {
+      label = "Até " + displayIsoDate(to);
+    }
+
+    setReportRange(from, to, label, null);
+  });
+
+  updatePeriodUi();
+}
+
 async function loadCampaigns() {
   const tbody = document.getElementById("campaignTableBody");
 
   try {
-    const response = await fetch("/api/campaigns", {
+    const response = await fetch(buildReportUrl("/api/campaigns"), {
       cache: "no-store"
     });
 
@@ -661,7 +976,7 @@ async function loadCampaigns() {
     if (campaigns.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="12" class="table-loading">
+          <td colspan="13" class="table-loading">
             Nenhuma campanha encontrada.
           </td>
         </tr>
@@ -671,6 +986,7 @@ async function loadCampaigns() {
 
     tbody.innerHTML = campaigns.map((row) => {
       const clicks = Number(row.clicks || 0);
+      const mediaClicks = Number(row.media_clicks || 0);
       const impressions = Number(row.impressions || 0);
       const leads = Number(row.leads || 0);
       const checkouts = Number(row.checkouts || 0);
@@ -687,6 +1003,7 @@ async function loadCampaigns() {
           </td>
 
           <td>${clicks.toLocaleString("pt-BR")}</td>
+          <td>${mediaClicks.toLocaleString("pt-BR")}</td>
           <td>${impressions.toLocaleString("pt-BR")}</td>
           <td>${leads}</td>
           <td>${checkouts}</td>
@@ -713,7 +1030,7 @@ async function loadCampaigns() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="12" class="table-loading">
+        <td colspan="13" class="table-loading">
           Erro ao carregar campanhas.
         </td>
       </tr>
@@ -723,7 +1040,7 @@ async function loadCampaigns() {
 
     async function loadDashboard() {
       try {
-        const response = await fetch("/api/summary", {
+        const response = await fetch(buildReportUrl("/api/summary"), {
           cache: "no-store"
         });
 
@@ -796,11 +1113,17 @@ async function loadCampaigns() {
       }
     }
 
-    loadDashboard();
-    loadCampaigns();
+    function refreshAll() {
+      return Promise.allSettled([
+        loadDashboard(),
+        loadCampaigns()
+      ]);
+    }
 
-    setInterval(loadDashboard, 30000);
-    setInterval(loadCampaigns, 30000);
+    initPeriodControls();
+    refreshAll();
+
+    setInterval(refreshAll, 30000);
   </script>
 
 </body>

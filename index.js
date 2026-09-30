@@ -28,6 +28,49 @@ function hashIp(ip) {
     .digest("hex");
 }
 
+function parseReportRange(query = {}) {
+  const parseDate = (value, field) => {
+    if (value == null || value === "") return null;
+    if (typeof value !== "string") {
+      const error = new Error(field + " deve usar o formato YYYY-MM-DD");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const normalized = value.trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+      const error = new Error(field + " deve usar o formato YYYY-MM-DD");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const parsed = new Date(normalized + "T00:00:00Z");
+
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10) !== normalized
+    ) {
+      const error = new Error(field + " deve ser uma data valida");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return normalized;
+  };
+
+  const from = parseDate(query.from, "from");
+  const to = parseDate(query.to, "to");
+
+  if (from && to && from > to) {
+    const error = new Error("from nao pode ser maior que to");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { from, to };
+}
+
 async function initDb() {
 
   await pool.query(`
@@ -220,23 +263,79 @@ app.get("/health", (req, res) => {
 
 app.get("/api/summary", async (req, res) => {
   try {
+    const { from, to } = parseReportRange(req.query);
+
     const result = await pool.query(`
       WITH base AS (
         SELECT
-          (SELECT COUNT(*) FROM dr_clicks)::int AS clicks,
-          (SELECT COUNT(*) FROM dr_leads)::int AS leads,
           (
-            SELECT COUNT(*) FROM dr_events WHERE event_name = 'checkout_started'
+            SELECT COUNT(*)
+            FROM dr_clicks
+            WHERE (
+              $1::date IS NULL OR
+              ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+            )
+            AND (
+              $2::date IS NULL OR
+              ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+            )
+          )::int AS clicks,
+          (
+            SELECT COUNT(*)
+            FROM dr_leads
+            WHERE (
+              $1::date IS NULL OR
+              ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+            )
+            AND (
+              $2::date IS NULL OR
+              ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+            )
+          )::int AS leads,
+          (
+            SELECT COUNT(*)
+            FROM dr_events
+            WHERE event_name = 'checkout_started'
+              AND (
+                $1::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+              )
+              AND (
+                $2::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+              )
           )::int AS checkouts,
           (
-            SELECT COUNT(*) FROM dr_events WHERE event_name = 'purchase'
+            SELECT COUNT(*)
+            FROM dr_events
+            WHERE event_name = 'purchase'
+              AND (
+                $1::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+              )
+              AND (
+                $2::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+              )
           )::int AS purchases,
           (
             SELECT COALESCE(SUM(value), 0)
-            FROM dr_events WHERE event_name = 'purchase'
+            FROM dr_events
+            WHERE event_name = 'purchase'
+              AND (
+                $1::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+              )
+              AND (
+                $2::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+              )
           )::numeric AS revenue,
           (
-            SELECT COALESCE(SUM(spend), 0) FROM dr_ad_spend
+            SELECT COALESCE(SUM(spend), 0)
+            FROM dr_ad_spend
+            WHERE ($1::date IS NULL OR spend_date >= $1::date)
+              AND ($2::date IS NULL OR spend_date <= $2::date)
           )::numeric AS spend
       )
       SELECT
@@ -248,17 +347,20 @@ app.get("/api/summary", async (req, res) => {
         CASE WHEN spend > 0
           THEN ROUND(revenue / spend, 4) ELSE NULL END AS roas
       FROM base
-    `);
+    `, [from, to]);
 
     res.json({
       ok: true,
+      range: { from, to },
       summary: result.rows[0]
     });
 
   } catch (error) {
-    res.status(500).json({
+    const statusCode = error.statusCode || 500;
+
+    res.status(statusCode).json({
       ok: false,
-      error: error.message
+      error: statusCode === 400 ? error.message : "erro interno"
     });
   }
 });
@@ -596,12 +698,22 @@ app.post("/track/purchase", async (req, res) => {
 
 app.get("/api/campaigns", async (req, res) => {
   try {
+    const { from, to } = parseReportRange(req.query);
+
     const result = await pool.query(`
       WITH
       lead_by_click AS (
         SELECT click_id, COUNT(*)::int AS leads
         FROM dr_leads
         WHERE click_id IS NOT NULL
+          AND (
+            $1::date IS NULL OR
+            ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+          )
+          AND (
+            $2::date IS NULL OR
+            ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+          )
         GROUP BY click_id
       ),
 
@@ -616,6 +728,14 @@ app.get("/api/campaigns", async (req, res) => {
           )::numeric AS revenue
         FROM dr_events
         WHERE click_id IS NOT NULL
+          AND (
+            $1::date IS NULL OR
+            ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+          )
+          AND (
+            $2::date IS NULL OR
+            ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+          )
         GROUP BY click_id
       ),
 
@@ -654,7 +774,17 @@ app.get("/api/campaigns", async (req, res) => {
             u.campaign_id
           ) AS canonical_campaign_id,
           LOWER(TRIM(COALESCE(c.utm_campaign, ''))) AS campaign_name_norm,
-          NULLIF(TRIM(c.utm_campaign), '') AS campaign_name
+          NULLIF(TRIM(c.utm_campaign), '') AS campaign_name,
+          (
+            (
+              $1::date IS NULL OR
+              ((c.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+            )
+            AND (
+              $2::date IS NULL OR
+              ((c.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+            )
+          ) AS click_in_range
         FROM dr_clicks c
         LEFT JOIN unique_name_id u
           ON NULLIF(TRIM(c.campaign_id), '') IS NULL
@@ -671,7 +801,10 @@ app.get("/api/campaigns", async (req, res) => {
           END AS campaign_key,
           r.canonical_campaign_id AS campaign_id,
           MAX(r.campaign_name) AS campaign_name,
-          COUNT(DISTINCT r.click_id)::int AS clicks,
+          (
+            COUNT(DISTINCT r.click_id)
+            FILTER (WHERE r.click_in_range)
+          )::int AS clicks,
           COALESCE(SUM(l.leads), 0)::int AS leads,
           COALESCE(SUM(e.checkouts), 0)::int AS checkouts,
           COALESCE(SUM(e.purchases), 0)::int AS purchases,
@@ -686,6 +819,12 @@ app.get("/api/campaigns", async (req, res) => {
             ELSE 'name:' || r.campaign_name_norm
           END,
           r.canonical_campaign_id
+        HAVING
+          COUNT(DISTINCT r.click_id) FILTER (WHERE r.click_in_range) > 0
+          OR COALESCE(SUM(l.leads), 0) > 0
+          OR COALESCE(SUM(e.checkouts), 0) > 0
+          OR COALESCE(SUM(e.purchases), 0) > 0
+          OR COALESCE(SUM(e.revenue), 0) > 0
       ),
 
       spend_resolved AS (
@@ -701,6 +840,8 @@ app.get("/api/campaigns", async (req, res) => {
           ON NULLIF(TRIM(s.campaign_id), '') IS NULL
          AND NULLIF(TRIM(s.campaign_name), '') IS NOT NULL
          AND u.campaign_name_norm = LOWER(TRIM(s.campaign_name))
+        WHERE ($1::date IS NULL OR s.spend_date >= $1::date)
+          AND ($2::date IS NULL OR s.spend_date <= $2::date)
       ),
 
       spend_agg AS (
@@ -767,17 +908,20 @@ app.get("/api/campaigns", async (req, res) => {
           THEN ROUND(revenue / spend, 4) ELSE NULL END AS roas
       FROM combined
       ORDER BY revenue DESC, spend DESC, campaign ASC
-    `);
+    `, [from, to]);
 
     res.json({
       ok: true,
+      range: { from, to },
       campaigns: result.rows
     });
 
   } catch (error) {
-    res.status(500).json({
+    const statusCode = error.statusCode || 500;
+
+    res.status(statusCode).json({
       ok: false,
-      error: error.message
+      error: statusCode === 400 ? error.message : "erro interno"
     });
   }
 });
