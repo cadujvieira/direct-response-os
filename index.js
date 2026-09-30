@@ -358,6 +358,67 @@ app.post("/track/lead", async (req, res) => {
   }
 });
 
+app.post("/track/event", async (req, res) => {
+  try {
+    const {
+      event_id,
+      click_id,
+      email,
+      telefone,
+      event_name,
+      value,
+      currency
+    } = req.body;
+
+    if (!event_name) {
+      return res.status(400).json({
+        ok: false,
+        error: "event_name obrigatorio"
+      });
+    }
+
+    const finalEventId = event_id || crypto.randomUUID();
+
+    const result = await pool.query(`
+      INSERT INTO dr_events (
+        event_id,
+        click_id,
+        email,
+        telefone,
+        event_name,
+        value,
+        currency,
+        raw_payload
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      ON CONFLICT (event_id) DO NOTHING
+      RETURNING id, event_id, click_id, event_name, value, currency
+    `, [
+      finalEventId,
+      click_id || null,
+      email ? email.trim().toLowerCase() : null,
+      telefone || null,
+      event_name,
+      Number(value || 0),
+      currency || "BRL",
+      req.body
+    ]);
+
+    res.json({
+      ok: true,
+      duplicate: result.rows.length === 0,
+      event_id: finalEventId,
+      event: result.rows[0] || null
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 async function start() {
 
   try {
