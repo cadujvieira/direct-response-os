@@ -5,6 +5,12 @@ const cors = require("cors");
 const crypto = require("crypto");
 const { Pool } = require("pg");
 const { createBreakdownService } = require("./breakdowns");
+const { normalizeSpendInput, upsertSpend } = require("./spendStore");
+const {
+  getMetaStatus,
+  secretMatches,
+  runMetaSync
+} = require("./metaAds");
 
 const app = express();
 
@@ -969,171 +975,97 @@ app.get("/api/ads", async (req, res) => {
   }
 });
 
-app.post("/track/spend", async (req, res) => {
+app.get("/integrations/meta/status", (req, res) => {
+  res.json({
+    ok: true,
+    ...getMetaStatus(process.env)
+  });
+});
+
+app.post("/integrations/meta/sync", async (req, res) => {
+  const status = getMetaStatus(process.env);
+
+  if (!status.has_sync_secret) {
+    return res.status(503).json({
+      ok: false,
+      error: "sincronizacao Meta Ads nao configurada"
+    });
+  }
+
+  const receivedSecret =
+    String(req.get("x-sync-secret") || "").trim();
+  const expectedSecret =
+    String(process.env.META_SYNC_SECRET || "").trim();
+
+  if (!secretMatches(expectedSecret, receivedSecret)) {
+    return res.status(401).json({
+      ok: false,
+      error: "nao autorizado"
+    });
+  }
+
   try {
-    const {
-      spend_date,
-      source,
-      campaign_id,
-      campaign_name,
-      adset_id,
-      adset_name,
-      ad_id,
-      ad_name,
-      spend,
-      impressions,
-      clicks
-    } = req.body;
-
-    if (!spend_date) {
-      return res.status(400).json({
-        ok: false,
-        error: "spend_date obrigatorio"
-      });
-    }
-
-    const finalSpendDate = String(spend_date).trim();
-    const parsedSpendDate = new Date(finalSpendDate + "T00:00:00Z");
-
-    if (
-      !/^\d{4}-\d{2}-\d{2}$/.test(finalSpendDate) ||
-      Number.isNaN(parsedSpendDate.getTime()) ||
-      parsedSpendDate.toISOString().slice(0, 10) !== finalSpendDate
-    ) {
-      return res.status(400).json({
-        ok: false,
-        error: "spend_date deve ser uma data valida no formato YYYY-MM-DD"
-      });
-    }
-
-    const finalCampaignId = String(campaign_id || "").trim();
-    const finalCampaignName = String(campaign_name || "").trim();
-    const finalAdsetId = String(adset_id || "").trim();
-    const finalAdsetName = String(adset_name || "").trim();
-    const finalAdId = String(ad_id || "").trim();
-    const finalAdName = String(ad_name || "").trim();
-
-    if (!finalCampaignId && !finalCampaignName) {
-      return res.status(400).json({
-        ok: false,
-        error: "campaign_id ou campaign_name obrigatorio"
-      });
-    }
-
-    const finalSource =
-      String(source || "meta").trim().toLowerCase() || "meta";
-    const finalSpend = Number(spend || 0);
-    const finalImpressions = Number(impressions || 0);
-    const finalClicks = Number(clicks || 0);
-
-    if (
-      !Number.isFinite(finalSpend) ||
-      !Number.isFinite(finalImpressions) ||
-      !Number.isFinite(finalClicks)
-    ) {
-      return res.status(400).json({
-        ok: false,
-        error: "valores de midia invalidos"
-      });
-    }
-
-    if (
-      !Number.isInteger(finalImpressions) ||
-      !Number.isInteger(finalClicks)
-    ) {
-      return res.status(400).json({
-        ok: false,
-        error: "impressions e clicks devem ser numeros inteiros"
-      });
-    }
-
-    if (finalSpend < 0 || finalImpressions < 0 || finalClicks < 0) {
-      return res.status(400).json({
-        ok: false,
-        error: "valores de midia nao podem ser negativos"
-      });
-    }
-
-    const result = await pool.query(`
-      INSERT INTO dr_ad_spend (
-        spend_date,
-        source,
-        campaign_id,
-        campaign_name,
-        adset_id,
-        adset_name,
-        ad_id,
-        ad_name,
-        spend,
-        impressions,
-        clicks
-      )
-      VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11
-      )
-
-      ON CONFLICT (
-        spend_date,
-        (LOWER(TRIM(COALESCE(source, '')))),
-        (COALESCE(
-          NULLIF(TRIM(campaign_id), ''),
-          'name:' || LOWER(TRIM(COALESCE(campaign_name, '')))
-        )),
-        (COALESCE(
-          NULLIF(TRIM(adset_id), ''),
-          'name:' || LOWER(TRIM(COALESCE(adset_name, '')))
-        )),
-        (COALESCE(
-          NULLIF(TRIM(ad_id), ''),
-          'name:' || LOWER(TRIM(COALESCE(ad_name, '')))
-        ))
-      )
-
-      DO UPDATE SET
-        campaign_name = EXCLUDED.campaign_name,
-        adset_name = EXCLUDED.adset_name,
-        ad_name = EXCLUDED.ad_name,
-        spend = EXCLUDED.spend,
-        impressions = EXCLUDED.impressions,
-        clicks = EXCLUDED.clicks,
-        updated_at = NOW()
-
-      RETURNING
-        id,
-        spend_date,
-        source,
-        campaign_id,
-        campaign_name,
-        adset_id,
-        adset_name,
-        ad_id,
-        ad_name,
-        spend,
-        impressions,
-        clicks
-    `, [
-      finalSpendDate,
-      finalSource,
-      finalCampaignId || null,
-      finalCampaignName || null,
-      finalAdsetId || null,
-      finalAdsetName || null,
-      finalAdId || null,
-      finalAdName || null,
-      finalSpend,
-      finalImpressions,
-      finalClicks
-    ]);
+    const sync = await runMetaSync({
+      pool,
+      body: req.body || {},
+      env: process.env
+    });
 
     res.json({
       ok: true,
-      spend: result.rows[0]
+      sync
     });
-
   } catch (error) {
+    const statusCode = error.statusCode || 500;
+
+    if (statusCode === 503) {
+      return res.status(503).json({
+        ok: false,
+        error: "integracao Meta Ads nao configurada",
+        missing: Array.isArray(error.missing) ? error.missing : []
+      });
+    }
+
+    if (statusCode === 400 || statusCode === 409) {
+      return res.status(statusCode).json({
+        ok: false,
+        error: error.message
+      });
+    }
+
+    if (statusCode === 502) {
+      return res.status(502).json({
+        ok: false,
+        error: "falha ao sincronizar Meta Ads"
+      });
+    }
+
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: "erro interno"
+    });
+  }
+});
+
+app.post("/track/spend", async (req, res) => {
+  try {
+    const normalized = normalizeSpendInput(
+      req.body || {},
+      { defaultSource: "meta" }
+    );
+
+    const spend = await upsertSpend(pool, normalized);
+
+    res.json({
+      ok: true,
+      spend
+    });
+  } catch (error) {
+    const statusCode = error.statusCode === 400 ? 400 : 500;
+
+    res.status(statusCode).json({
+      ok: false,
+      error: statusCode === 400 ? error.message : "erro interno"
     });
   }
 });
