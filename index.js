@@ -419,6 +419,101 @@ app.post("/track/event", async (req, res) => {
   }
 });
 
+app.post("/track/purchase", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const {
+      order_id,
+      click_id,
+      email,
+      telefone,
+      produto,
+      valor,
+      currency
+    } = req.body;
+
+    if (!order_id) {
+      return res.status(400).json({
+        ok: false,
+        error: "order_id obrigatorio"
+      });
+    }
+
+    const finalValue = Number(valor || 0);
+    const eventId = `purchase_${order_id}`;
+
+    await client.query("BEGIN");
+
+    const orderResult = await client.query(`
+      INSERT INTO dr_orders (
+        order_id,
+        click_id,
+        email,
+        telefone,
+        produto,
+        valor,
+        status
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,'paid')
+      ON CONFLICT (order_id) DO NOTHING
+      RETURNING id, order_id, click_id, produto, valor, status
+    `, [
+      order_id,
+      click_id || null,
+      email ? email.trim().toLowerCase() : null,
+      telefone || null,
+      produto || null,
+      finalValue
+    ]);
+
+    const eventResult = await client.query(`
+      INSERT INTO dr_events (
+        event_id,
+        click_id,
+        email,
+        telefone,
+        event_name,
+        value,
+        currency,
+        raw_payload
+      )
+      VALUES ($1,$2,$3,$4,'purchase',$5,$6,$7)
+      ON CONFLICT (event_id) DO NOTHING
+      RETURNING id, event_id, event_name, value, currency
+    `, [
+      eventId,
+      click_id || null,
+      email ? email.trim().toLowerCase() : null,
+      telefone || null,
+      finalValue,
+      currency || "BRL",
+      req.body
+    ]);
+
+    await client.query("COMMIT");
+
+    res.json({
+      ok: true,
+      duplicate: eventResult.rows.length === 0,
+      order_id,
+      order: orderResult.rows[0] || null,
+      event: eventResult.rows[0] || null
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+
+  } finally {
+    client.release();
+  }
+});
+
 async function start() {
 
   try {
