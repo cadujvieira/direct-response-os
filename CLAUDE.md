@@ -61,8 +61,10 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_experiment_variants`: destination variants and traffic weights.
 - `dr_experiment_assignments`: click-to-variant assignment with persistent visitor key.
 - `dr_lead_crm_history`: CRM state audit trail.
-- `dr_crm_followups`: persistent commercial follow-up queue linked to leads.
+- `dr_crm_followups`: persistent commercial follow-up queue linked to leads. Automated tasks can reference `automation_run_id` for idempotency.
 - `dr_crm_saved_segments`: reusable CRM filter views saved by admin.
+- `dr_automation_rules`: persistent Automation Hub rules (trigger, delay, conditions and action configuration).
+- `dr_automation_runs`: durable queue and audit history for every scheduled automation execution.
 
 Offer foundation routes:
 - GET `/admin` serves the experiment administration UI.
@@ -75,6 +77,10 @@ Offer foundation routes:
 - POST `/api/crm/bulk-update` (requires `x-admin-secret`; update lifecycle/temperature/score/note for selected leads)
 - GET/POST `/api/crm/followups` and PATCH `/api/crm/followups/:id` (requires `x-admin-secret`)
 - GET/POST `/api/crm/saved-segments` and DELETE `/api/crm/saved-segments/:id` (requires `x-admin-secret`)
+- GET `/api/automations/summary` (requires `x-admin-secret`)
+- GET/POST `/api/automations/rules`, PATCH/DELETE `/api/automations/rules/:id` (requires `x-admin-secret`)
+- GET `/api/automations/runs` (requires `x-admin-secret`; includes protected contact identity and safe run result)
+- POST `/api/automations/process` (requires `x-admin-secret`; manually processes currently due runs)
 - GET `/api/experiments` (public-safe summary, no destination URLs)
 - GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)
 - PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
@@ -83,7 +89,24 @@ Offer foundation routes:
 - GET `/api/revenue/ltv`
 - GET `/api/overview/timeseries` (daily spend, purchases, revenue and ROAS for the overview chart; defaults to the latest 30 days when no date range is supplied)
 
-Lead-level CRM reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+Lead-level CRM and Automation Hub reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+
+Automation Hub worker rules:
+- the PostgreSQL queue is the source of truth; delayed actions are never kept only in memory;
+- event ingestion enqueues only after a new `dr_events` row is inserted;
+- a unique `(rule_id, lead_id, source_event_id)` prevents duplicate runs;
+- the worker claims due rows with `FOR UPDATE SKIP LOCKED`, recovers stale `running` rows, and processes bounded batches;
+- conditions are re-evaluated at execution time, so checkout/purchase/call outcomes can cancel a pending action safely;
+- follow-up creation is idempotent through `automation_run_id`;
+- disabling a rule prevents new enqueues and causes still-disabled pending runs to skip at execution;
+- changing a rule delay affects only future enqueues;
+- external WhatsApp/email sending is not connected yet. The current action is creation of an internal CRM follow-up.
+
+Default system rules:
+- `checkout_abandoned`: checkout_started -> 60 min -> skip if purchase -> high-priority recovery follow-up;
+- `frontend_without_call`: purchase -> 24 h -> skip if call_booked -> high-priority call follow-up;
+- `no_show_recovery`: call_no_show -> immediate -> skip if a newer call_booked exists -> urgent rebooking follow-up;
+- `post_call_without_mentorship`: call_attended -> 24 h -> skip if mentorship_purchase -> high-priority sales follow-up.
 
 Do not rename or destructively recreate existing tables.
 Migrations must preserve production data.
@@ -114,6 +137,7 @@ Migrations must preserve production data.
 At minimum run:
 ```bash
 node --check index.js
+node --check automationHub.js
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js
 node --check /tmp/dashboard.js
 git diff --check

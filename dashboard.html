@@ -1910,6 +1910,394 @@
       }
     }
 
+
+    .automation-workspace[hidden],
+    .automation-auth-panel[hidden] {
+      display: none !important;
+    }
+
+    .automation-auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+    }
+
+    .automation-auth-panel h3 {
+      font-size: 15px;
+    }
+
+    .automation-auth-panel p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .automation-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .automation-kpi-card {
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,.018), transparent), var(--panel);
+    }
+
+    .automation-kpi-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+    }
+
+    .automation-kpi-card strong {
+      display: block;
+      margin-top: 9px;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .automation-kpi-card small {
+      display: block;
+      margin-top: 8px;
+      color: #666e7b;
+      font-size: 10px;
+    }
+
+    .automation-kpi-card.success strong {
+      color: var(--green);
+    }
+
+    .automation-kpi-card.warn strong {
+      color: var(--yellow);
+    }
+
+    .automation-kpi-card.danger strong {
+      color: var(--red);
+    }
+
+    .automation-rules-panel {
+      margin-bottom: 14px;
+    }
+
+    .automation-panel-head {
+      align-items: center;
+    }
+
+    .automation-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .automation-rules-list {
+      display: grid;
+      gap: 9px;
+      padding: 14px;
+    }
+
+    .automation-rule-card {
+      display: grid;
+      grid-template-columns: minmax(230px, 1.2fr) minmax(130px, .7fr) minmax(130px, .7fr) minmax(220px, 1fr) minmax(220px, 1.1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .automation-rule-card.paused {
+      opacity: .64;
+    }
+
+    .automation-rule-name {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #e5e9ee;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .automation-rule-description {
+      margin-top: 5px;
+      color: #777f8b;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .automation-rule-system {
+      display: inline-flex;
+      border: 1px solid rgba(101,167,255,.22);
+      border-radius: 999px;
+      padding: 2px 5px;
+      color: #a9cdff;
+      background: rgba(101,167,255,.07);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .automation-rule-label {
+      display: block;
+      color: #656e7a;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .automation-rule-value {
+      display: block;
+      margin-top: 5px;
+      color: #cfd5dd;
+      font-size: 10px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .automation-rule-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      justify-content: flex-end;
+    }
+
+    .automation-toggle {
+      position: relative;
+      width: 38px;
+      height: 21px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #1b1f26;
+      cursor: pointer;
+    }
+
+    .automation-toggle::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #7f8792;
+      transition: .15s ease;
+    }
+
+    .automation-toggle.active {
+      border-color: rgba(62,227,137,.35);
+      background: rgba(62,227,137,.16);
+    }
+
+    .automation-toggle.active::after {
+      left: 20px;
+      background: var(--green);
+    }
+
+    .automation-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .automation-table {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+    }
+
+    .automation-table th,
+    .automation-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 11px;
+    }
+
+    .automation-table th {
+      color: var(--muted);
+      background: rgba(255,255,255,.014);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: 9px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .automation-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .automation-run-contact {
+      color: #e1e5eb;
+      font-weight: 700;
+    }
+
+    .automation-run-meta {
+      margin-top: 4px;
+      color: #707986;
+      font-size: 9px;
+    }
+
+    .automation-status {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 7px;
+      background: #171a20;
+      color: #b6bdc7;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .035em;
+    }
+
+    .automation-status.completed {
+      color: #84efb5;
+      background: rgba(62,227,137,.08);
+      border-color: rgba(62,227,137,.22);
+    }
+
+    .automation-status.failed {
+      color: #ff9b9b;
+      background: rgba(255,107,107,.08);
+      border-color: rgba(255,107,107,.22);
+    }
+
+    .automation-status.pending,
+    .automation-status.running {
+      color: #a8ccff;
+      background: rgba(101,167,255,.08);
+      border-color: rgba(101,167,255,.2);
+    }
+
+    .automation-status.skipped,
+    .automation-status.cancelled {
+      color: #ddc98b;
+      background: rgba(245,196,81,.06);
+      border-color: rgba(245,196,81,.18);
+    }
+
+    .automation-result {
+      color: #858e9a;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .automation-stage-fieldset {
+      margin: 0;
+      padding: 10px 11px 11px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+    }
+
+    .automation-stage-fieldset legend {
+      padding: 0 5px;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .automation-stage-checks {
+      display: flex;
+      gap: 10px 14px;
+      flex-wrap: wrap;
+    }
+
+    .automation-stage-checks label {
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+      color: #b9c0c9;
+      font-size: 10px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .automation-modal-footer {
+      align-items: center;
+    }
+
+    .automation-modal-spacer {
+      flex: 1;
+    }
+
+    .automation-delete-btn {
+      color: #ff9b9b;
+      border-color: rgba(255,107,107,.24);
+    }
+
+    .automation-rule-form label[hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1180px) {
+      .automation-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .automation-rule-card {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .automation-rule-main {
+        grid-column: 1 / -1;
+      }
+
+      .automation-rule-actions {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .automation-auth-panel,
+      .automation-panel-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .automation-auth-panel .crm-primary-btn {
+        width: 100%;
+      }
+
+      .automation-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .automation-rule-card {
+        grid-template-columns: 1fr;
+      }
+
+      .automation-rule-main {
+        grid-column: auto;
+      }
+
+      .automation-head-actions {
+        width: 100%;
+      }
+
+      .automation-head-actions > * {
+        flex: 1 1 auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .automation-kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .experiment-list {
       display: grid;
       gap: 12px;
@@ -2061,6 +2449,7 @@
         <a class="stage-tab" href="#calls" data-stage-target="calls">Calls</a>
         <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
+        <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
         <a class="stage-tab" href="#router" data-stage-target="router">Router</a>
         <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
       </div>
@@ -2403,6 +2792,205 @@
       </div>
     </section>
 
+    <section class="dashboard-view" data-view="automations" id="automations-view">
+      <div class="panel automation-auth-panel" id="automationAuthPanel">
+        <div>
+          <h3>Automações protegidas</h3>
+          <p>Use a mesma sessão administrativa do CRM para visualizar regras, execuções e dados de contatos.</p>
+        </div>
+        <button class="crm-primary-btn" id="automationGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+
+      <div class="automation-workspace" id="automationWorkspace" hidden>
+        <div class="automation-kpi-grid">
+          <div class="automation-kpi-card">
+            <span data-tooltip="Regras ativas que podem receber novos eventos do funil.">Regras ativas</span>
+            <strong id="automationActiveRules">0</strong>
+            <small>Recebendo eventos</small>
+          </div>
+          <div class="automation-kpi-card">
+            <span data-tooltip="Execuções já agendadas e ainda não processadas.">Agendadas</span>
+            <strong id="automationPending">0</strong>
+            <small>Na fila persistente</small>
+          </div>
+          <div class="automation-kpi-card warn">
+            <span data-tooltip="Execuções cujo horário já chegou e aguardam processamento.">Vencidas</span>
+            <strong id="automationOverdue">0</strong>
+            <small>Prioridade do worker</small>
+          </div>
+          <div class="automation-kpi-card success">
+            <span data-tooltip="Execuções concluídas com ação criada nas últimas 24 horas.">Executadas 24h</span>
+            <strong id="automationCompleted">0</strong>
+            <small>Ações concluídas</small>
+          </div>
+          <div class="automation-kpi-card">
+            <span data-tooltip="Execuções ignoradas porque a condição deixou de ser verdadeira, como uma compra antes do prazo.">Ignoradas 24h</span>
+            <strong id="automationSkipped">0</strong>
+            <small>Condição resolvida</small>
+          </div>
+          <div class="automation-kpi-card danger">
+            <span data-tooltip="Execuções que falharam internamente nas últimas 24 horas.">Falhas 24h</span>
+            <strong id="automationFailed">0</strong>
+            <small>Requer atenção</small>
+          </div>
+        </div>
+
+        <div class="panel automation-rules-panel">
+          <div class="panel-head automation-panel-head">
+            <div>
+              <h3 data-tooltip="Cada fluxo escuta um evento do funil, aguarda o tempo configurado, valida as condições e cria uma ação comercial.">Fluxos da oferta</h3>
+              <p>Regras persistentes para recuperação, call e monetização da mentoria.</p>
+            </div>
+            <div class="automation-head-actions">
+              <button class="crm-secondary-btn" id="automationProcessNow" type="button">Processar agora</button>
+              <button class="crm-primary-btn" id="automationNewRule" type="button">Nova automação</button>
+            </div>
+          </div>
+          <div class="automation-rules-list" id="automationRulesList">
+            <div class="section-empty">Carregando regras...</div>
+          </div>
+        </div>
+
+        <div class="panel automation-runs-panel">
+          <div class="panel-head automation-panel-head">
+            <div>
+              <h3 data-tooltip="Histórico protegido das execuções do motor. Uma execução pode concluir, ser ignorada por condição ou falhar.">Execuções recentes</h3>
+              <p>Auditoria do que foi agendado e do que realmente virou ação.</p>
+            </div>
+            <div class="automation-head-actions">
+              <select class="crm-control" id="automationRunStatus">
+                <option value="">Todos os status</option>
+                <option value="pending">Agendadas</option>
+                <option value="running">Processando</option>
+                <option value="completed">Concluídas</option>
+                <option value="skipped">Ignoradas</option>
+                <option value="failed">Falhas</option>
+                <option value="cancelled">Canceladas</option>
+              </select>
+              <button class="crm-secondary-btn" id="automationRefresh" type="button">Atualizar</button>
+            </div>
+          </div>
+          <div class="automation-table-wrap">
+            <table class="automation-table">
+              <thead>
+                <tr>
+                  <th>Contato</th>
+                  <th>Regra</th>
+                  <th>Gatilho</th>
+                  <th>Agendada para</th>
+                  <th>Status</th>
+                  <th>Resultado</th>
+                </tr>
+              </thead>
+              <tbody id="automationRunsBody">
+                <tr><td colspan="6" class="section-empty">Carregando execuções...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="crm-modal-backdrop" id="automationRuleModal" hidden>
+        <div class="crm-modal automation-rule-modal">
+          <div class="crm-modal-head">
+            <div>
+              <h3 id="automationModalTitle">Nova automação</h3>
+              <p id="automationModalSubtitle">Configure gatilho, espera, condição e ação.</p>
+            </div>
+            <button class="crm-drawer-close" type="button" data-close-automation-modal>×</button>
+          </div>
+
+          <div class="crm-modal-body automation-rule-form">
+            <input id="automationRuleId" type="hidden" />
+
+            <label id="automationKeyLabel">
+              Chave
+              <input class="crm-control" id="automationRuleKey" type="text" maxlength="80" placeholder="ex.: lead_sem_call" />
+            </label>
+
+            <label>
+              Nome
+              <input class="crm-control" id="automationRuleName" type="text" maxlength="120" placeholder="Nome da automação" />
+            </label>
+
+            <label class="crm-modal-wide">
+              Descrição
+              <input class="crm-control" id="automationRuleDescription" type="text" maxlength="500" placeholder="O que este fluxo resolve" />
+            </label>
+
+            <label>
+              Evento gatilho
+              <input class="crm-control" id="automationTriggerEvent" type="text" list="automationEventOptions" maxlength="100" placeholder="purchase" />
+              <datalist id="automationEventOptions">
+                <option value="checkout_started"></option>
+                <option value="purchase"></option>
+                <option value="call_booked"></option>
+                <option value="call_attended"></option>
+                <option value="call_no_show"></option>
+                <option value="mentorship_offer"></option>
+                <option value="mentorship_purchase"></option>
+                <option value="refund"></option>
+                <option value="order_bump_purchase"></option>
+              </datalist>
+            </label>
+
+            <label>
+              Espera em minutos
+              <input class="crm-control" id="automationDelayMinutes" type="number" min="0" max="43200" step="1" value="60" />
+            </label>
+
+            <label class="crm-modal-wide">
+              Eventos que cancelam a ação
+              <input class="crm-control" id="automationMissingEvents" type="text" placeholder="ex.: purchase, call_booked" />
+            </label>
+
+            <fieldset class="automation-stage-fieldset crm-modal-wide">
+              <legend>Não executar se o lead estiver nestas etapas</legend>
+              <div class="automation-stage-checks">
+                <label><input type="checkbox" value="refunded" data-automation-skip-stage /> Reembolsado</label>
+                <label><input type="checkbox" value="mentorship_customer" data-automation-skip-stage /> Cliente mentoria</label>
+                <label><input type="checkbox" value="customer" data-automation-skip-stage /> Cliente front</label>
+                <label><input type="checkbox" value="call_booked" data-automation-skip-stage /> Call agendada</label>
+                <label><input type="checkbox" value="mentorship_opportunity" data-automation-skip-stage /> Oportunidade</label>
+              </div>
+            </fieldset>
+
+            <label>
+              Prioridade do follow-up
+              <select class="crm-control" id="automationPriority">
+                <option value="low">Baixa</option>
+                <option value="normal">Normal</option>
+                <option value="high" selected>Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </label>
+
+            <label>
+              Status
+              <select class="crm-control" id="automationActive">
+                <option value="true">Ativa</option>
+                <option value="false">Pausada</option>
+              </select>
+            </label>
+
+            <label class="crm-modal-wide">
+              Nota criada no follow-up
+              <textarea class="crm-control crm-note" id="automationActionNote" rows="3" maxlength="1000" placeholder="Instrução para a equipe comercial"></textarea>
+            </label>
+
+            <div class="crm-modal-status" id="automationModalStatus"></div>
+          </div>
+
+          <div class="crm-modal-footer automation-modal-footer">
+            <button class="crm-secondary-btn automation-delete-btn" id="automationDeleteRule" type="button" hidden>Excluir automação</button>
+            <div class="automation-modal-spacer"></div>
+            <button class="crm-secondary-btn" type="button" data-close-automation-modal>Cancelar</button>
+            <button class="crm-primary-btn" id="automationSaveRule" type="button">Salvar automação</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="dashboard-view" data-view="router" id="router-view">
       <div class="panel">
         <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição de landing pages</h3><p>Pesos atuais das variantes cadastradas.</p></div>
@@ -2568,6 +3156,7 @@ const dashboardViewTitles = {
   calls: "Calls",
   mentorship: "Mentoria",
   crm: "CRM",
+  automations: "Automações",
   router: "Router",
   performance: "Performance"
 };
@@ -2614,6 +3203,10 @@ function setActiveStage(viewName) {
   });
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (viewName === "automations") {
+    loadAutomations();
+  }
 }
 
 function initStageNavigation() {
@@ -4106,6 +4699,542 @@ function initCrm() {
   });
 }
 
+const automationState = {
+  rules: [],
+  runs: [],
+  loading: false
+};
+
+const automationStatusLabels = {
+  pending: "Agendada",
+  running: "Processando",
+  completed: "Concluída",
+  skipped: "Ignorada",
+  failed: "Falhou",
+  cancelled: "Cancelada"
+};
+
+function automationDelayLabel(minutes) {
+  const value = Number(minutes || 0);
+  if (value === 0) return "Imediata";
+  if (value % 1440 === 0) {
+    const days = value / 1440;
+    return days + (days === 1 ? " dia" : " dias");
+  }
+  if (value % 60 === 0) {
+    const hours = value / 60;
+    return hours + (hours === 1 ? " hora" : " horas");
+  }
+  return value + " min";
+}
+
+function automationConditionsLabel(conditions = {}) {
+  const missing = Array.isArray(conditions.missing_events)
+    ? conditions.missing_events
+    : [];
+  const skipped = Array.isArray(conditions.skip_lifecycle_stages)
+    ? conditions.skip_lifecycle_stages
+    : [];
+  const parts = [];
+
+  if (missing.length) {
+    parts.push("Cancela se ocorrer: " + missing.join(", "));
+  }
+  if (skipped.length) {
+    parts.push("Ignora etapas: " + skipped.map((stage) =>
+      crmStageLabels[stage] || stage
+    ).join(", "));
+  }
+
+  return parts.length ? parts.join(" · ") : "Sem condição adicional";
+}
+
+function automationActionLabel(rule) {
+  const config = rule.action_config || {};
+  const priority = crmPriorityLabel(config.priority || "normal");
+  return "Follow-up " + priority + " · " + (config.note || "Sem nota");
+}
+
+async function automationFetch(path, options = {}) {
+  const secret = crmState.secret ||
+    sessionStorage.getItem("dr_admin_secret") ||
+    "";
+
+  if (!secret) {
+    const error = new Error("Conecte a sessão administrativa pelo CRM.");
+    error.status = 401;
+    throw error;
+  }
+
+  const headers = new Headers(options.headers || {});
+  headers.set("x-admin-secret", secret);
+
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(path, {
+    ...options,
+    headers,
+    cache: "no-store"
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error(data.error || "Erro no Automation Hub");
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+function automationSetProtectedState(isConnected) {
+  document.getElementById("automationAuthPanel").hidden = isConnected;
+  document.getElementById("automationWorkspace").hidden = !isConnected;
+}
+
+async function loadAutomationSummary() {
+  const data = await automationFetch("/api/automations/summary");
+  const summary = data.summary || {};
+
+  document.getElementById("automationActiveRules").textContent =
+    Number(summary.active_rules || 0);
+  document.getElementById("automationPending").textContent =
+    Number(summary.pending || 0);
+  document.getElementById("automationOverdue").textContent =
+    Number(summary.overdue || 0);
+  document.getElementById("automationCompleted").textContent =
+    Number(summary.completed_24h || 0);
+  document.getElementById("automationSkipped").textContent =
+    Number(summary.skipped_24h || 0);
+  document.getElementById("automationFailed").textContent =
+    Number(summary.failed_24h || 0);
+}
+
+function renderAutomationRules() {
+  const container = document.getElementById("automationRulesList");
+
+  if (automationState.rules.length === 0) {
+    container.innerHTML =
+      '<div class="section-empty">Nenhuma automação cadastrada.</div>';
+    return;
+  }
+
+  container.innerHTML = automationState.rules.map((rule) => {
+    const config = rule.action_config || {};
+    const conditions = rule.conditions || {};
+
+    return `
+      <div class="automation-rule-card ${rule.active ? "" : "paused"}">
+        <div class="automation-rule-main">
+          <div class="automation-rule-name">
+            ${escapeHtml(rule.name || rule.key)}
+            ${rule.system_rule ? '<span class="automation-rule-system">Sistema</span>' : ""}
+          </div>
+          <div class="automation-rule-description">${escapeHtml(rule.description || "Sem descrição.")}</div>
+        </div>
+
+        <div>
+          <span class="automation-rule-label">Gatilho</span>
+          <span class="automation-rule-value">${escapeHtml(rule.trigger_event || "—")}</span>
+        </div>
+
+        <div>
+          <span class="automation-rule-label">Espera</span>
+          <span class="automation-rule-value">${escapeHtml(automationDelayLabel(rule.delay_minutes))}</span>
+        </div>
+
+        <div>
+          <span class="automation-rule-label">Condição</span>
+          <span class="automation-rule-value">${escapeHtml(automationConditionsLabel(conditions))}</span>
+        </div>
+
+        <div>
+          <span class="automation-rule-label">Ação</span>
+          <span class="automation-rule-value">${escapeHtml(automationActionLabel(rule))}</span>
+        </div>
+
+        <div class="automation-rule-actions">
+          <button
+            class="automation-toggle ${rule.active ? "active" : ""}"
+            type="button"
+            data-automation-toggle="${Number(rule.id)}"
+            aria-label="${rule.active ? "Pausar" : "Ativar"} ${escapeHtml(rule.name || "")}"
+            title="${rule.active ? "Pausar regra" : "Ativar regra"}"
+          ></button>
+          <button class="crm-secondary-btn small" type="button" data-automation-edit="${Number(rule.id)}">Editar</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  container.querySelectorAll("[data-automation-toggle]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = Number(button.dataset.automationToggle);
+      const rule = automationState.rules.find((item) => Number(item.id) === id);
+      if (!rule) return;
+
+      button.disabled = true;
+      try {
+        await automationFetch("/api/automations/rules/" + id, {
+          method: "PATCH",
+          body: JSON.stringify({ active: !rule.active })
+        });
+        await loadAutomations();
+      } catch (error) {
+        button.disabled = false;
+      }
+    });
+  });
+
+  container.querySelectorAll("[data-automation-edit]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = Number(button.dataset.automationEdit);
+      const rule = automationState.rules.find((item) => Number(item.id) === id);
+      if (rule) openAutomationRuleModal(rule);
+    });
+  });
+}
+
+async function loadAutomationRules() {
+  const data = await automationFetch("/api/automations/rules");
+  automationState.rules = Array.isArray(data.rules) ? data.rules : [];
+  renderAutomationRules();
+}
+
+function automationRunResultText(run) {
+  if (run.status === "completed") {
+    const followupId = run.result?.followup_id;
+    return followupId
+      ? "Follow-up #" + followupId + " criado"
+      : "Ação concluída";
+  }
+
+  if (run.status === "skipped") {
+    const reason = run.result?.reason;
+    if (reason === "blocking_event_found") return "Condição resolvida antes do prazo";
+    if (reason === "lifecycle_stage") return "Etapa atual bloqueou a ação";
+    if (reason === "rule_disabled") return "Regra pausada antes da execução";
+    return "Condição não atendida";
+  }
+
+  if (run.status === "failed") return "Falha interna";
+  if (run.status === "cancelled") return "Regra removida";
+  if (run.status === "running") return "Worker processando";
+  return "Aguardando horário";
+}
+
+function renderAutomationRuns() {
+  const tbody = document.getElementById("automationRunsBody");
+
+  if (automationState.runs.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="6" class="section-empty">Nenhuma execução encontrada.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = automationState.runs.map((run) => {
+    const identity = run.telefone || run.email || "Sem contato";
+
+    return `
+      <tr>
+        <td>
+          <div class="automation-run-contact">${escapeHtml(run.nome || "Sem nome")}</div>
+          <div class="automation-run-meta">${escapeHtml(identity)}</div>
+          <button class="crm-row-btn" type="button" data-automation-open-lead="${Number(run.lead_id)}">Abrir contato</button>
+        </td>
+        <td>
+          <div>${escapeHtml(run.rule_name || run.rule_key || "—")}</div>
+          <div class="automation-run-meta">${escapeHtml(run.rule_key || "")}</div>
+        </td>
+        <td>${escapeHtml(run.source_event_name || "—")}</td>
+        <td>${escapeHtml(crmFormatDateTime(run.scheduled_for))}</td>
+        <td><span class="automation-status ${escapeHtml(run.status || "")}">${escapeHtml(automationStatusLabels[run.status] || run.status || "—")}</span></td>
+        <td><div class="automation-result">${escapeHtml(automationRunResultText(run))}</div></td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.querySelectorAll("[data-automation-open-lead]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openCrmDrawer(Number(button.dataset.automationOpenLead));
+    });
+  });
+}
+
+async function loadAutomationRuns() {
+  const status = document.getElementById("automationRunStatus").value;
+  const params = new URLSearchParams({ limit: "80" });
+  if (status) params.set("status", status);
+
+  const data = await automationFetch(
+    "/api/automations/runs?" + params.toString()
+  );
+  automationState.runs = Array.isArray(data.runs) ? data.runs : [];
+  renderAutomationRuns();
+}
+
+async function loadAutomations() {
+  if (automationState.loading) return;
+
+  const secret = crmState.secret ||
+    sessionStorage.getItem("dr_admin_secret") ||
+    "";
+
+  if (!secret) {
+    automationSetProtectedState(false);
+    return;
+  }
+
+  if (!crmState.secret) {
+    crmState.secret = secret;
+  }
+
+  automationState.loading = true;
+
+  try {
+    await Promise.all([
+      loadAutomationSummary(),
+      loadAutomationRules(),
+      loadAutomationRuns()
+    ]);
+    automationSetProtectedState(true);
+    decorateTooltips(document.getElementById("automations-view"));
+  } catch (error) {
+    automationSetProtectedState(false);
+    if (error.status === 401) {
+      sessionStorage.removeItem("dr_admin_secret");
+      crmState.secret = "";
+    }
+  } finally {
+    automationState.loading = false;
+  }
+}
+
+function resetAutomationRuleModal() {
+  document.getElementById("automationRuleId").value = "";
+  document.getElementById("automationRuleKey").value = "";
+  document.getElementById("automationRuleName").value = "";
+  document.getElementById("automationRuleDescription").value = "";
+  document.getElementById("automationTriggerEvent").value = "";
+  document.getElementById("automationDelayMinutes").value = "60";
+  document.getElementById("automationMissingEvents").value = "";
+  document.getElementById("automationPriority").value = "high";
+  document.getElementById("automationActive").value = "true";
+  document.getElementById("automationActionNote").value = "";
+  document.getElementById("automationModalStatus").textContent = "";
+  document.getElementById("automationModalStatus").className = "crm-modal-status";
+  document.querySelectorAll("[data-automation-skip-stage]").forEach((checkbox) => {
+    checkbox.checked = false;
+  });
+}
+
+function openAutomationRuleModal(rule = null) {
+  resetAutomationRuleModal();
+
+  const isEditing = Boolean(rule);
+  const modal = document.getElementById("automationRuleModal");
+  const keyLabel = document.getElementById("automationKeyLabel");
+  const deleteButton = document.getElementById("automationDeleteRule");
+
+  document.getElementById("automationModalTitle").textContent =
+    isEditing ? "Editar automação" : "Nova automação";
+  document.getElementById("automationModalSubtitle").textContent =
+    isEditing
+      ? "Alterações de espera valem apenas para eventos futuros."
+      : "Crie uma regra segura baseada nos eventos do funil.";
+
+  keyLabel.hidden = isEditing;
+  deleteButton.hidden = !isEditing || Boolean(rule?.system_rule);
+
+  if (isEditing) {
+    document.getElementById("automationRuleId").value = String(rule.id);
+    document.getElementById("automationRuleKey").value = rule.key || "";
+    document.getElementById("automationRuleName").value = rule.name || "";
+    document.getElementById("automationRuleDescription").value = rule.description || "";
+    document.getElementById("automationTriggerEvent").value = rule.trigger_event || "";
+    document.getElementById("automationDelayMinutes").value =
+      String(Number(rule.delay_minutes || 0));
+    document.getElementById("automationMissingEvents").value =
+      (rule.conditions?.missing_events || []).join(", ");
+    document.getElementById("automationPriority").value =
+      rule.action_config?.priority || "normal";
+    document.getElementById("automationActive").value =
+      rule.active ? "true" : "false";
+    document.getElementById("automationActionNote").value =
+      rule.action_config?.note || "";
+
+    const skipped = new Set(
+      rule.conditions?.skip_lifecycle_stages || []
+    );
+    document.querySelectorAll("[data-automation-skip-stage]").forEach((checkbox) => {
+      checkbox.checked = skipped.has(checkbox.value);
+    });
+  }
+
+  modal.hidden = false;
+}
+
+function closeAutomationRuleModal() {
+  document.getElementById("automationRuleModal").hidden = true;
+}
+
+function automationFormPayload() {
+  const missingEvents = document.getElementById("automationMissingEvents").value
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  const skipStages = Array.from(
+    document.querySelectorAll("[data-automation-skip-stage]:checked")
+  ).map((checkbox) => checkbox.value);
+
+  return {
+    key: document.getElementById("automationRuleKey").value.trim(),
+    name: document.getElementById("automationRuleName").value.trim(),
+    description: document.getElementById("automationRuleDescription").value.trim(),
+    trigger_event: document.getElementById("automationTriggerEvent").value.trim(),
+    delay_minutes: Number(document.getElementById("automationDelayMinutes").value || 0),
+    conditions: {
+      missing_events: missingEvents,
+      skip_lifecycle_stages: skipStages
+    },
+    action_type: "create_followup",
+    action_config: {
+      priority: document.getElementById("automationPriority").value,
+      note: document.getElementById("automationActionNote").value.trim()
+    },
+    active: document.getElementById("automationActive").value === "true"
+  };
+}
+
+async function saveAutomationRule() {
+  const statusNode = document.getElementById("automationModalStatus");
+  const ruleId = Number(document.getElementById("automationRuleId").value || 0);
+  const payload = automationFormPayload();
+
+  statusNode.textContent = "Salvando...";
+  statusNode.className = "crm-modal-status";
+
+  try {
+    if (ruleId) {
+      delete payload.key;
+      await automationFetch("/api/automations/rules/" + ruleId, {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await automationFetch("/api/automations/rules", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+    }
+
+    closeAutomationRuleModal();
+    await loadAutomations();
+  } catch (error) {
+    statusNode.textContent = error.message;
+    statusNode.className = "crm-modal-status error";
+  }
+}
+
+async function deleteAutomationRule() {
+  const ruleId = Number(document.getElementById("automationRuleId").value || 0);
+  if (!ruleId) return;
+
+  const statusNode = document.getElementById("automationModalStatus");
+  statusNode.textContent = "Excluindo...";
+  statusNode.className = "crm-modal-status";
+
+  try {
+    await automationFetch("/api/automations/rules/" + ruleId, {
+      method: "DELETE"
+    });
+    closeAutomationRuleModal();
+    await loadAutomations();
+  } catch (error) {
+    statusNode.textContent = error.message;
+    statusNode.className = "crm-modal-status error";
+  }
+}
+
+async function processAutomationsNow() {
+  const button = document.getElementById("automationProcessNow");
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Processando...";
+
+  try {
+    await automationFetch("/api/automations/process", {
+      method: "POST"
+    });
+    await Promise.all([
+      loadAutomationSummary(),
+      loadAutomationRuns()
+    ]);
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
+function initAutomations() {
+  document.getElementById("automationGoCrm").addEventListener("click", () => {
+    setActiveStage("crm");
+    if (history.replaceState) {
+      history.replaceState(null, "", "#crm");
+    }
+  });
+
+  document.getElementById("automationNewRule").addEventListener("click", () => {
+    openAutomationRuleModal();
+  });
+
+  document.getElementById("automationRefresh").addEventListener("click", () => {
+    loadAutomations();
+  });
+
+  document.getElementById("automationProcessNow").addEventListener(
+    "click",
+    processAutomationsNow
+  );
+
+  document.getElementById("automationRunStatus").addEventListener("change", () => {
+    loadAutomationRuns();
+  });
+
+  document.getElementById("automationSaveRule").addEventListener(
+    "click",
+    saveAutomationRule
+  );
+
+  document.getElementById("automationDeleteRule").addEventListener(
+    "click",
+    deleteAutomationRule
+  );
+
+  document.querySelectorAll("[data-close-automation-modal]").forEach((button) => {
+    button.addEventListener("click", closeAutomationRuleModal);
+  });
+
+  document.getElementById("automationRuleModal").addEventListener(
+    "click",
+    (event) => {
+      if (event.target.id === "automationRuleModal") {
+        closeAutomationRuleModal();
+      }
+    }
+  );
+}
+
+
 async function loadExperiments() {
   const container = document.getElementById("experimentList");
 
@@ -4492,6 +5621,11 @@ function initBreakdownControls() {
         );
       }
 
+      const activeView = document.querySelector(".dashboard-view.active")?.dataset.view;
+      if (activeView === "automations") {
+        tasks.push(loadAutomations());
+      }
+
       return Promise.allSettled(tasks);
     }
 
@@ -4500,6 +5634,7 @@ function initBreakdownControls() {
     initPeriodControls();
     initBreakdownControls();
     initCrm();
+    initAutomations();
     refreshAll();
 
     setInterval(refreshAll, 30000);

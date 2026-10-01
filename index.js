@@ -16,6 +16,12 @@ const {
   registerOfferRoutes,
   syncLeadCrmFromEvent
 } = require("./offerFoundation");
+const {
+  enqueueAutomationEvent,
+  initAutomationDb,
+  registerAutomationRoutes,
+  startAutomationWorker
+} = require("./automationHub");
 
 const app = express();
 
@@ -240,6 +246,7 @@ await pool.query(`
 }
 
 registerOfferRoutes({ app, pool, hashIp, parseReportRange });
+registerAutomationRoutes(app, pool);
 
 app.get("/", async (req, res) => {
 
@@ -679,7 +686,7 @@ app.post("/track/event", async (req, res) => {
       )
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       ON CONFLICT (event_id) DO NOTHING
-      RETURNING id, event_id, click_id, event_name, value, currency
+      RETURNING id, event_id, click_id, event_name, value, currency, created_at
     `, [
       finalEventId,
       click_id || null,
@@ -695,7 +702,20 @@ app.post("/track/event", async (req, res) => {
       try {
         await syncLeadCrmFromEvent(pool, { click_id, email, telefone, event_name });
       } catch (crmError) {
-        console.error("CRM event sync failed:", crmError.message);
+        console.error("CRM event sync failed");
+      }
+
+      try {
+        await enqueueAutomationEvent(pool, {
+          event_id: finalEventId,
+          event_name,
+          click_id,
+          email,
+          telefone,
+          created_at: result.rows[0].created_at
+        });
+      } catch (automationError) {
+        console.error("Automation enqueue failed");
       }
     }
 
@@ -775,7 +795,7 @@ app.post("/track/purchase", async (req, res) => {
       )
       VALUES ($1,$2,$3,$4,'purchase',$5,$6,$7)
       ON CONFLICT (event_id) DO NOTHING
-      RETURNING id, event_id, event_name, value, currency
+      RETURNING id, event_id, event_name, value, currency, created_at
     `, [
       eventId,
       click_id || null,
@@ -797,7 +817,20 @@ app.post("/track/purchase", async (req, res) => {
           event_name: "purchase"
         });
       } catch (crmError) {
-        console.error("CRM purchase sync failed:", crmError.message);
+        console.error("CRM purchase sync failed");
+      }
+
+      try {
+        await enqueueAutomationEvent(pool, {
+          event_id: eventId,
+          event_name: "purchase",
+          click_id,
+          email,
+          telefone,
+          created_at: eventResult.rows[0].created_at
+        });
+      } catch (automationError) {
+        console.error("Automation enqueue failed");
       }
     }
 
@@ -1205,6 +1238,8 @@ async function start() {
 
     await initDb();
     await initOfferDb(pool);
+    await initAutomationDb(pool);
+    startAutomationWorker(pool);
 
     app.listen(PORT, () => {
       console.log("Oferta DR online na porta " + PORT);

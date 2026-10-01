@@ -63,6 +63,44 @@ Offer-specific quick segments currently include: checkout abandoned, front-end b
 
 Lead-level read/write routes require `DR_ADMIN_SECRET`. This variable must exist only in environment configuration, never in source.
 
+## Automation Hub
+
+Automation Hub is a durable event-to-action engine layered on top of the canonical funnel. It does not send WhatsApp or email yet; its current action is to create persistent CRM follow-up tasks for the commercial team.
+
+Persistence:
+- `dr_automation_rules` stores rule trigger, delay, conditions, action configuration and active/system state;
+- `dr_automation_runs` is both the delayed queue and the audit trail;
+- `dr_crm_followups.automation_run_id` guarantees that retrying a run cannot create the same automatic follow-up twice.
+
+Event ingestion enqueues a run only when a new `dr_events` row is inserted. The unique key `(rule_id, lead_id, source_event_id)` prevents duplicate runs for repeated webhooks/events.
+
+The worker:
+- uses PostgreSQL as the source of truth rather than in-memory timers;
+- claims bounded batches with `FOR UPDATE SKIP LOCKED`;
+- recovers stale `running` executions after ten minutes;
+- evaluates conditions again only when the scheduled time arrives;
+- skips a run when a configured blocking event has occurred after the source event;
+- skips terminal/configured lifecycle stages;
+- skips a pending run when its rule is disabled at execution time;
+- isolates failures so one bad run cannot break the rest of the batch.
+
+Default system rules:
+- `checkout_abandoned`: `checkout_started`, wait 60 minutes, skip if `purchase`, create high-priority recovery follow-up;
+- `frontend_without_call`: `purchase`, wait 24 hours, skip if `call_booked`, create high-priority call follow-up;
+- `no_show_recovery`: `call_no_show`, immediate, skip if a newer `call_booked` exists, create urgent rebooking follow-up;
+- `post_call_without_mentorship`: `call_attended`, wait 24 hours, skip if `mentorship_purchase`, create high-priority sales follow-up.
+
+System rules may be edited, paused or re-enabled but not deleted. Custom rules use the same editor and are soft-deleted so historical runs remain auditable. Changing a delay affects only future enqueues and does not rewrite already scheduled runs.
+
+Protected routes:
+- `GET /api/automations/summary`;
+- `GET/POST /api/automations/rules`;
+- `PATCH/DELETE /api/automations/rules/:id`;
+- `GET /api/automations/runs`;
+- `POST /api/automations/process` for an admin-triggered processing tick.
+
+All Automation Hub routes require `x-admin-secret` and share the same browser session secret as CRM.
+
 ## Revenue and LTV
 
 `GET /api/revenue/ltv` is cohort-based: the selected date range chooses the front-end buyers, then downstream revenue for those same attributed buyers is accumulated through the present.
