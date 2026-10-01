@@ -39,19 +39,40 @@ Working routes that must not regress:
 - POST `/track/purchase`
 - POST `/track/spend`
 
-Core funnel:
-`click -> lead -> checkout_started -> purchase`
+Core acquisition funnel:
+`click -> landing_view -> lead -> checkout_started -> purchase`
 
-Attribution uses `click_id`.
+Extended monetization funnel:
+`purchase -> call_booked -> call_attended/call_no_show -> mentorship_offer -> mentorship_purchase`
+
+Also supported as generic events: `refund` and future `order_bump_purchase`.
+
+Attribution uses `click_id`. A persistent visitor ID is separate from `click_id`: every new router entry can create a fresh click while keeping the visitor sticky to the same experiment variant.
 Purchase idempotency uses `order_id` / purchase event IDs.
 Lead duplicate protection is enforced at the database level for normalized email/phone.
 Spend ingestion is an upsert by daily media scope.
 ## Database tables
-- `dr_clicks`: attribution parameters, campaign/adset/ad IDs, UTM data.
-- `dr_leads`: lead identity and attribution.
+- `dr_clicks`: attribution parameters, campaign/adset/ad IDs, UTM data, fbclid/gclid.
+- `dr_leads`: lead identity, attribution, lifecycle stage, temperature and lead score.
 - `dr_events`: generic funnel/lifecycle events.
 - `dr_orders`: paid orders.
 - `dr_ad_spend`: daily paid-media spend, impressions, media clicks and campaign/adset/ad metadata.
+- `dr_experiments`: routing experiments.
+- `dr_experiment_variants`: destination variants and traffic weights.
+- `dr_experiment_assignments`: click-to-variant assignment with persistent visitor key.
+- `dr_lead_crm_history`: CRM state audit trail.
+
+Offer foundation routes:
+- GET `/go/:slug`
+- GET `/api/crm/summary`
+- GET `/api/crm/leads` (requires `x-admin-secret`)
+- PATCH `/api/crm/leads/:id` (requires `x-admin-secret`)
+- GET `/api/experiments`
+- PATCH `/api/experiments/:slug/weights` (requires `x-admin-secret`)
+- GET `/api/experiments/:slug/performance`
+- GET `/api/revenue/ltv`
+
+Lead-level CRM reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
 
 Do not rename or destructively recreate existing tables.
 Migrations must preserve production data.

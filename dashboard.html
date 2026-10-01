@@ -553,6 +553,185 @@
       color: var(--text);
     }
 
+    .offer-section {
+      margin-top: 28px;
+    }
+
+    .offer-metrics {
+      grid-template-columns: repeat(4, 1fr);
+      margin-bottom: 0;
+    }
+
+    .crm-grid {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 18px;
+    }
+
+    .temperature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 18px;
+    }
+
+    .temperature-card,
+    .stage-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.018);
+      padding: 14px;
+    }
+
+    .temperature-label,
+    .stage-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .temperature-value,
+    .stage-value {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 750;
+    }
+
+    .temperature-card.hot .temperature-value {
+      color: var(--red);
+    }
+
+    .temperature-card.warm .temperature-value {
+      color: var(--yellow);
+    }
+
+    .temperature-card.cold .temperature-value {
+      color: var(--blue);
+    }
+
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 18px;
+    }
+
+    .experiment-list {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .experiment-card {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: rgba(255,255,255,0.018);
+      padding: 16px;
+    }
+
+    .experiment-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .experiment-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .experiment-slug {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .status-badge {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .status-badge.active {
+      color: var(--green);
+      background: var(--green-soft);
+      border-color: rgba(62,227,137,.25);
+    }
+
+    .variant-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .variant-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 1fr) minmax(160px, 3fr) 70px;
+      gap: 12px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .variant-name {
+      color: #dce0e6;
+      font-weight: 650;
+    }
+
+    .weight-track {
+      height: 7px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #20232a;
+    }
+
+    .weight-bar {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--green);
+      min-width: 2px;
+    }
+
+    .variant-weight {
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .section-empty {
+      padding: 28px 18px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1000px) {
+      .offer-metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .crm-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .offer-metrics,
+      .temperature-grid,
+      .stage-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .variant-row {
+        grid-template-columns: 1fr 2fr 56px;
+      }
+    }
+
   </style>
 </head>
 
@@ -672,6 +851,41 @@
 
     </section>
 
+    <section class="offer-section">
+      <div class="section-title">
+        <div>
+          <h2>Economia real</h2>
+          <span class="updated">Front-end + upsell + LTV</span>
+        </div>
+      </div>
+
+      <div class="metrics offer-metrics">
+        <div class="card">
+          <div class="metric-label">Receita front-end</div>
+          <div class="metric-value" id="frontRevenue">R$ 0</div>
+          <div class="metric-sub">Produto principal</div>
+        </div>
+
+        <div class="card revenue">
+          <div class="metric-label">Receita mentoria</div>
+          <div class="metric-value" id="mentorshipRevenue">R$ 0</div>
+          <div class="metric-sub">Upsell de maior ticket</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label">LTV por comprador</div>
+          <div class="metric-value" id="ltvPerBuyer">—</div>
+          <div class="metric-sub">Receita líquida média</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label">Attach mentoria</div>
+          <div class="metric-value" id="mentorshipAttach">—</div>
+          <div class="metric-sub">Compradores que viraram mentoria</div>
+        </div>
+      </div>
+    </section>
+
     <section class="layout">
 
       <div class="panel">
@@ -748,6 +962,92 @@
         </div>
       </div>
 
+    </section>
+
+    <section class="offer-section">
+      <div class="section-title">
+        <div>
+          <h2>CRM operacional</h2>
+          <span class="updated">Temperatura e estágio são dimensões separadas</span>
+        </div>
+      </div>
+
+      <div class="crm-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Temperatura</h3>
+            <p>Base para priorização comercial e remarketing.</p>
+          </div>
+
+          <div class="temperature-grid">
+            <div class="temperature-card cold">
+              <div class="temperature-label">Frios</div>
+              <div class="temperature-value" id="crmCold">0</div>
+            </div>
+            <div class="temperature-card warm">
+              <div class="temperature-label">Mornos</div>
+              <div class="temperature-value" id="crmWarm">0</div>
+            </div>
+            <div class="temperature-card hot">
+              <div class="temperature-label">Quentes</div>
+              <div class="temperature-value" id="crmHot">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Estágio comercial</h3>
+            <p>Da captura até a venda da mentoria.</p>
+          </div>
+
+          <div class="stage-grid">
+            <div class="stage-card">
+              <div class="stage-label">Leads</div>
+              <div class="stage-value" id="stageLeads">0</div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-label">Checkout</div>
+              <div class="stage-value" id="stageCheckout">0</div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-label">Clientes</div>
+              <div class="stage-value" id="stageCustomers">0</div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-label">Calls agendadas</div>
+              <div class="stage-value" id="stageCalls">0</div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-label">Oportunidades</div>
+              <div class="stage-value" id="stageOpportunities">0</div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-label">Mentorias</div>
+              <div class="stage-value" id="stageMentorship">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="offer-section">
+      <div class="section-title">
+        <div>
+          <h2>Experiments</h2>
+          <span class="updated">Um link, múltiplas páginas, atribuição preservada</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Distribuição de landing pages</h3>
+          <p>Pesos atuais das variantes cadastradas.</p>
+        </div>
+        <div class="experiment-list" id="experimentList">
+          <div class="section-empty">Carregando experimentos...</div>
+        </div>
+      </div>
     </section>
 
 <section class="campaign-section">
@@ -982,6 +1282,136 @@ function initPeriodControls() {
   });
 
   updatePeriodUi();
+}
+
+async function loadLtv() {
+  try {
+    const response = await fetch(buildReportUrl("/api/revenue/ltv"), {
+      cache: "no-store"
+    });
+
+    if (!response.ok) throw new Error("Erro ao carregar LTV");
+
+    const data = await response.json();
+    const ltv = data.ltv || {};
+
+    document.getElementById("frontRevenue").textContent =
+      formatMoney(ltv.front_revenue);
+
+    document.getElementById("mentorshipRevenue").textContent =
+      formatMoney(ltv.mentorship_revenue);
+
+    document.getElementById("ltvPerBuyer").textContent =
+      ltv.ltv_per_front_buyer == null
+        ? "—"
+        : formatMoney(ltv.ltv_per_front_buyer);
+
+    document.getElementById("mentorshipAttach").textContent =
+      ltv.mentorship_attach_rate_pct == null
+        ? "—"
+        : formatPercent(Number(ltv.mentorship_attach_rate_pct));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadCrmSummary() {
+  try {
+    const response = await fetch("/api/crm/summary", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) throw new Error("Erro ao carregar CRM");
+
+    const data = await response.json();
+    const crm = data.crm || {};
+
+    document.getElementById("crmCold").textContent = Number(crm.cold || 0);
+    document.getElementById("crmWarm").textContent = Number(crm.warm || 0);
+    document.getElementById("crmHot").textContent = Number(crm.hot || 0);
+    document.getElementById("stageLeads").textContent = Number(crm.leads || 0);
+    document.getElementById("stageCheckout").textContent = Number(crm.checkout || 0);
+    document.getElementById("stageCustomers").textContent = Number(crm.customers || 0);
+    document.getElementById("stageCalls").textContent = Number(crm.call_booked || 0);
+    document.getElementById("stageOpportunities").textContent =
+      Number(crm.mentorship_opportunities || 0);
+    document.getElementById("stageMentorship").textContent =
+      Number(crm.mentorship_customers || 0);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadExperiments() {
+  const container = document.getElementById("experimentList");
+
+  try {
+    const response = await fetch("/api/experiments", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) throw new Error("Erro ao carregar experimentos");
+
+    const data = await response.json();
+    const experiments = Array.isArray(data.experiments)
+      ? data.experiments
+      : [];
+
+    if (experiments.length === 0) {
+      container.innerHTML =
+        '<div class="section-empty">Nenhum experimento configurado ainda.</div>';
+      return;
+    }
+
+    container.innerHTML = experiments.map((experiment) => {
+      const variants = Array.isArray(experiment.variants)
+        ? experiment.variants
+        : [];
+      const activeVariants = variants.filter((variant) => variant.active !== false);
+      const totalWeight = activeVariants.reduce(
+        (sum, variant) => sum + Number(variant.weight || 0),
+        0
+      );
+
+      const variantsHtml = variants.length
+        ? variants.map((variant) => {
+            const weight = Number(variant.weight || 0);
+            const percent = totalWeight > 0 && variant.active !== false
+              ? (weight / totalWeight) * 100
+              : 0;
+
+            return `
+              <div class="variant-row">
+                <div class="variant-name">${escapeHtml(variant.name || "Variante")}</div>
+                <div class="weight-track">
+                  <div class="weight-bar" style="width:${Math.max(percent, 0)}%"></div>
+                </div>
+                <div class="variant-weight">${formatPercent(percent)}</div>
+              </div>
+            `;
+          }).join("")
+        : '<div class="section-empty">Sem variantes cadastradas.</div>';
+
+      return `
+        <div class="experiment-card">
+          <div class="experiment-head">
+            <div>
+              <div class="experiment-name">${escapeHtml(experiment.name || experiment.slug)}</div>
+              <div class="experiment-slug">/go/${escapeHtml(experiment.slug)}</div>
+            </div>
+            <span class="status-badge ${experiment.active ? "active" : ""}">
+              ${experiment.active ? "Ativo" : "Pausado"}
+            </span>
+          </div>
+          <div class="variant-list">${variantsHtml}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error(error);
+    container.innerHTML =
+      '<div class="section-empty">Erro ao carregar experimentos.</div>';
+  }
 }
 
 const performanceState = {
@@ -1237,6 +1667,9 @@ function initBreakdownControls() {
     function refreshAll() {
       return Promise.allSettled([
         loadDashboard(),
+        loadLtv(),
+        loadCrmSummary(),
+        loadExperiments(),
         loadPerformance()
       ]);
     }

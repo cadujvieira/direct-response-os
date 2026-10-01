@@ -11,6 +11,11 @@ const {
   secretMatches,
   runMetaSync
 } = require("./metaAds");
+const {
+  initOfferDb,
+  registerOfferRoutes,
+  syncLeadCrmFromEvent
+} = require("./offerFoundation");
 
 const app = express();
 
@@ -234,6 +239,8 @@ await pool.query(`
 
 }
 
+registerOfferRoutes({ app, pool, hashIp, parseReportRange });
+
 app.get("/", async (req, res) => {
 
   try {
@@ -386,6 +393,8 @@ app.post("/track/click", async (req, res) => {
       campaign_id,
       adset_id,
       ad_id,
+      fbclid,
+      gclid,
       page_url,
       referrer
     } = req.body;
@@ -451,6 +460,17 @@ app.post("/track/click", async (req, res) => {
       referrer || null,
       userAgent,
       hashIp(ip)
+    ]);
+
+    await pool.query(`
+      UPDATE dr_clicks
+      SET fbclid = COALESCE($2, fbclid),
+          gclid = COALESCE($3, gclid)
+      WHERE click_id = $1
+    `, [
+      click_id,
+      fbclid || null,
+      gclid || null
     ]);
 
     res.json({
@@ -595,6 +615,14 @@ app.post("/track/event", async (req, res) => {
       req.body
     ]);
 
+    if (result.rows.length > 0) {
+      try {
+        await syncLeadCrmFromEvent(pool, { click_id, email, telefone, event_name });
+      } catch (crmError) {
+        console.error("CRM event sync failed:", crmError.message);
+      }
+    }
+
     res.json({
       ok: true,
       duplicate: result.rows.length === 0,
@@ -683,6 +711,19 @@ app.post("/track/purchase", async (req, res) => {
     ]);
 
     await client.query("COMMIT");
+
+    if (eventResult.rows.length > 0) {
+      try {
+        await syncLeadCrmFromEvent(pool, {
+          click_id,
+          email,
+          telefone,
+          event_name: "purchase"
+        });
+      } catch (crmError) {
+        console.error("CRM purchase sync failed:", crmError.message);
+      }
+    }
 
     res.json({
       ok: true,
@@ -1083,6 +1124,7 @@ async function start() {
     }
 
     await initDb();
+    await initOfferDb(pool);
 
     app.listen(PORT, () => {
       console.log("Direct Response OS online na porta " + PORT);
