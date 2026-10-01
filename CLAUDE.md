@@ -66,7 +66,9 @@ Offer foundation routes:
 - GET `/admin` serves the experiment administration UI.
 - GET `/go/:slug`
 - GET `/api/crm/summary`
-- GET `/api/crm/leads` (requires `x-admin-secret`)
+- GET `/api/crm/facets` (requires `x-admin-secret`; segment counts + source/campaign filter options)
+- GET `/api/crm/leads` (requires `x-admin-secret`; supports search, lifecycle, temperature, source, campaign, segment, sorting and pagination)
+- GET `/api/crm/leads/:id/timeline` (requires `x-admin-secret`; event + CRM audit history)
 - PATCH `/api/crm/leads/:id` (requires `x-admin-secret`)
 - GET `/api/experiments` (public-safe summary, no destination URLs)
 - GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)

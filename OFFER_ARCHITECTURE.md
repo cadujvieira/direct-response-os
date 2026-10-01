@@ -51,8 +51,12 @@ The event-to-CRM mapper only moves a lead forward in the commercial lifecycle, e
 
 CRM routes:
 - `GET /api/crm/summary` exposes aggregate counts only;
-- `GET /api/crm/leads` exposes lead-level data only with `x-admin-secret`;
-- `PATCH /api/crm/leads/:id` updates CRM state only with `x-admin-secret`.
+- `GET /api/crm/facets` exposes protected segment counts and source/campaign filter options;
+- `GET /api/crm/leads` exposes protected lead-level data with filters, sorting, pagination, attributed revenue and derived offer segments;
+- `GET /api/crm/leads/:id/timeline` combines funnel events with the CRM audit trail;
+- `PATCH /api/crm/leads/:id` updates lifecycle, temperature, score and notes.
+
+Offer-specific quick segments currently include: checkout abandoned, front-end buyer without a booked call, call booked, no-show, mentorship opportunity and mentorship customer.
 
 Lead-level read/write routes require `DR_ADMIN_SECRET`. This variable must exist only in environment configuration, never in source.
 

@@ -287,6 +287,29 @@ async function initOfferDb(pool) {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS dr_events_click_idx
+    ON dr_events (click_id);
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS dr_events_email_idx
+    ON dr_events (LOWER(email))
+    WHERE email IS NOT NULL AND TRIM(email) <> '';
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS dr_events_phone_idx
+    ON dr_events (regexp_replace(telefone, '[^0-9]', '', 'g'))
+    WHERE telefone IS NOT NULL
+      AND regexp_replace(telefone, '[^0-9]', '', 'g') <> '';
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS dr_leads_crm_stage_idx
+    ON dr_leads (lifecycle_stage, temperature, updated_at DESC);
+  `);
 }
 
 async function findLeadForEvent(client, payload = {}) {
@@ -574,46 +597,401 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
     }
   });
 
+  app.get("/api/crm/facets", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    try {
+      const countsResult = await pool.query(`
+        WITH crm_rows AS (
+          SELECT
+            l.id,
+            l.temperature,
+            l.lifecycle_stage,
+            CASE
+              WHEN COALESCE(ev.has_refund, FALSE) THEN 'refunded'
+              WHEN COALESCE(ev.has_mentorship_purchase, FALSE) THEN 'mentorship_customer'
+              WHEN COALESCE(ev.has_no_show, FALSE)
+                AND NOT COALESCE(ev.has_call_attended, FALSE) THEN 'no_show'
+              WHEN (
+                COALESCE(ev.has_call_attended, FALSE)
+                OR COALESCE(ev.has_mentorship_offer, FALSE)
+              )
+                AND NOT COALESCE(ev.has_mentorship_purchase, FALSE)
+                THEN 'mentorship_opportunity'
+              WHEN COALESCE(ev.has_call_booked, FALSE)
+                AND NOT COALESCE(ev.has_call_attended, FALSE)
+                AND NOT COALESCE(ev.has_no_show, FALSE)
+                THEN 'call_booked'
+              WHEN COALESCE(ev.has_purchase, FALSE)
+                AND NOT COALESCE(ev.has_call_booked, FALSE)
+                THEN 'frontend_no_call'
+              WHEN COALESCE(ev.has_checkout, FALSE)
+                AND NOT COALESCE(ev.has_purchase, FALSE)
+                THEN 'checkout_abandoned'
+              ELSE 'lead'
+            END AS crm_segment
+          FROM dr_leads l
+          LEFT JOIN LATERAL (
+            WITH matched_events AS (
+              SELECT DISTINCT e.id, e.event_name, e.created_at
+              FROM dr_events e
+              WHERE
+                (l.click_id IS NOT NULL AND e.click_id = l.click_id)
+                OR (
+                  l.email IS NOT NULL
+                  AND e.email IS NOT NULL
+                  AND LOWER(e.email) = LOWER(l.email)
+                )
+                OR (
+                  l.telefone IS NOT NULL
+                  AND e.telefone IS NOT NULL
+                  AND regexp_replace(e.telefone, '[^0-9]', '', 'g') =
+                      regexp_replace(l.telefone, '[^0-9]', '', 'g')
+                )
+            )
+            SELECT
+              BOOL_OR(event_name = 'checkout_started') AS has_checkout,
+              BOOL_OR(event_name = 'purchase') AS has_purchase,
+              BOOL_OR(event_name = 'call_booked') AS has_call_booked,
+              BOOL_OR(event_name = 'call_attended') AS has_call_attended,
+              BOOL_OR(event_name = 'call_no_show') AS has_no_show,
+              BOOL_OR(event_name = 'mentorship_offer') AS has_mentorship_offer,
+              BOOL_OR(event_name = 'mentorship_purchase') AS has_mentorship_purchase,
+              BOOL_OR(event_name = 'refund') AS has_refund
+            FROM matched_events
+          ) ev ON TRUE
+        )
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE temperature = 'cold')::int AS cold,
+          COUNT(*) FILTER (WHERE temperature = 'warm')::int AS warm,
+          COUNT(*) FILTER (WHERE temperature = 'hot')::int AS hot,
+          COUNT(*) FILTER (WHERE lifecycle_stage = 'customer')::int AS customers,
+          COUNT(*) FILTER (WHERE crm_segment = 'checkout_abandoned')::int AS checkout_abandoned,
+          COUNT(*) FILTER (WHERE crm_segment = 'frontend_no_call')::int AS frontend_no_call,
+          COUNT(*) FILTER (WHERE crm_segment = 'call_booked')::int AS call_booked,
+          COUNT(*) FILTER (WHERE crm_segment = 'no_show')::int AS no_show,
+          COUNT(*) FILTER (WHERE crm_segment = 'mentorship_opportunity')::int AS mentorship_opportunity,
+          COUNT(*) FILTER (WHERE crm_segment = 'mentorship_customer')::int AS mentorship_customer,
+          COUNT(*) FILTER (WHERE crm_segment = 'refunded')::int AS refunded
+        FROM crm_rows
+      `);
+
+      const sourcesResult = await pool.query(`
+        SELECT DISTINCT utm_source AS value
+        FROM dr_leads
+        WHERE utm_source IS NOT NULL AND TRIM(utm_source) <> ''
+        ORDER BY utm_source
+        LIMIT 100
+      `);
+
+      const campaignsResult = await pool.query(`
+        SELECT DISTINCT utm_campaign AS value
+        FROM dr_leads
+        WHERE utm_campaign IS NOT NULL AND TRIM(utm_campaign) <> ''
+        ORDER BY utm_campaign
+        LIMIT 200
+      `);
+
+      res.json({
+        ok: true,
+        counts: countsResult.rows[0],
+        sources: sourcesResult.rows.map((row) => row.value),
+        campaigns: campaignsResult.rows.map((row) => row.value)
+      });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
   app.get("/api/crm/leads", async (req, res) => {
     if (!requireAdmin(req, res)) return;
 
     try {
       const conditions = [];
       const values = [];
+
       const add = (sql, value) => {
         values.push(value);
         conditions.push(sql.replace("?", "$" + values.length));
       };
 
-      if (req.query.lifecycle_stage) add("lifecycle_stage = ?", String(req.query.lifecycle_stage));
-      if (req.query.temperature) add("temperature = ?", String(req.query.temperature));
+      if (req.query.lifecycle_stage) {
+        add("lifecycle_stage = ?", String(req.query.lifecycle_stage));
+      }
+
+      if (req.query.temperature) {
+        add("temperature = ?", String(req.query.temperature));
+      }
+
+      if (req.query.utm_source) {
+        add("LOWER(COALESCE(utm_source,'')) = LOWER(?)", String(req.query.utm_source));
+      }
+
+      if (req.query.utm_campaign) {
+        add("LOWER(COALESCE(utm_campaign,'')) = LOWER(?)", String(req.query.utm_campaign));
+      }
+
+      const allowedSegments = new Set([
+        "lead",
+        "checkout_abandoned",
+        "frontend_no_call",
+        "call_booked",
+        "no_show",
+        "mentorship_opportunity",
+        "mentorship_customer",
+        "refunded"
+      ]);
+
+      if (req.query.segment && allowedSegments.has(String(req.query.segment))) {
+        add("crm_segment = ?", String(req.query.segment));
+      }
+
       if (req.query.search) {
         const search = "%" + String(req.query.search).trim().toLowerCase() + "%";
         values.push(search);
         conditions.push(
           "(LOWER(COALESCE(nome,'')) LIKE $" + values.length +
           " OR LOWER(COALESCE(email,'')) LIKE $" + values.length +
-          " OR regexp_replace(COALESCE(telefone,''), '[^0-9]', '', 'g') LIKE regexp_replace($" + values.length + ", '[^0-9]', '', 'g'))"
+          " OR regexp_replace(COALESCE(telefone,''), '[^0-9]', '', 'g') LIKE regexp_replace($" +
+          values.length + ", '[^0-9]', '', 'g'))"
         );
       }
 
+      const sortMap = {
+        recent: "last_activity_at DESC NULLS LAST, id DESC",
+        oldest: "last_activity_at ASC NULLS LAST, id ASC",
+        revenue_desc: "total_revenue DESC, last_activity_at DESC NULLS LAST",
+        score_desc: "lead_score DESC, last_activity_at DESC NULLS LAST"
+      };
+
+      const sort = sortMap[String(req.query.sort || "recent")] || sortMap.recent;
       const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
       const offset = Math.max(Number(req.query.offset) || 0, 0);
-      values.push(limit, offset);
       const where = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
 
+      values.push(limit, offset);
+      const limitParam = "$" + (values.length - 1);
+      const offsetParam = "$" + values.length;
+
       const result = await pool.query(`
-        SELECT id, click_id, nome, email, telefone, status,
+        WITH crm_rows AS (
+          SELECT
+            l.id,
+            l.click_id,
+            l.nome,
+            l.email,
+            l.telefone,
+            l.status,
+            l.lifecycle_stage,
+            l.temperature,
+            l.lead_score,
+            l.utm_source,
+            l.utm_medium,
+            l.utm_campaign,
+            l.utm_content,
+            l.created_at,
+            l.updated_at,
+            l.crm_updated_at,
+            ev.last_event,
+            ev.last_event_at,
+            COALESCE(ev.front_revenue, 0)::numeric AS front_revenue,
+            COALESCE(ev.mentorship_revenue, 0)::numeric AS mentorship_revenue,
+            COALESCE(ev.bump_revenue, 0)::numeric AS bump_revenue,
+            COALESCE(ev.refunds, 0)::numeric AS refunds,
+            (
+              COALESCE(ev.front_revenue, 0)
+              + COALESCE(ev.mentorship_revenue, 0)
+              + COALESCE(ev.bump_revenue, 0)
+              - COALESCE(ev.refunds, 0)
+            )::numeric AS total_revenue,
+            GREATEST(
+              l.updated_at,
+              COALESCE(ev.last_event_at, l.updated_at)
+            ) AS last_activity_at,
+            CASE
+              WHEN COALESCE(ev.has_refund, FALSE) THEN 'refunded'
+              WHEN COALESCE(ev.has_mentorship_purchase, FALSE) THEN 'mentorship_customer'
+              WHEN COALESCE(ev.has_no_show, FALSE)
+                AND NOT COALESCE(ev.has_call_attended, FALSE) THEN 'no_show'
+              WHEN (
+                COALESCE(ev.has_call_attended, FALSE)
+                OR COALESCE(ev.has_mentorship_offer, FALSE)
+              )
+                AND NOT COALESCE(ev.has_mentorship_purchase, FALSE)
+                THEN 'mentorship_opportunity'
+              WHEN COALESCE(ev.has_call_booked, FALSE)
+                AND NOT COALESCE(ev.has_call_attended, FALSE)
+                AND NOT COALESCE(ev.has_no_show, FALSE)
+                THEN 'call_booked'
+              WHEN COALESCE(ev.has_purchase, FALSE)
+                AND NOT COALESCE(ev.has_call_booked, FALSE)
+                THEN 'frontend_no_call'
+              WHEN COALESCE(ev.has_checkout, FALSE)
+                AND NOT COALESCE(ev.has_purchase, FALSE)
+                THEN 'checkout_abandoned'
+              ELSE 'lead'
+            END AS crm_segment
+          FROM dr_leads l
+          LEFT JOIN LATERAL (
+            WITH matched_events AS (
+              SELECT DISTINCT
+                e.id,
+                e.event_name,
+                e.value,
+                e.created_at
+              FROM dr_events e
+              WHERE
+                (l.click_id IS NOT NULL AND e.click_id = l.click_id)
+                OR (
+                  l.email IS NOT NULL
+                  AND e.email IS NOT NULL
+                  AND LOWER(e.email) = LOWER(l.email)
+                )
+                OR (
+                  l.telefone IS NOT NULL
+                  AND e.telefone IS NOT NULL
+                  AND regexp_replace(e.telefone, '[^0-9]', '', 'g') =
+                      regexp_replace(l.telefone, '[^0-9]', '', 'g')
+                )
+            )
+            SELECT
+              (ARRAY_AGG(event_name ORDER BY created_at DESC, id DESC))[1] AS last_event,
+              MAX(created_at) AS last_event_at,
+              COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)::numeric AS front_revenue,
+              COALESCE(SUM(value) FILTER (WHERE event_name = 'mentorship_purchase'), 0)::numeric AS mentorship_revenue,
+              COALESCE(SUM(value) FILTER (WHERE event_name = 'order_bump_purchase'), 0)::numeric AS bump_revenue,
+              COALESCE(SUM(ABS(value)) FILTER (WHERE event_name = 'refund'), 0)::numeric AS refunds,
+              BOOL_OR(event_name = 'checkout_started') AS has_checkout,
+              BOOL_OR(event_name = 'purchase') AS has_purchase,
+              BOOL_OR(event_name = 'call_booked') AS has_call_booked,
+              BOOL_OR(event_name = 'call_attended') AS has_call_attended,
+              BOOL_OR(event_name = 'call_no_show') AS has_no_show,
+              BOOL_OR(event_name = 'mentorship_offer') AS has_mentorship_offer,
+              BOOL_OR(event_name = 'mentorship_purchase') AS has_mentorship_purchase,
+              BOOL_OR(event_name = 'refund') AS has_refund
+            FROM matched_events
+          ) ev ON TRUE
+        ),
+        filtered AS (
+          SELECT *
+          FROM crm_rows
+          ${where}
+        )
+        SELECT
+          *,
+          COUNT(*) OVER()::int AS total_count
+        FROM filtered
+        ORDER BY ${sort}
+        LIMIT ${limitParam}
+        OFFSET ${offsetParam}
+      `, values);
+
+      res.json({
+        ok: true,
+        leads: result.rows.map(({ total_count, ...row }) => row),
+        total: result.rows[0]?.total_count || 0,
+        limit,
+        offset
+      });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
+  app.get("/api/crm/leads/:id/timeline", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const leadId = Number(req.params.id);
+    if (!Number.isInteger(leadId) || leadId <= 0) {
+      return res.status(400).json({ ok: false, error: "lead id invalido" });
+    }
+
+    try {
+      const leadResult = await pool.query(`
+        SELECT id, click_id, nome, email, telefone,
                lifecycle_stage, temperature, lead_score,
                utm_source, utm_medium, utm_campaign, utm_content,
                created_at, updated_at, crm_updated_at
         FROM dr_leads
-        ${where}
-        ORDER BY updated_at DESC, id DESC
-        LIMIT $${values.length - 1} OFFSET $${values.length}
-      `, values);
+        WHERE id = $1
+        LIMIT 1
+      `, [leadId]);
 
-      res.json({ ok: true, leads: result.rows, limit, offset });
+      const lead = leadResult.rows[0];
+
+      if (!lead) {
+        return res.status(404).json({ ok: false, error: "lead nao encontrado" });
+      }
+
+      const eventResult = await pool.query(`
+        SELECT DISTINCT
+          id,
+          event_name,
+          value,
+          currency,
+          created_at
+        FROM dr_events
+        WHERE
+          ($1::text IS NOT NULL AND click_id = $1)
+          OR (
+            $2::text IS NOT NULL
+            AND email IS NOT NULL
+            AND LOWER(email) = LOWER($2)
+          )
+          OR (
+            $3::text IS NOT NULL
+            AND telefone IS NOT NULL
+            AND regexp_replace(telefone, '[^0-9]', '', 'g') =
+                regexp_replace($3, '[^0-9]', '', 'g')
+          )
+        ORDER BY created_at DESC, id DESC
+        LIMIT 200
+      `, [lead.click_id, lead.email, lead.telefone]);
+
+      const historyResult = await pool.query(`
+        SELECT
+          id,
+          old_lifecycle_stage,
+          new_lifecycle_stage,
+          old_temperature,
+          new_temperature,
+          old_lead_score,
+          new_lead_score,
+          note,
+          actor,
+          created_at
+        FROM dr_lead_crm_history
+        WHERE lead_id = $1
+        ORDER BY created_at DESC, id DESC
+        LIMIT 200
+      `, [leadId]);
+
+      const timeline = [
+        ...eventResult.rows.map((event) => ({
+          type: "event",
+          created_at: event.created_at,
+          event_name: event.event_name,
+          value: event.value,
+          currency: event.currency
+        })),
+        ...historyResult.rows.map((history) => ({
+          type: "crm",
+          created_at: history.created_at,
+          old_lifecycle_stage: history.old_lifecycle_stage,
+          new_lifecycle_stage: history.new_lifecycle_stage,
+          old_temperature: history.old_temperature,
+          new_temperature: history.new_temperature,
+          old_lead_score: history.old_lead_score,
+          new_lead_score: history.new_lead_score,
+          note: history.note,
+          actor: history.actor
+        }))
+      ].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      res.json({ ok: true, lead, timeline });
     } catch (error) {
       res.status(500).json({ ok: false, error: "erro interno" });
     }

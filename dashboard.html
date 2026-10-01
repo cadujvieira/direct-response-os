@@ -1003,6 +1003,677 @@
       padding: 18px;
     }
 
+
+    .crm-auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+
+    .crm-auth-panel h3 {
+      font-size: 15px;
+    }
+
+    .crm-auth-panel p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .crm-auth-actions {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .crm-auth-status {
+      color: var(--muted);
+      font-size: 11px;
+      min-width: 100px;
+    }
+
+    .crm-auth-status.ok {
+      color: var(--green);
+    }
+
+    .crm-auth-status.error {
+      color: var(--red);
+    }
+
+    .crm-workspace[hidden],
+    .crm-drawer-backdrop[hidden],
+    .crm-selection-bar[hidden] {
+      display: none !important;
+    }
+
+    .crm-control {
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .crm-control:focus {
+      border-color: rgba(62,227,137,.65);
+      box-shadow: 0 0 0 2px rgba(62,227,137,.08);
+    }
+
+    .crm-primary-btn,
+    .crm-secondary-btn {
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .crm-primary-btn {
+      color: #07120b;
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .crm-secondary-btn {
+      color: #d8dde5;
+      background: var(--panel-2);
+    }
+
+    .crm-secondary-btn:hover {
+      border-color: #414957;
+      color: var(--text);
+    }
+
+    .crm-secondary-btn.small {
+      min-height: 32px;
+      padding: 6px 9px;
+      font-size: 11px;
+    }
+
+    .crm-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .crm-kpi-card {
+      min-width: 0;
+      padding: 15px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,.018), transparent), var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      transition: .15s ease;
+    }
+
+    .crm-kpi-card:hover {
+      transform: translateY(-1px);
+      border-color: #3b4350;
+    }
+
+    .crm-kpi-card > span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+    }
+
+    .crm-kpi-card strong {
+      display: block;
+      margin-top: 9px;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .crm-kpi-card small {
+      display: block;
+      margin-top: 8px;
+      color: #666e7b;
+      font-size: 10px;
+    }
+
+    .crm-kpi-card.hot strong {
+      color: var(--red);
+    }
+
+    .crm-kpi-card.warm strong {
+      color: var(--yellow);
+    }
+
+    .crm-kpi-card.success strong {
+      color: var(--green);
+    }
+
+    .crm-segment-strip {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .crm-segment-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .crm-segment-btn {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.015);
+      color: var(--muted);
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .crm-segment-btn span {
+      min-width: 21px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #20242b;
+      color: #bec4cd;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .crm-segment-btn.active {
+      color: #07120b;
+      background: var(--green);
+      border-color: var(--green);
+      font-weight: 700;
+    }
+
+    .crm-segment-btn.active span {
+      background: rgba(0,0,0,.16);
+      color: #07120b;
+    }
+
+    .crm-main-panel {
+      overflow: visible;
+    }
+
+    .crm-filter-shell {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.7fr) repeat(5, minmax(135px, .8fr)) auto auto;
+      gap: 8px;
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .crm-search {
+      min-width: 210px;
+    }
+
+    .crm-selection-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--green-soft);
+      border-bottom: 1px solid rgba(62,227,137,.22);
+      color: #c9f6dc;
+      font-size: 12px;
+    }
+
+    .crm-selection-bar > div {
+      display: flex;
+      gap: 7px;
+    }
+
+    .crm-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .crm-table {
+      width: 100%;
+      min-width: 1320px;
+      border-collapse: collapse;
+    }
+
+    .crm-table th,
+    .crm-table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .crm-table th {
+      color: var(--muted);
+      background: rgba(255,255,255,.014);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: 10px;
+      font-weight: 650;
+    }
+
+    .crm-table tbody tr {
+      transition: background .12s ease;
+    }
+
+    .crm-table tbody tr:hover {
+      background: rgba(255,255,255,.018);
+    }
+
+    .crm-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .crm-table-empty {
+      padding: 28px !important;
+      text-align: center !important;
+      color: var(--muted) !important;
+    }
+
+    .crm-contact-name {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .crm-contact-meta {
+      margin-top: 4px;
+      color: #727a87;
+      font-size: 10px;
+    }
+
+    .crm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 7px;
+      color: #b6bdc7;
+      background: #171a20;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .035em;
+    }
+
+    .crm-badge.hot {
+      color: #ff9b9b;
+      background: rgba(255,107,107,.08);
+      border-color: rgba(255,107,107,.22);
+    }
+
+    .crm-badge.warm {
+      color: #f8d77f;
+      background: rgba(245,196,81,.08);
+      border-color: rgba(245,196,81,.22);
+    }
+
+    .crm-badge.cold {
+      color: #9fc8ff;
+      background: rgba(101,167,255,.08);
+      border-color: rgba(101,167,255,.2);
+    }
+
+    .crm-badge.success {
+      color: #85efb5;
+      background: var(--green-soft);
+      border-color: rgba(62,227,137,.22);
+    }
+
+    .crm-source {
+      color: #d2d7df;
+      font-weight: 650;
+    }
+
+    .crm-source-sub {
+      margin-top: 4px;
+      color: #6f7784;
+      font-size: 10px;
+    }
+
+    .crm-revenue {
+      color: var(--green);
+      font-weight: 750;
+    }
+
+    .crm-row-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: #191c22;
+      color: #d8dde5;
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .crm-table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .crm-pagination {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .crm-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      justify-content: flex-end;
+      background: rgba(2,4,7,.66);
+      backdrop-filter: blur(3px);
+    }
+
+    .crm-drawer {
+      width: min(560px, 100vw);
+      height: 100%;
+      overflow-y: auto;
+      background: #0d0f13;
+      border-left: 1px solid var(--border);
+      box-shadow: -18px 0 50px rgba(0,0,0,.38);
+    }
+
+    .crm-drawer-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,15,19,.96);
+      backdrop-filter: blur(12px);
+    }
+
+    .crm-drawer-head > div > span {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .crm-drawer-head h3 {
+      margin-top: 5px;
+      font-size: 20px;
+    }
+
+    .crm-drawer-head p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .crm-drawer-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 21px;
+      cursor: pointer;
+    }
+
+    .crm-drawer-body {
+      padding: 18px;
+    }
+
+    .crm-contact-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .crm-contact-actions a,
+    .crm-contact-actions button {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 10px;
+      background: var(--panel-2);
+      color: #d8dde5;
+      text-decoration: none;
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .crm-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .crm-detail-grid > div {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.015);
+    }
+
+    .crm-detail-grid span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .crm-detail-grid strong {
+      display: block;
+      margin-top: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #e4e8ed;
+      font-size: 12px;
+    }
+
+    .crm-edit-panel {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,.015);
+    }
+
+    .crm-edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr .7fr;
+      gap: 9px;
+    }
+
+    .crm-edit-grid label,
+    .crm-note-label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .crm-note-label {
+      margin-top: 10px;
+    }
+
+    .crm-note {
+      min-height: 78px;
+      resize: vertical;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .crm-save-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .crm-timeline-section {
+      margin-top: 18px;
+    }
+
+    .crm-timeline-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .crm-timeline-head h4 {
+      font-size: 13px;
+    }
+
+    .crm-timeline-head span {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .crm-timeline {
+      display: grid;
+      gap: 8px;
+    }
+
+    .crm-timeline-item {
+      display: grid;
+      grid-template-columns: 9px 1fr auto;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .crm-timeline-dot {
+      width: 8px;
+      height: 8px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .crm-timeline-item.crm .crm-timeline-dot {
+      background: var(--green);
+    }
+
+    .crm-timeline-title {
+      color: #dce1e8;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .crm-timeline-note {
+      margin-top: 4px;
+      color: #7c8491;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .crm-timeline-time {
+      color: #666e79;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1180px) {
+      .crm-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .crm-filter-shell {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .crm-search {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .crm-auth-panel,
+      .crm-auth-actions,
+      .crm-table-footer,
+      .crm-selection-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .crm-auth-actions > * {
+        width: 100%;
+      }
+
+      .crm-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .crm-filter-shell {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .crm-search {
+        grid-column: span 2;
+      }
+
+      .crm-edit-grid,
+      .crm-detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .crm-drawer {
+        width: 100vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .crm-kpi-grid,
+      .crm-filter-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .crm-search {
+        grid-column: auto;
+      }
+    }
+
     .experiment-list {
       display: grid;
       gap: 12px;
@@ -1335,26 +2006,75 @@
     </section>
 
     <section class="dashboard-view" data-view="crm" id="crm-view">
-      <div class="crm-grid">
-        <div class="panel">
-          <div class="panel-head"><h3 data-tooltip="Prioridade/intenção comercial do contato: cold, warm ou hot.">Temperatura</h3><p>Base para priorização comercial e remarketing.</p></div>
-          <div class="temperature-grid">
-            <div class="temperature-card cold"><div class="temperature-label" data-tooltip="Leads com menor sinal de intenção comercial no momento.">Frios</div><div class="temperature-value" id="crmCold">0</div></div>
-            <div class="temperature-card warm"><div class="temperature-label" data-tooltip="Leads com sinais intermediários de intenção.">Mornos</div><div class="temperature-value" id="crmWarm">0</div></div>
-            <div class="temperature-card hot"><div class="temperature-label" data-tooltip="Leads com forte intenção ou avanço relevante no funil.">Quentes</div><div class="temperature-value" id="crmHot">0</div></div>
-          </div>
+      <div class="crm-auth-panel panel" id="crmAuthPanel">
+        <div>
+          <h3>CRM protegido</h3>
+          <p>Use a senha administrativa para acessar dados pessoais, segmentação e ações comerciais.</p>
         </div>
-        <div class="panel">
-          <div class="panel-head"><h3 data-tooltip="Posição objetiva do contato no processo comercial, independente da temperatura.">Estágio comercial</h3><p>Da captura até a venda da mentoria.</p></div>
-          <div class="stage-grid">
-            <div class="stage-card"><div class="stage-label">Leads</div><div class="stage-value" id="stageLeads">0</div></div>
-            <div class="stage-card"><div class="stage-label">Checkout</div><div class="stage-value" id="stageCheckout">0</div></div>
-            <div class="stage-card"><div class="stage-label">Clientes</div><div class="stage-value" id="stageCustomers">0</div></div>
-            <div class="stage-card"><div class="stage-label">Calls agendadas</div><div class="stage-value" id="crmStageCalls">0</div></div>
-            <div class="stage-card"><div class="stage-label">Oportunidades</div><div class="stage-value" id="crmStageOpportunities">0</div></div>
-            <div class="stage-card"><div class="stage-label">Mentorias</div><div class="stage-value" id="stageMentorship">0</div></div>
-          </div>
+        <div class="crm-auth-actions">
+          <input class="crm-control" id="crmAdminSecret" type="password" autocomplete="off" placeholder="DR_ADMIN_SECRET" />
+          <button class="crm-primary-btn" id="crmConnectBtn" type="button">Conectar CRM</button>
+          <span class="crm-auth-status" id="crmAuthStatus">Não conectado</span>
         </div>
+      </div>
+
+      <div class="crm-workspace" id="crmWorkspace" hidden>
+        <div class="crm-kpi-grid">
+          <button class="crm-kpi-card" type="button" data-crm-segment=""><span data-tooltip="Todos os contatos únicos disponíveis no CRM.">Total de leads</span><strong id="crmKpiTotal">0</strong><small>Base completa</small></button>
+          <button class="crm-kpi-card hot" type="button" data-crm-temperature="hot"><span data-tooltip="Contatos com maior intenção ou avanço relevante no funil.">Leads quentes</span><strong id="crmKpiHot">0</strong><small>Prioridade comercial</small></button>
+          <button class="crm-kpi-card" type="button" data-crm-segment="frontend_no_call"><span data-tooltip="Comprou o produto front-end, mas ainda não possui call registrada.">Front sem call</span><strong id="crmKpiFrontNoCall">0</strong><small>Oportunidade imediata</small></button>
+          <button class="crm-kpi-card" type="button" data-crm-segment="call_booked"><span data-tooltip="Contatos com call de análise agendada e ainda não concluída.">Calls agendadas</span><strong id="crmKpiCalls">0</strong><small>Pipeline ativo</small></button>
+          <button class="crm-kpi-card warm" type="button" data-crm-segment="mentorship_opportunity"><span data-tooltip="Já realizou call ou recebeu oferta de mentoria, mas ainda não comprou.">Oportunidades</span><strong id="crmKpiOpportunities">0</strong><small>Follow-up de mentoria</small></button>
+          <button class="crm-kpi-card success" type="button" data-crm-segment="mentorship_customer"><span data-tooltip="Contatos com compra de mentoria atribuída ao funil.">Mentorias</span><strong id="crmKpiMentorship">0</strong><small>High ticket convertido</small></button>
+        </div>
+
+        <div class="crm-segment-strip" id="crmSegmentStrip">
+          <button class="crm-segment-btn active" type="button" data-segment="">Todos <span id="crmSegAll">0</span></button>
+          <button class="crm-segment-btn" type="button" data-segment="checkout_abandoned">Checkout abandonado <span id="crmSegCheckout">0</span></button>
+          <button class="crm-segment-btn" type="button" data-segment="frontend_no_call">Front sem call <span id="crmSegFrontNoCall">0</span></button>
+          <button class="crm-segment-btn" type="button" data-segment="call_booked">Call agendada <span id="crmSegCall">0</span></button>
+          <button class="crm-segment-btn" type="button" data-segment="no_show">No-show <span id="crmSegNoShow">0</span></button>
+          <button class="crm-segment-btn" type="button" data-segment="mentorship_opportunity">Oportunidade mentoria <span id="crmSegOpportunity">0</span></button>
+          <button class="crm-segment-btn" type="button" data-segment="mentorship_customer">Cliente mentoria <span id="crmSegMentorship">0</span></button>
+        </div>
+
+        <div class="panel crm-main-panel">
+          <div class="crm-filter-shell">
+            <input class="crm-control crm-search" id="crmSearch" type="search" placeholder="Buscar nome, email ou telefone..." />
+            <select class="crm-control" id="crmTemperatureFilter"><option value="">Temperatura: todas</option><option value="cold">Cold</option><option value="warm">Warm</option><option value="hot">Hot</option></select>
+            <select class="crm-control" id="crmStageFilter"><option value="">Etapa: todas</option><option value="lead">Lead</option><option value="checkout">Checkout</option><option value="customer">Cliente front</option><option value="call_booked">Call agendada</option><option value="mentorship_opportunity">Oportunidade</option><option value="mentorship_customer">Cliente mentoria</option><option value="refunded">Reembolsado</option></select>
+            <select class="crm-control" id="crmSourceFilter"><option value="">Origem: todas</option></select>
+            <select class="crm-control" id="crmCampaignFilter"><option value="">Campanha: todas</option></select>
+            <select class="crm-control" id="crmSort"><option value="recent">Mais recentes</option><option value="revenue_desc">Maior receita</option><option value="score_desc">Maior score</option><option value="oldest">Mais antigos</option></select>
+            <button class="crm-secondary-btn" id="crmClearFilters" type="button">Limpar</button>
+            <button class="crm-secondary-btn" id="crmExportCsv" type="button">Exportar CSV</button>
+          </div>
+
+          <div class="crm-selection-bar" id="crmSelectionBar" hidden><span><strong id="crmSelectedCount">0</strong> selecionado(s)</span><div><button class="crm-secondary-btn small" id="crmExportSelected" type="button">Exportar selecionados</button><button class="crm-secondary-btn small" id="crmClearSelection" type="button">Limpar seleção</button></div></div>
+
+          <div class="crm-table-wrap"><table class="crm-table"><thead><tr><th><input id="crmSelectPage" type="checkbox" aria-label="Selecionar página" /></th><th>Contato</th><th data-tooltip="Prioridade comercial atual: cold, warm ou hot.">Temperatura</th><th data-tooltip="Posição objetiva do contato no processo comercial.">Etapa</th><th data-tooltip="Pontuação manual de 0 a 100 para priorização comercial.">Score</th><th>Origem / campanha</th><th data-tooltip="Evento mais recente atribuído ao contato no funil.">Último evento</th><th data-tooltip="Receita líquida atribuída ao contato, incluindo front-end e mentoria menos reembolsos.">Receita</th><th>Última atividade</th><th></th></tr></thead><tbody id="crmTableBody"><tr><td colspan="10" class="crm-table-empty">Conecte o CRM para carregar a base.</td></tr></tbody></table></div>
+          <div class="crm-table-footer"><div id="crmTableStatus">0 contatos</div><div class="crm-pagination"><button class="crm-secondary-btn small" id="crmPrevPage" type="button">← Anterior</button><span id="crmPageLabel">Página 1</span><button class="crm-secondary-btn small" id="crmNextPage" type="button">Próxima →</button></div></div>
+        </div>
+      </div>
+
+      <div class="crm-drawer-backdrop" id="crmDrawerBackdrop" hidden>
+        <aside class="crm-drawer">
+          <div class="crm-drawer-head"><div><span>Contato</span><h3 id="crmDrawerName">—</h3><p id="crmDrawerIdentity">—</p></div><button class="crm-drawer-close" id="crmDrawerClose" type="button">×</button></div>
+          <div class="crm-drawer-body">
+            <div class="crm-contact-actions" id="crmContactActions"></div>
+            <div class="crm-detail-grid"><div><span>Origem</span><strong id="crmDrawerSource">—</strong></div><div><span>Campanha</span><strong id="crmDrawerCampaign">—</strong></div><div><span>Receita total</span><strong id="crmDrawerRevenue">R$ 0</strong></div><div><span>Segmento</span><strong id="crmDrawerSegment">—</strong></div></div>
+            <div class="crm-edit-panel">
+              <div class="crm-edit-grid">
+                <label>Temperatura<select class="crm-control" id="crmDrawerTemperature"><option value="cold">Cold</option><option value="warm">Warm</option><option value="hot">Hot</option></select></label>
+                <label>Etapa<select class="crm-control" id="crmDrawerStage"><option value="lead">Lead</option><option value="checkout">Checkout</option><option value="customer">Cliente front</option><option value="call_booked">Call agendada</option><option value="mentorship_opportunity">Oportunidade</option><option value="mentorship_customer">Cliente mentoria</option><option value="refunded">Reembolsado</option></select></label>
+                <label>Score<input class="crm-control" id="crmDrawerScore" type="number" min="0" max="100" /></label>
+              </div>
+              <label class="crm-note-label">Nota / próximo passo<textarea class="crm-control crm-note" id="crmDrawerNote" rows="3" placeholder="Ex.: ligar amanhã às 14h, pediu condição especial..."></textarea></label>
+              <div class="crm-save-row"><span id="crmDrawerSaveStatus">Sem alterações.</span><button class="crm-primary-btn" id="crmDrawerSave" type="button">Salvar no CRM</button></div>
+            </div>
+            <div class="crm-timeline-section"><div class="crm-timeline-head"><h4>Timeline completa</h4><span id="crmTimelineCount">0 eventos</span></div><div class="crm-timeline" id="crmTimeline"><div class="crm-table-empty">Carregando timeline...</div></div></div>
+          </div>
+        </aside>
       </div>
     </section>
 
@@ -1966,32 +2686,642 @@ async function loadLtv() {
   }
 }
 
-async function loadCrmSummary() {
+const crmState = {
+  secret: sessionStorage.getItem("dr_admin_secret") || "",
+  connected: false,
+  segment: "",
+  page: 0,
+  limit: 50,
+  total: 0,
+  rows: [],
+  selected: new Map(),
+  activeLeadId: null,
+  searchTimer: null
+};
+
+const crmStageLabels = {
+  lead: "Lead",
+  checkout: "Checkout",
+  customer: "Cliente front",
+  call_booked: "Call agendada",
+  mentorship_opportunity: "Oportunidade",
+  mentorship_customer: "Cliente mentoria",
+  refunded: "Reembolsado"
+};
+
+const crmSegmentLabels = {
+  lead: "Lead",
+  checkout_abandoned: "Checkout abandonado",
+  frontend_no_call: "Front sem call",
+  call_booked: "Call agendada",
+  no_show: "No-show",
+  mentorship_opportunity: "Oportunidade mentoria",
+  mentorship_customer: "Cliente mentoria",
+  refunded: "Reembolsado"
+};
+
+const crmEventLabels = {
+  checkout_started: "Checkout iniciado",
+  purchase: "Compra front-end",
+  call_booked: "Call agendada",
+  call_attended: "Call realizada",
+  call_no_show: "No-show",
+  mentorship_offer: "Oferta de mentoria",
+  mentorship_purchase: "Compra de mentoria",
+  refund: "Reembolso",
+  order_bump_purchase: "Order bump"
+};
+
+function crmSetAuthStatus(message, type = "") {
+  const node = document.getElementById("crmAuthStatus");
+  node.textContent = message;
+  node.className = "crm-auth-status" + (type ? " " + type : "");
+}
+
+async function crmFetch(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  headers.set("x-admin-secret", crmState.secret);
+
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(path, {
+    ...options,
+    headers,
+    cache: "no-store"
+  });
+
+  let data = {};
   try {
-    const response = await fetch("/api/crm/summary", {
-      cache: "no-store"
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error(data.error || "Erro no CRM");
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+function crmFormatDateTime(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function crmBadge(value, type = "stage") {
+  const normalized = String(value || "").toLowerCase();
+  const label = type === "temperature"
+    ? ({ cold: "Cold", warm: "Warm", hot: "Hot" }[normalized] || "—")
+    : (crmStageLabels[normalized] || crmSegmentLabels[normalized] || normalized || "—");
+  const className =
+    normalized === "hot" || normalized === "no_show"
+      ? "hot"
+      : normalized === "warm" || normalized === "mentorship_opportunity"
+        ? "warm"
+        : normalized === "mentorship_customer"
+          ? "success"
+          : normalized === "cold"
+            ? "cold"
+            : "";
+
+  return `<span class="crm-badge ${className}">${escapeHtml(label)}</span>`;
+}
+
+function crmBuildLeadUrl({ offset = null, limit = null } = {}) {
+  const params = new URLSearchParams();
+  const search = document.getElementById("crmSearch").value.trim();
+  const temperature = document.getElementById("crmTemperatureFilter").value;
+  const stage = document.getElementById("crmStageFilter").value;
+  const source = document.getElementById("crmSourceFilter").value;
+  const campaign = document.getElementById("crmCampaignFilter").value;
+  const sort = document.getElementById("crmSort").value;
+
+  if (search) params.set("search", search);
+  if (temperature) params.set("temperature", temperature);
+  if (stage) params.set("lifecycle_stage", stage);
+  if (source) params.set("utm_source", source);
+  if (campaign) params.set("utm_campaign", campaign);
+  if (crmState.segment) params.set("segment", crmState.segment);
+  if (sort) params.set("sort", sort);
+
+  params.set("limit", String(limit ?? crmState.limit));
+  params.set("offset", String(offset ?? crmState.page * crmState.limit));
+
+  return "/api/crm/leads?" + params.toString();
+}
+
+function crmFillSelect(id, values, firstLabel) {
+  const select = document.getElementById(id);
+  const current = select.value;
+
+  select.innerHTML =
+    `<option value="">${escapeHtml(firstLabel)}</option>` +
+    values.map((value) =>
+      `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+    ).join("");
+
+  if (values.includes(current)) select.value = current;
+}
+
+async function loadCrmFacets() {
+  const data = await crmFetch("/api/crm/facets");
+  const counts = data.counts || {};
+
+  document.getElementById("crmKpiTotal").textContent = Number(counts.total || 0);
+  document.getElementById("crmKpiHot").textContent = Number(counts.hot || 0);
+  document.getElementById("crmKpiFrontNoCall").textContent = Number(counts.frontend_no_call || 0);
+  document.getElementById("crmKpiCalls").textContent = Number(counts.call_booked || 0);
+  document.getElementById("crmKpiOpportunities").textContent = Number(counts.mentorship_opportunity || 0);
+  document.getElementById("crmKpiMentorship").textContent = Number(counts.mentorship_customer || 0);
+
+  document.getElementById("crmSegAll").textContent = Number(counts.total || 0);
+  document.getElementById("crmSegCheckout").textContent = Number(counts.checkout_abandoned || 0);
+  document.getElementById("crmSegFrontNoCall").textContent = Number(counts.frontend_no_call || 0);
+  document.getElementById("crmSegCall").textContent = Number(counts.call_booked || 0);
+  document.getElementById("crmSegNoShow").textContent = Number(counts.no_show || 0);
+  document.getElementById("crmSegOpportunity").textContent = Number(counts.mentorship_opportunity || 0);
+  document.getElementById("crmSegMentorship").textContent = Number(counts.mentorship_customer || 0);
+
+  crmFillSelect("crmSourceFilter", data.sources || [], "Origem: todas");
+  crmFillSelect("crmCampaignFilter", data.campaigns || [], "Campanha: todas");
+}
+
+function crmUpdateSelectionBar() {
+  const count = crmState.selected.size;
+  const pageCheckbox = document.getElementById("crmSelectPage");
+  const selectedOnPage = crmState.rows.filter((row) =>
+    crmState.selected.has(Number(row.id))
+  ).length;
+
+  document.getElementById("crmSelectedCount").textContent = count;
+  document.getElementById("crmSelectionBar").hidden = count === 0;
+
+  pageCheckbox.checked =
+    crmState.rows.length > 0 &&
+    selectedOnPage === crmState.rows.length;
+  pageCheckbox.indeterminate =
+    selectedOnPage > 0 && selectedOnPage < crmState.rows.length;
+}
+
+function crmRenderRows() {
+  const tbody = document.getElementById("crmTableBody");
+
+  if (crmState.rows.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="10" class="crm-table-empty">Nenhum contato encontrado com estes filtros.</td></tr>';
+    crmUpdateSelectionBar();
+    return;
+  }
+
+  tbody.innerHTML = crmState.rows.map((row) => {
+    const contactName = row.nome || "Sem nome";
+    const identity = [row.email, row.telefone].filter(Boolean).join(" · ") || "Sem contato";
+    const source = row.utm_source || "Direto / desconhecido";
+    const campaign = row.utm_campaign || "Sem campanha";
+    const lastEvent = crmEventLabels[row.last_event] || row.last_event || "Lead criado";
+    const isSelected = crmState.selected.has(Number(row.id));
+
+    return `
+      <tr>
+        <td><input class="crm-row-check" type="checkbox" data-id="${Number(row.id)}" ${isSelected ? "checked" : ""} /></td>
+        <td><div class="crm-contact-name">${escapeHtml(contactName)}</div><div class="crm-contact-meta">${escapeHtml(identity)}</div></td>
+        <td>${crmBadge(row.temperature, "temperature")}</td>
+        <td>${crmBadge(row.lifecycle_stage)}</td>
+        <td>${Number(row.lead_score || 0)}</td>
+        <td><div class="crm-source">${escapeHtml(source)}</div><div class="crm-source-sub">${escapeHtml(campaign)}</div></td>
+        <td><div>${escapeHtml(lastEvent)}</div><div class="crm-source-sub">${escapeHtml(crmSegmentLabels[row.crm_segment] || row.crm_segment || "")}</div></td>
+        <td class="crm-revenue">${formatMoney(row.total_revenue)}</td>
+        <td>${escapeHtml(crmFormatDateTime(row.last_activity_at))}</td>
+        <td><button class="crm-row-btn" type="button" data-crm-open="${Number(row.id)}">Abrir</button></td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.querySelectorAll(".crm-row-check").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const id = Number(checkbox.dataset.id);
+      if (checkbox.checked) {
+        const row = crmState.rows.find((item) => Number(item.id) === id);
+        if (row) crmState.selected.set(id, row);
+      } else crmState.selected.delete(id);
+      crmUpdateSelectionBar();
     });
+  });
 
-    if (!response.ok) throw new Error("Erro ao carregar CRM");
+  tbody.querySelectorAll("[data-crm-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openCrmDrawer(Number(button.dataset.crmOpen));
+    });
+  });
 
-    const data = await response.json();
-    const crm = data.crm || {};
+  crmUpdateSelectionBar();
+}
 
-    document.getElementById("crmCold").textContent = Number(crm.cold || 0);
-    document.getElementById("crmWarm").textContent = Number(crm.warm || 0);
-    document.getElementById("crmHot").textContent = Number(crm.hot || 0);
-    document.getElementById("stageLeads").textContent = Number(crm.leads || 0);
-    document.getElementById("stageCheckout").textContent = Number(crm.checkout || 0);
-    document.getElementById("stageCustomers").textContent = Number(crm.customers || 0);
-    document.getElementById("crmStageCalls").textContent = Number(crm.call_booked || 0);
-    document.getElementById("crmStageOpportunities").textContent =
-      Number(crm.mentorship_opportunities || 0);
-    document.getElementById("stageMentorship").textContent =
-      Number(crm.mentorship_customers || 0);
+async function loadCrmLeads() {
+  const tbody = document.getElementById("crmTableBody");
+  tbody.innerHTML =
+    '<tr><td colspan="10" class="crm-table-empty">Carregando contatos...</td></tr>';
+
+  try {
+    const data = await crmFetch(crmBuildLeadUrl());
+    crmState.rows = Array.isArray(data.leads) ? data.leads : [];
+    crmState.total = Number(data.total || 0);
+
+    crmRenderRows();
+
+    const start = crmState.total === 0
+      ? 0
+      : (crmState.page * crmState.limit) + 1;
+    const end = Math.min(
+      (crmState.page * crmState.limit) + crmState.rows.length,
+      crmState.total
+    );
+    const totalPages = Math.max(Math.ceil(crmState.total / crmState.limit), 1);
+
+    document.getElementById("crmTableStatus").textContent =
+      `${start}–${end} de ${crmState.total} contatos`;
+    document.getElementById("crmPageLabel").textContent =
+      `Página ${crmState.page + 1} de ${totalPages}`;
+    document.getElementById("crmPrevPage").disabled = crmState.page <= 0;
+    document.getElementById("crmNextPage").disabled =
+      (crmState.page + 1) >= totalPages;
   } catch (error) {
-    console.error(error);
+    tbody.innerHTML =
+      `<tr><td colspan="10" class="crm-table-empty">${escapeHtml(error.message)}</td></tr>`;
   }
 }
+
+async function connectCrm() {
+  const input = document.getElementById("crmAdminSecret");
+  const secret = input.value.trim() || crmState.secret;
+
+  if (!secret) {
+    crmSetAuthStatus("Informe a senha.", "error");
+    return;
+  }
+
+  crmState.secret = secret;
+  crmSetAuthStatus("Validando...");
+
+  try {
+    await loadCrmFacets();
+    crmState.connected = true;
+    sessionStorage.setItem("dr_admin_secret", secret);
+    document.getElementById("crmWorkspace").hidden = false;
+    crmSetAuthStatus("Conectado.", "ok");
+    await loadCrmLeads();
+  } catch (error) {
+    crmState.connected = false;
+    document.getElementById("crmWorkspace").hidden = true;
+    if (error.status === 401) {
+      sessionStorage.removeItem("dr_admin_secret");
+      crmState.secret = "";
+      crmSetAuthStatus("Senha inválida.", "error");
+    } else {
+      crmSetAuthStatus(error.message, "error");
+    }
+  }
+}
+
+function crmApplySegment(segment) {
+  crmState.segment = segment || "";
+  crmState.page = 0;
+
+  document.querySelectorAll(".crm-segment-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.segment === crmState.segment);
+  });
+
+  loadCrmLeads();
+}
+
+function crmClearFilters() {
+  document.getElementById("crmSearch").value = "";
+  document.getElementById("crmTemperatureFilter").value = "";
+  document.getElementById("crmStageFilter").value = "";
+  document.getElementById("crmSourceFilter").value = "";
+  document.getElementById("crmCampaignFilter").value = "";
+  document.getElementById("crmSort").value = "recent";
+  crmApplySegment("");
+}
+
+function crmCsvValue(value) {
+  const text = String(value ?? "");
+  return '"' + text.replace(/"/g, '""') + '"';
+}
+
+function crmDownloadCsv(rows, filename) {
+  const headers = [
+    "nome", "email", "telefone", "temperatura", "etapa", "score",
+    "segmento", "origem", "campanha", "ultimo_evento",
+    "receita_front", "receita_mentoria", "receita_total", "ultima_atividade"
+  ];
+
+  const lines = [
+    headers.join(";"),
+    ...rows.map((row) => [
+      row.nome,
+      row.email,
+      row.telefone,
+      row.temperature,
+      row.lifecycle_stage,
+      row.lead_score,
+      row.crm_segment,
+      row.utm_source,
+      row.utm_campaign,
+      row.last_event,
+      row.front_revenue,
+      row.mentorship_revenue,
+      row.total_revenue,
+      row.last_activity_at
+    ].map(crmCsvValue).join(";"))
+  ];
+
+  const blob = new Blob(["\ufeff" + lines.join("\n")], {
+    type: "text/csv;charset=utf-8"
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function crmExportFiltered() {
+  const rows = [];
+  let offset = 0;
+  const maxRows = 5000;
+
+  while (offset < maxRows) {
+    const data = await crmFetch(crmBuildLeadUrl({ offset, limit: 200 }));
+    const batch = Array.isArray(data.leads) ? data.leads : [];
+    rows.push(...batch);
+    offset += batch.length;
+
+    if (batch.length < 200 || offset >= Number(data.total || 0)) break;
+  }
+
+  crmDownloadCsv(
+    rows,
+    "oferta-dr-crm-" + new Date().toISOString().slice(0, 10) + ".csv"
+  );
+}
+
+function crmExportSelected() {
+  const rows = Array.from(crmState.selected.values());
+  crmDownloadCsv(
+    rows,
+    "oferta-dr-crm-selecionados-" + new Date().toISOString().slice(0, 10) + ".csv"
+  );
+}
+
+function crmWhatsAppNumber(phone) {
+  const digits = String(phone || "").replace(/[^0-9]/g, "");
+  if (!digits) return "";
+  return digits.length === 10 || digits.length === 11
+    ? "55" + digits
+    : digits;
+}
+
+function closeCrmDrawer() {
+  document.getElementById("crmDrawerBackdrop").hidden = true;
+  crmState.activeLeadId = null;
+}
+
+function crmRenderTimeline(items) {
+  const container = document.getElementById("crmTimeline");
+  document.getElementById("crmTimelineCount").textContent =
+    `${items.length} evento(s)`;
+
+  if (items.length === 0) {
+    container.innerHTML =
+      '<div class="crm-table-empty">Nenhuma atividade registrada.</div>';
+    return;
+  }
+
+  container.innerHTML = items.map((item) => {
+    const isCrm = item.type === "crm";
+    const title = isCrm
+      ? "Atualização do CRM"
+      : (crmEventLabels[item.event_name] || item.event_name || "Evento");
+    const parts = [];
+
+    if (isCrm) {
+      if (item.new_lifecycle_stage) {
+        parts.push("Etapa: " + (crmStageLabels[item.new_lifecycle_stage] || item.new_lifecycle_stage));
+      }
+      if (item.new_temperature) {
+        parts.push("Temperatura: " + item.new_temperature);
+      }
+      if (item.new_lead_score != null) {
+        parts.push("Score: " + item.new_lead_score);
+      }
+      if (item.note) parts.push(item.note);
+    } else if (Number(item.value || 0) !== 0) {
+      parts.push(formatMoney(item.value));
+    }
+
+    return `
+      <div class="crm-timeline-item ${isCrm ? "crm" : ""}">
+        <span class="crm-timeline-dot"></span>
+        <div>
+          <div class="crm-timeline-title">${escapeHtml(title)}</div>
+          ${parts.length ? `<div class="crm-timeline-note">${escapeHtml(parts.join(" · "))}</div>` : ""}
+        </div>
+        <div class="crm-timeline-time">${escapeHtml(crmFormatDateTime(item.created_at))}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function openCrmDrawer(leadId) {
+  const row = crmState.rows.find((item) => Number(item.id) === Number(leadId));
+  if (!row) return;
+
+  crmState.activeLeadId = Number(leadId);
+  document.getElementById("crmDrawerBackdrop").hidden = false;
+  document.getElementById("crmDrawerName").textContent = row.nome || "Sem nome";
+  document.getElementById("crmDrawerIdentity").textContent =
+    [row.email, row.telefone].filter(Boolean).join(" · ") || "Sem contato";
+  document.getElementById("crmDrawerSource").textContent = row.utm_source || "—";
+  document.getElementById("crmDrawerCampaign").textContent = row.utm_campaign || "—";
+  document.getElementById("crmDrawerRevenue").textContent = formatMoney(row.total_revenue);
+  document.getElementById("crmDrawerSegment").textContent =
+    crmSegmentLabels[row.crm_segment] || row.crm_segment || "—";
+  document.getElementById("crmDrawerTemperature").value = row.temperature || "cold";
+  document.getElementById("crmDrawerStage").value = row.lifecycle_stage || "lead";
+  document.getElementById("crmDrawerScore").value = Number(row.lead_score || 0);
+  document.getElementById("crmDrawerNote").value = "";
+  document.getElementById("crmDrawerSaveStatus").textContent = "Sem alterações.";
+
+  const actions = [];
+  const wa = crmWhatsAppNumber(row.telefone);
+  if (wa) {
+    actions.push(
+      `<a href="https://wa.me/${wa}" target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a>`
+    );
+  }
+  if (row.telefone) {
+    actions.push(
+      `<button type="button" data-copy-value="${escapeHtml(row.telefone)}">Copiar telefone</button>`
+    );
+  }
+  if (row.email) {
+    actions.push(
+      `<button type="button" data-copy-value="${escapeHtml(row.email)}">Copiar email</button>`
+    );
+  }
+
+  const actionsNode = document.getElementById("crmContactActions");
+  actionsNode.innerHTML = actions.join("");
+  actionsNode.querySelectorAll("[data-copy-value]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(button.dataset.copyValue);
+      button.textContent = "Copiado";
+    });
+  });
+
+  document.getElementById("crmTimeline").innerHTML =
+    '<div class="crm-table-empty">Carregando timeline...</div>';
+
+  try {
+    const data = await crmFetch(`/api/crm/leads/${leadId}/timeline`);
+    crmRenderTimeline(data.timeline || []);
+  } catch (error) {
+    document.getElementById("crmTimeline").innerHTML =
+      `<div class="crm-table-empty">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+async function saveCrmDrawer() {
+  if (!crmState.activeLeadId) return;
+
+  const status = document.getElementById("crmDrawerSaveStatus");
+  status.textContent = "Salvando...";
+
+  try {
+    await crmFetch(`/api/crm/leads/${crmState.activeLeadId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        temperature: document.getElementById("crmDrawerTemperature").value,
+        lifecycle_stage: document.getElementById("crmDrawerStage").value,
+        lead_score: Number(document.getElementById("crmDrawerScore").value || 0),
+        note: document.getElementById("crmDrawerNote").value.trim() || null
+      })
+    });
+
+    status.textContent = "Salvo.";
+    await Promise.all([loadCrmFacets(), loadCrmLeads()]);
+    await openCrmDrawer(crmState.activeLeadId);
+    document.getElementById("crmDrawerSaveStatus").textContent = "Salvo.";
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+function initCrm() {
+  const secretInput = document.getElementById("crmAdminSecret");
+
+  if (crmState.secret) {
+    secretInput.value = crmState.secret;
+    connectCrm();
+  }
+
+  document.getElementById("crmConnectBtn").addEventListener("click", connectCrm);
+  secretInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") connectCrm();
+  });
+
+  document.querySelectorAll(".crm-segment-btn").forEach((button) => {
+    button.addEventListener("click", () => crmApplySegment(button.dataset.segment));
+  });
+
+  document.querySelectorAll("[data-crm-segment]").forEach((button) => {
+    button.addEventListener("click", () => crmApplySegment(button.dataset.crmSegment));
+  });
+
+  document.querySelectorAll("[data-crm-temperature]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.getElementById("crmTemperatureFilter").value =
+        button.dataset.crmTemperature;
+      crmState.page = 0;
+      loadCrmLeads();
+    });
+  });
+
+  [
+    "crmTemperatureFilter",
+    "crmStageFilter",
+    "crmSourceFilter",
+    "crmCampaignFilter",
+    "crmSort"
+  ].forEach((id) => {
+    document.getElementById(id).addEventListener("change", () => {
+      crmState.page = 0;
+      loadCrmLeads();
+    });
+  });
+
+  document.getElementById("crmSearch").addEventListener("input", () => {
+    clearTimeout(crmState.searchTimer);
+    crmState.searchTimer = setTimeout(() => {
+      crmState.page = 0;
+      loadCrmLeads();
+    }, 280);
+  });
+
+  document.getElementById("crmClearFilters").addEventListener("click", crmClearFilters);
+  document.getElementById("crmExportCsv").addEventListener("click", crmExportFiltered);
+  document.getElementById("crmExportSelected").addEventListener("click", crmExportSelected);
+  document.getElementById("crmClearSelection").addEventListener("click", () => {
+    crmState.selected.clear();
+    crmRenderRows();
+  });
+
+  document.getElementById("crmSelectPage").addEventListener("change", (event) => {
+    crmState.rows.forEach((row) => {
+      const id = Number(row.id);
+      if (event.target.checked) crmState.selected.set(id, row);
+      else crmState.selected.delete(id);
+    });
+    crmRenderRows();
+  });
+
+  document.getElementById("crmPrevPage").addEventListener("click", () => {
+    if (crmState.page <= 0) return;
+    crmState.page -= 1;
+    loadCrmLeads();
+  });
+
+  document.getElementById("crmNextPage").addEventListener("click", () => {
+    if ((crmState.page + 1) * crmState.limit >= crmState.total) return;
+    crmState.page += 1;
+    loadCrmLeads();
+  });
+
+  document.getElementById("crmDrawerClose").addEventListener("click", closeCrmDrawer);
+  document.getElementById("crmDrawerBackdrop").addEventListener("click", (event) => {
+    if (event.target.id === "crmDrawerBackdrop") closeCrmDrawer();
+  });
+  document.getElementById("crmDrawerSave").addEventListener("click", saveCrmDrawer);
+}
+
 
 async function loadExperiments() {
   const container = document.getElementById("experimentList");
@@ -2362,20 +3692,26 @@ function initBreakdownControls() {
     }
 
     function refreshAll() {
-      return Promise.allSettled([
+      const tasks = [
         loadDashboard(),
         loadOverviewTrend(),
         loadLtv(),
-        loadCrmSummary(),
         loadExperiments(),
         loadPerformance()
-      ]);
+      ];
+
+      if (crmState.connected) {
+        tasks.push(loadCrmFacets(), loadCrmLeads());
+      }
+
+      return Promise.allSettled(tasks);
     }
 
     decorateTooltips();
     initStageNavigation();
     initPeriodControls();
     initBreakdownControls();
+    initCrm();
     refreshAll();
 
     setInterval(refreshAll, 30000);
