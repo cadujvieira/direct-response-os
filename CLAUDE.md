@@ -63,11 +63,13 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_lead_crm_history`: CRM state audit trail.
 
 Offer foundation routes:
+- GET `/admin` serves the experiment administration UI.
 - GET `/go/:slug`
 - GET `/api/crm/summary`
 - GET `/api/crm/leads` (requires `x-admin-secret`)
 - PATCH `/api/crm/leads/:id` (requires `x-admin-secret`)
-- GET `/api/experiments`
+- GET `/api/experiments` (public-safe summary, no destination URLs)
+- GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)
 - PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
 - PATCH `/api/experiments/:slug/weights` (requires `x-admin-secret`)
 - GET `/api/experiments/:slug/performance`

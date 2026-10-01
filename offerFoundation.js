@@ -699,6 +699,44 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
     }
   });
 
+  app.get("/api/admin/experiments", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          x.id,
+          x.slug,
+          x.name,
+          x.active,
+          x.created_at,
+          x.updated_at,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', v.id,
+                'name', v.name,
+                'destination_url', v.destination_url,
+                'weight', v.weight,
+                'active', v.active
+              )
+              ORDER BY v.id
+            ) FILTER (WHERE v.id IS NOT NULL),
+            '[]'::json
+          ) AS variants
+        FROM dr_experiments x
+        LEFT JOIN dr_experiment_variants v
+          ON v.experiment_id = x.id
+        GROUP BY x.id
+        ORDER BY x.created_at DESC, x.id DESC
+      `);
+
+      return res.json({ ok: true, experiments: result.rows });
+    } catch (error) {
+      return res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
   app.put("/api/experiments/:slug", async (req, res) => {
     if (!requireAdmin(req, res)) return;
 

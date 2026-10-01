@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Direct Response OS — Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #08090c;
+      --panel: #111318;
+      --panel-2: #16191f;
+      --border: #242832;
+      --text: #f5f7fa;
+      --muted: #8f96a3;
+      --green: #3ee389;
+      --green-soft: rgba(62,227,137,.10);
+      --blue: #65a7ff;
+      --yellow: #f5c451;
+      --red: #ff6b6b;
+    }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(62,227,137,.06), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .page { max-width: 1380px; margin: 0 auto; padding: 30px; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; margin-bottom: 28px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: var(--green); color: #06110b;
+      font-weight: 800;
+    }
+    .brand h1 { font-size: 20px; }
+    .brand p { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .link-btn, .ghost-btn, .primary-btn, .danger-btn, .small-btn {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      background: var(--panel-2);
+      color: var(--text);
+      text-decoration: none;
+      transition: .15s ease;
+    }
+    .link-btn:hover, .ghost-btn:hover, .small-btn:hover { border-color: #3a414f; }
+    .primary-btn {
+      border-color: var(--green);
+      background: var(--green);
+      color: #06110b;
+      font-weight: 750;
+    }
+    .danger-btn { color: var(--red); }
+    .small-btn { padding: 7px 9px; font-size: 12px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .panel-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    }
+    .panel-head h2, .panel-head h3 { font-size: 15px; }
+    .panel-head p { margin-top: 5px; font-size: 12px; color: var(--muted); }
+    .auth-panel { margin-bottom: 18px; }
+    .auth-body {
+      padding: 16px 20px; display: flex; align-items: end; gap: 10px; flex-wrap: wrap;
+    }
+    .field { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 190px; }
+    .field label {
+      color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .input {
+      width: 100%; border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 11px; background: var(--panel-2); color: var(--text);
+      outline: none;
+    }
+    .input:focus { border-color: var(--green); }
+    .auth-status { font-size: 12px; color: var(--muted); min-width: 180px; }
+    .auth-status.ok { color: var(--green); }
+    .auth-status.error { color: var(--red); }
+    .workspace {
+      display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start;
+    }
+    .experiment-list { padding: 10px; display: grid; gap: 8px; }
+    .experiment-item {
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 13px; background: rgba(255,255,255,.012); cursor: pointer;
+    }
+    .experiment-item.active {
+      border-color: rgba(62,227,137,.55);
+      background: var(--green-soft);
+    }
+    .experiment-name { font-size: 13px; font-weight: 700; }
+    .experiment-meta {
+      margin-top: 5px; color: var(--muted); font-size: 11px;
+      display: flex; justify-content: space-between; gap: 8px;
+    }
+    .empty { padding: 22px 14px; text-align: center; color: var(--muted); font-size: 12px; }
+    .editor-body { padding: 20px; }
+    .editor-grid {
+      display: grid; grid-template-columns: 1fr 1fr 170px; gap: 12px; margin-bottom: 18px;
+    }
+    .toggle-wrap {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 11px; background: var(--panel-2);
+      min-height: 42px; display: flex; align-items: center; gap: 9px;
+    }
+    .toggle-wrap input { width: 17px; height: 17px; accent-color: var(--green); }
+    .summary-strip {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-bottom: 18px;
+    }
+    .summary-card {
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 13px; background: rgba(255,255,255,.012);
+    }
+    .summary-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+    .summary-value { margin-top: 6px; font-size: 20px; font-weight: 760; }
+    .variants-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 10px;
+    }
+    .variants-head h3 { font-size: 14px; }
+    .variants-head p { color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .variants { display: grid; gap: 10px; }
+    .variant-row {
+      border: 1px solid var(--border); border-radius: 13px;
+      padding: 14px; background: rgba(255,255,255,.012);
+    }
+    .variant-top {
+      display: grid; grid-template-columns: 160px 1fr 96px 96px;
+      gap: 10px; align-items: end;
+    }
+    .variant-bottom {
+      margin-top: 12px;
+      display: grid; grid-template-columns: 1fr 95px; gap: 12px; align-items: center;
+    }
+    .range {
+      width: 100%; accent-color: var(--green);
+    }
+    .share-box { text-align: right; }
+    .share-label { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+    .share-value { margin-top: 4px; font-weight: 750; color: var(--green); }
+    .variant-actions {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 8px; margin-top: 11px;
+    }
+    .editor-footer {
+      margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .save-status { color: var(--muted); font-size: 12px; }
+    .save-status.ok { color: var(--green); }
+    .save-status.error { color: var(--red); }
+    .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .disabled-overlay {
+      padding: 36px 24px; text-align: center; color: var(--muted); font-size: 13px;
+    }
+    .note {
+      margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: rgba(101,167,255,.06);
+      color: #b9c9df; font-size: 11px; line-height: 1.5;
+    }
+    @media (max-width: 1000px) {
+      .workspace { grid-template-columns: 1fr; }
+      .experiment-list { grid-template-columns: repeat(2, 1fr); }
+      .editor-grid { grid-template-columns: 1fr 1fr; }
+      .variant-top { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 660px) {
+      body { overflow-x: hidden; }
+      .page { width: 100%; padding: 18px 12px; overflow-x: hidden; }
+      header { align-items: flex-start; flex-direction: column; }
+      .top-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .top-actions > * {
+        min-width: 0;
+        text-align: center;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .auth-body {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .auth-body .field,
+      .auth-body button,
+      .auth-status {
+        width: 100%;
+        min-width: 0;
+      }
+      .experiment-list { grid-template-columns: 1fr; }
+      .editor-grid, .summary-strip, .variant-top { grid-template-columns: 1fr; }
+      .variant-bottom { grid-template-columns: 1fr; }
+      .share-box { text-align: left; }
+      .editor-footer { align-items: stretch; flex-direction: column; }
+      .footer-actions { width: 100%; }
+      .footer-actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="brand">
+        <div class="logo">DR</div>
+        <div>
+          <h1>Direct Response OS — Admin</h1>
+          <p>Experiments & Traffic Control</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a class="link-btn" href="/dashboard">Dashboard</a>
+        <button class="ghost-btn" id="newExperimentBtn" type="button">Novo experimento</button>
+      </div>
+    </header>
+
+    <section class="panel auth-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Acesso administrativo</h2>
+          <p>O segredo fica apenas nesta aba e não é gravado no servidor.</p>
+        </div>
+      </div>
+      <div class="auth-body">
+        <div class="field">
+          <label for="adminSecret">DR_ADMIN_SECRET</label>
+          <input class="input" id="adminSecret" type="password" autocomplete="off" placeholder="Cole o segredo administrativo" />
+        </div>
+        <button class="primary-btn" id="connectBtn" type="button">Conectar</button>
+        <button class="ghost-btn" id="disconnectBtn" type="button">Limpar</button>
+        <div class="auth-status" id="authStatus">Não conectado</div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Experimentos</h3>
+            <p>Selecione para editar.</p>
+          </div>
+        </div>
+        <div class="experiment-list" id="experimentList">
+          <div class="empty">Informe o segredo para carregar.</div>
+        </div>
+      </aside>
+
+      <main class="panel">
+        <div class="panel-head">
+          <div>
+            <h3 id="editorTitle">Editor de split</h3>
+            <p id="editorSubtitle">Configure páginas, pesos e status de roteamento.</p>
+          </div>
+        </div>
+        <div id="editorLocked" class="disabled-overlay">
+          Conecte o acesso administrativo para editar os experimentos.
+        </div>
+        <div class="editor-body" id="editorBody" hidden>
+          <div class="editor-grid">
+            <div class="field">
+              <label for="experimentName">Nome</label>
+              <input class="input" id="experimentName" type="text" placeholder="Ex.: Oferta Dólar" />
+            </div>
+            <div class="field">
+              <label for="experimentSlug">Slug do link</label>
+              <input class="input" id="experimentSlug" type="text" placeholder="oferta-dolar" />
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <label class="toggle-wrap">
+                <input id="experimentActive" type="checkbox" checked />
+                Experimento ativo
+              </label>
+            </div>
+          </div>
+
+          <div class="summary-strip">
+            <div class="summary-card">
+              <div class="summary-label">Link público</div>
+              <div class="summary-value" id="publicLink">/go/—</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Peso ativo total</div>
+              <div class="summary-value" id="totalWeight">0</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Variantes com tráfego</div>
+              <div class="summary-value" id="activeVariantsCount">0</div>
+            </div>
+          </div>
+
+          <div class="variants-head">
+            <div>
+              <h3>Landing pages</h3>
+              <p>Peso 0 = sem tráfego. A participação efetiva é calculada automaticamente.</p>
+            </div>
+            <button class="small-btn" id="addVariantBtn" type="button">+ Adicionar LP</button>
+          </div>
+
+          <div class="variants" id="variants"></div>
+
+          <div class="note">
+            O split usa pesos relativos. Ex.: 70/30 e 7/3 produzem a mesma distribuição. Visitantes permanecem na mesma LP enquanto ela continuar ativa e com peso maior que zero.
+          </div>
+
+          <div class="editor-footer">
+            <div class="save-status" id="saveStatus">Sem alterações salvas nesta sessão.</div>
+            <div class="footer-actions">
+              <button class="ghost-btn" id="equalizeBtn" type="button">Dividir igualmente</button>
+              <button class="primary-btn" id="saveBtn" type="button">Salvar configuração</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+  </div>
+  <script>
+    const state = {
+      secret: sessionStorage.getItem("dr_admin_secret") || "",
+      experiments: [],
+      selectedSlug: null,
+      isNew: false,
+      draft: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[char]);
+    }
+
+    function blankDraft() {
+      return {
+        slug: "",
+        name: "",
+        active: true,
+        variants: [
+          {
+            name: "LP_A",
+            destination_url: "",
+            weight: 100,
+            active: true
+          }
+        ]
+      };
+    }
+
+    async function adminFetch(path, options = {}) {
+      const headers = new Headers(options.headers || {});
+      headers.set("x-admin-secret", state.secret);
+      if (options.body && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+      }
+
+      const response = await fetch(path, {
+        ...options,
+        headers,
+        cache: "no-store"
+      });
+
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        const error = new Error(data.error || "Erro na requisição");
+        error.status = response.status;
+        throw error;
+      }
+
+      return data;
+    }
+
+    function setAuthStatus(message, type = "") {
+      const node = $("authStatus");
+      node.textContent = message;
+      node.className = "auth-status" + (type ? " " + type : "");
+    }
+
+    function setSaveStatus(message, type = "") {
+      const node = $("saveStatus");
+      node.textContent = message;
+      node.className = "save-status" + (type ? " " + type : "");
+    }
+
+    function setEditorUnlocked(unlocked) {
+      $("editorLocked").hidden = unlocked;
+      $("editorBody").hidden = !unlocked;
+    }
+
+    async function connect() {
+      const secret = $("adminSecret").value.trim();
+      if (!secret) {
+        setAuthStatus("Informe o DR_ADMIN_SECRET.", "error");
+        return;
+      }
+
+      state.secret = secret;
+      sessionStorage.setItem("dr_admin_secret", secret);
+      setAuthStatus("Validando acesso...");
+
+      try {
+        await loadExperiments();
+        setAuthStatus("Acesso conectado nesta aba.", "ok");
+        setEditorUnlocked(true);
+
+        if (state.experiments.length > 0) {
+          selectExperiment(state.experiments[0].slug);
+        } else {
+          newExperiment();
+        }
+      } catch (error) {
+        if (error.status === 401) {
+          sessionStorage.removeItem("dr_admin_secret");
+        }
+        setAuthStatus(
+          error.status === 401 ? "Segredo inválido." : error.message,
+          "error"
+        );
+        setEditorUnlocked(false);
+      }
+    }
+
+    function disconnect() {
+      state.secret = "";
+      state.experiments = [];
+      state.selectedSlug = null;
+      state.draft = null;
+      sessionStorage.removeItem("dr_admin_secret");
+      $("adminSecret").value = "";
+      $("experimentList").innerHTML =
+        '<div class="empty">Informe o segredo para carregar.</div>';
+      setAuthStatus("Não conectado");
+      setEditorUnlocked(false);
+    }
+
+    async function loadExperiments() {
+      const data = await adminFetch("/api/admin/experiments");
+      state.experiments = Array.isArray(data.experiments)
+        ? data.experiments
+        : [];
+      renderExperimentList();
+      return state.experiments;
+    }
+
+    function renderExperimentList() {
+      const container = $("experimentList");
+
+      if (state.experiments.length === 0) {
+        container.innerHTML =
+          '<div class="empty">Nenhum experimento cadastrado.</div>';
+        return;
+      }
+
+      container.innerHTML = state.experiments.map((experiment) => {
+        const variants = Array.isArray(experiment.variants)
+          ? experiment.variants
+          : [];
+        const activeCount = variants.filter(
+          (variant) => variant.active !== false && Number(variant.weight) > 0
+        ).length;
+
+        return `
+          <div
+            class="experiment-item ${state.selectedSlug === experiment.slug ? "active" : ""}"
+            data-slug="${escapeHtml(experiment.slug)}"
+          >
+            <div class="experiment-name">${escapeHtml(experiment.name)}</div>
+            <div class="experiment-meta">
+              <span>/go/${escapeHtml(experiment.slug)}</span>
+              <span>${activeCount} LP${activeCount === 1 ? "" : "s"}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      container.querySelectorAll(".experiment-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          selectExperiment(item.dataset.slug);
+        });
+      });
+    }
+
+    function selectExperiment(slug) {
+      const experiment = state.experiments.find((item) => item.slug === slug);
+      if (!experiment) return;
+
+      state.selectedSlug = experiment.slug;
+      state.isNew = false;
+      state.draft = {
+        slug: experiment.slug,
+        name: experiment.name || "",
+        active: experiment.active !== false,
+        variants: (experiment.variants || []).map((variant) => ({
+          name: variant.name || "",
+          destination_url: variant.destination_url || "",
+          weight: Number(variant.weight || 0),
+          active: variant.active !== false
+        }))
+      };
+
+      renderExperimentList();
+      renderEditor();
+      setSaveStatus("Configuração carregada.");
+    }
+
+    function newExperiment() {
+      state.selectedSlug = null;
+      state.isNew = true;
+      state.draft = blankDraft();
+      renderExperimentList();
+      renderEditor();
+      setEditorUnlocked(true);
+      setSaveStatus("Novo experimento ainda não salvo.");
+    }
+
+    function renderEditor() {
+      const draft = state.draft || blankDraft();
+      $("experimentName").value = draft.name;
+      $("experimentSlug").value = draft.slug;
+      $("experimentSlug").disabled = !state.isNew;
+      $("experimentActive").checked = draft.active;
+      $("editorTitle").textContent = state.isNew
+        ? "Novo experimento"
+        : "Editar experimento";
+      $("editorSubtitle").textContent = state.isNew
+        ? "Defina o link e as landing pages."
+        : "Ajuste URLs, pesos e status sem alterar o link público.";
+
+      renderVariants();
+      updateSummary();
+    }
+    function nextVariantName() {
+      const used = new Set(
+        (state.draft?.variants || []).map((variant) => variant.name)
+      );
+
+      for (let index = 0; index < 26; index += 1) {
+        const name = "LP_" + String.fromCharCode(65 + index);
+        if (!used.has(name)) return name;
+      }
+
+      return "LP_" + ((state.draft?.variants || []).length + 1);
+    }
+
+    function renderVariants() {
+      const container = $("variants");
+      const variants = state.draft?.variants || [];
+
+      if (variants.length === 0) {
+        container.innerHTML =
+          '<div class="empty">Adicione pelo menos uma landing page.</div>';
+        updateSummary();
+        return;
+      }
+
+      const activeWeight = variants.reduce(
+        (sum, variant) =>
+          sum + (variant.active ? Math.max(Number(variant.weight || 0), 0) : 0),
+        0
+      );
+
+      container.innerHTML = variants.map((variant, index) => {
+        const weight = Math.max(Number(variant.weight || 0), 0);
+        const share =
+          variant.active && activeWeight > 0
+            ? (weight / activeWeight) * 100
+            : 0;
+
+        return `
+          <div class="variant-row" data-index="${index}">
+            <div class="variant-top">
+              <div class="field">
+                <label>Nome</label>
+                <input
+                  class="input variant-input"
+                  data-field="name"
+                  type="text"
+                  value="${escapeHtml(variant.name)}"
+                  placeholder="LP_A"
+                />
+              </div>
+
+              <div class="field">
+                <label>URL da landing page</label>
+                <input
+                  class="input variant-input"
+                  data-field="destination_url"
+                  type="url"
+                  value="${escapeHtml(variant.destination_url)}"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div class="field">
+                <label>Peso</label>
+                <input
+                  class="input variant-input weight-input"
+                  data-field="weight"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="${weight}"
+                />
+              </div>
+
+              <div class="field">
+                <label>Status</label>
+                <label class="toggle-wrap">
+                  <input
+                    class="variant-active"
+                    type="checkbox"
+                    ${variant.active ? "checked" : ""}
+                  />
+                  Ativa
+                </label>
+              </div>
+            </div>
+
+            <div class="variant-bottom">
+              <input
+                class="range variant-range"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="${Math.min(weight, 100)}"
+              />
+              <div class="share-box">
+                <div class="share-label">Tráfego efetivo</div>
+                <div class="share-value">${share.toFixed(1).replace(".", ",")}%</div>
+              </div>
+            </div>
+
+            <div class="variant-actions">
+              <button class="danger-btn small-btn disable-variant" type="button">
+                Desativar LP
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      container.querySelectorAll(".variant-row").forEach((row) => {
+        const index = Number(row.dataset.index);
+        const numericInput = row.querySelector(".weight-input");
+        const range = row.querySelector(".variant-range");
+
+        row.querySelectorAll(".variant-input").forEach((input) => {
+          input.addEventListener("input", () => {
+            const field = input.dataset.field;
+
+            if (field === "weight") {
+              const value = Math.max(Number(input.value || 0), 0);
+              state.draft.variants[index].weight = value;
+              range.value = Math.min(value, 100);
+              refreshShares();
+            } else {
+              state.draft.variants[index][field] = input.value;
+            }
+
+            setSaveStatus("Alterações pendentes.");
+          });
+        });
+
+        range.addEventListener("input", () => {
+          const value = Number(range.value || 0);
+          state.draft.variants[index].weight = value;
+          numericInput.value = value;
+          refreshShares();
+          setSaveStatus("Alterações pendentes.");
+        });
+
+        row.querySelector(".variant-active").addEventListener("change", (event) => {
+          state.draft.variants[index].active = event.target.checked;
+          refreshShares();
+          setSaveStatus("Alterações pendentes.");
+        });
+
+        row.querySelector(".disable-variant").addEventListener("click", () => {
+          state.draft.variants[index].active = false;
+          state.draft.variants[index].weight = 0;
+          renderVariants();
+          setSaveStatus("LP desativada e peso zerado. Salve para aplicar.");
+        });
+      });
+
+      updateSummary();
+    }
+
+    function refreshShares() {
+      const variants = state.draft?.variants || [];
+      const total = variants.reduce(
+        (sum, variant) =>
+          sum + (variant.active ? Math.max(Number(variant.weight || 0), 0) : 0),
+        0
+      );
+
+      document.querySelectorAll(".variant-row").forEach((row) => {
+        const index = Number(row.dataset.index);
+        const variant = variants[index];
+        const share =
+          variant?.active && total > 0
+            ? (Math.max(Number(variant.weight || 0), 0) / total) * 100
+            : 0;
+
+        row.querySelector(".share-value").textContent =
+          share.toFixed(1).replace(".", ",") + "%";
+      });
+
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const draft = state.draft || blankDraft();
+      const variants = draft.variants || [];
+      const total = variants.reduce(
+        (sum, variant) =>
+          sum + (variant.active ? Math.max(Number(variant.weight || 0), 0) : 0),
+        0
+      );
+      const receivingTraffic = variants.filter(
+        (variant) => variant.active && Number(variant.weight || 0) > 0
+      ).length;
+
+      $("publicLink").textContent = "/go/" + (draft.slug || "—");
+      $("totalWeight").textContent = total.toLocaleString("pt-BR");
+      $("activeVariantsCount").textContent = receivingTraffic;
+    }
+
+    function addVariant() {
+      state.draft.variants.push({
+        name: nextVariantName(),
+        destination_url: "",
+        weight: 0,
+        active: true
+      });
+
+      renderVariants();
+      setSaveStatus("Nova LP adicionada. Defina URL e peso.");
+    }
+
+    function equalize() {
+      const active = state.draft.variants.filter((variant) => variant.active);
+
+      if (active.length === 0) {
+        setSaveStatus("Ative pelo menos uma LP.", "error");
+        return;
+      }
+
+      state.draft.variants.forEach((variant) => {
+        variant.weight = variant.active ? 1 : 0;
+      });
+
+      renderVariants();
+      setSaveStatus("Pesos equalizados. Salve para aplicar.");
+    }
+    async function saveExperiment() {
+      const slug = String(state.draft.slug || "").trim().toLowerCase();
+      const name = String(state.draft.name || "").trim();
+
+      if (!name) {
+        setSaveStatus("Informe o nome do experimento.", "error");
+        $("experimentName").focus();
+        return;
+      }
+
+      if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(slug)) {
+        setSaveStatus(
+          "Slug inválido. Use letras minúsculas, números e hífens.",
+          "error"
+        );
+        $("experimentSlug").focus();
+        return;
+      }
+
+      if (!state.draft.variants.length) {
+        setSaveStatus("Adicione pelo menos uma landing page.", "error");
+        return;
+      }
+
+      const activeWeight = state.draft.variants.reduce(
+        (sum, variant) =>
+          sum + (variant.active ? Math.max(Number(variant.weight || 0), 0) : 0),
+        0
+      );
+
+      if (!(activeWeight > 0)) {
+        setSaveStatus(
+          "Pelo menos uma LP ativa precisa ter peso maior que zero.",
+          "error"
+        );
+        return;
+      }
+
+      const payload = {
+        name,
+        active: state.draft.active,
+        variants: state.draft.variants.map((variant) => ({
+          name: String(variant.name || "").trim(),
+          destination_url: String(variant.destination_url || "").trim(),
+          weight: Math.max(Number(variant.weight || 0), 0),
+          active: variant.active !== false
+        }))
+      };
+
+      setSaveStatus("Salvando configuração...");
+
+      try {
+        await adminFetch(
+          "/api/experiments/" + encodeURIComponent(slug),
+          {
+            method: "PUT",
+            body: JSON.stringify(payload)
+          }
+        );
+
+        state.isNew = false;
+        state.selectedSlug = slug;
+        await loadExperiments();
+        selectExperiment(slug);
+        setSaveStatus("Configuração salva e pronta para roteamento.", "ok");
+      } catch (error) {
+        setSaveStatus(error.message, "error");
+      }
+    }
+
+    $("connectBtn").addEventListener("click", connect);
+    $("disconnectBtn").addEventListener("click", disconnect);
+    $("newExperimentBtn").addEventListener("click", () => {
+      if (!state.secret) {
+        setAuthStatus("Conecte o acesso administrativo primeiro.", "error");
+        return;
+      }
+      newExperiment();
+    });
+    $("addVariantBtn").addEventListener("click", addVariant);
+    $("equalizeBtn").addEventListener("click", equalize);
+    $("saveBtn").addEventListener("click", saveExperiment);
+
+    $("experimentName").addEventListener("input", (event) => {
+      state.draft.name = event.target.value;
+      setSaveStatus("Alterações pendentes.");
+    });
+
+    $("experimentSlug").addEventListener("input", (event) => {
+      const normalized = event.target.value
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-/, "");
+
+      event.target.value = normalized;
+      state.draft.slug = normalized;
+      updateSummary();
+      setSaveStatus("Alterações pendentes.");
+    });
+
+    $("experimentActive").addEventListener("change", (event) => {
+      state.draft.active = event.target.checked;
+      setSaveStatus("Alterações pendentes.");
+    });
+
+    $("adminSecret").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") connect();
+    });
+
+    if (state.secret) {
+      $("adminSecret").value = state.secret;
+      connect();
+    } else {
+      setEditorUnlocked(false);
+    }
+  </script>
+</body>
+</html>

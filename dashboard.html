@@ -78,6 +78,28 @@
       margin-top: 4px;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .admin-link {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      transition: .18s ease;
+    }
+
+    .admin-link:hover {
+      color: var(--text);
+      border-color: #39404d;
+    }
+
     .status {
       display: flex;
       align-items: center;
@@ -749,9 +771,12 @@
         </div>
       </div>
 
-      <div class="status">
-        <span class="dot"></span>
-        Tracking online
+      <div class="header-actions">
+        <a class="admin-link" href="/admin">Admin</a>
+        <div class="status">
+          <span class="dot"></span>
+          Tracking online
+        </div>
       </div>
     </header>
 

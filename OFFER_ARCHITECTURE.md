@@ -33,6 +33,8 @@ Traffic allocation is fully dynamic and uses relative weights, not a hard-coded 
 
 Experiment configuration is not hard-coded. `PUT /api/experiments/:slug` with `x-admin-secret` creates or updates the experiment and its landing-page variants, including destination URLs, active flags and weights. Variants omitted from that configuration are disabled.
 
+The administration UI is served at `/admin`. It keeps `DR_ADMIN_SECRET` only in browser session storage, loads full experiment configuration through the protected admin API, and allows editing URLs, active flags and relative weights without changing the public routing link.
+
 Administrative weight-only changes use `PATCH /api/experiments/:slug/weights` with `x-admin-secret`. The body is `{ "weights": { "LP_A": 80, "LP_B": 20, "LP_C": 0 } }`. At least one active variant must keep a positive weight.
 
 ## CRM model

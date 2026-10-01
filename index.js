@@ -1115,6 +1115,10 @@ app.get("/dashboard", (req, res) => {
   res.sendFile(__dirname + "/dashboard.html");
 });
 
+app.get("/admin", (req, res) => {
+  res.sendFile(__dirname + "/admin.html");
+});
+
 async function start() {
 
   try {
