@@ -280,6 +280,10 @@
       color: #626977;
     }
 
+    .period-toolbar[hidden] {
+      display: none !important;
+    }
+
     .period-toolbar {
       display: flex;
       align-items: center;
@@ -413,11 +417,231 @@
       }
     }
 
+    .dashboard-view {
+      display: none;
+      animation: viewFade .18s ease;
+    }
+
+    .dashboard-view.active {
+      display: block;
+    }
+
+    @keyframes viewFade {
+      from {
+        opacity: 0;
+        transform: translateY(3px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .metrics {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 14px;
       margin-bottom: 28px;
+    }
+
+    .overview-metrics {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .stage-metrics {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .overview-chart-panel {
+      margin-top: 4px;
+    }
+
+    .overview-chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .trend-legend {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .trend-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trend-legend-item::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .invest-dot {
+      color: var(--yellow);
+    }
+
+    .sales-dot {
+      color: var(--blue);
+    }
+
+    .roas-dot {
+      color: var(--green);
+    }
+
+    .trend-stack {
+      display: grid;
+      gap: 0;
+      padding: 0 22px 18px;
+    }
+
+    .trend-row {
+      display: grid;
+      grid-template-columns: 145px 1fr;
+      gap: 16px;
+      align-items: stretch;
+      min-height: 126px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .trend-row:last-child {
+      border-bottom: 0;
+    }
+
+    .trend-meta {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .trend-name {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .trend-total {
+      margin-top: 8px;
+      font-size: 22px;
+      font-weight: 760;
+      letter-spacing: -.5px;
+    }
+
+    .trend-chart-wrap {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .trend-svg {
+      width: 100%;
+      height: 94px;
+      display: block;
+      overflow: visible;
+    }
+
+    .trend-grid-line {
+      stroke: rgba(255,255,255,.055);
+      stroke-width: 1;
+    }
+
+    .trend-line {
+      fill: none;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .trend-line.invest {
+      stroke: var(--yellow);
+    }
+
+    .trend-line.sales {
+      stroke: var(--blue);
+    }
+
+    .trend-line.roas {
+      stroke: var(--green);
+    }
+
+    .trend-area {
+      opacity: .08;
+    }
+
+    .trend-area.invest {
+      fill: var(--yellow);
+    }
+
+    .trend-area.sales {
+      fill: var(--blue);
+    }
+
+    .trend-area.roas {
+      fill: var(--green);
+    }
+
+    .trend-axis {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 5px;
+      color: #5f6671;
+      font-size: 10px;
+    }
+
+    @media (max-width: 1180px) {
+      .overview-metrics {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .stage-metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .overview-metrics,
+      .stage-metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .overview-chart-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .trend-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .trend-total {
+        font-size: 19px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .overview-metrics,
+      .stage-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .trend-stack {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
     }
 
     .card {
@@ -922,25 +1146,25 @@
 
     <nav class="stage-nav-shell" aria-label="Etapas do painel">
       <div class="stage-nav" id="stageNav">
-        <a class="stage-tab active" href="#overview-section" data-stage-target="overview-section">Visão geral</a>
-        <a class="stage-tab" href="#stage-clicks" data-stage-target="stage-clicks">Cliques</a>
-        <a class="stage-tab" href="#stage-leads" data-stage-target="stage-leads">Leads</a>
-        <a class="stage-tab" href="#stage-checkout" data-stage-target="stage-checkout">Checkout</a>
-        <a class="stage-tab" href="#stage-purchases" data-stage-target="stage-purchases">Compras</a>
-        <a class="stage-tab" href="#stage-calls" data-stage-target="stage-calls">Calls</a>
-        <a class="stage-tab" href="#stage-mentorship" data-stage-target="stage-mentorship">Mentoria</a>
-        <a class="stage-tab" href="#crm-section" data-stage-target="crm-section">CRM</a>
-        <a class="stage-tab" href="#experiments-section" data-stage-target="experiments-section">Experimentos</a>
-        <a class="stage-tab" href="#performance-section" data-stage-target="performance-section">Performance</a>
+        <a class="stage-tab active" href="#overview" data-stage-target="overview">Visão geral</a>
+        <a class="stage-tab" href="#clicks" data-stage-target="clicks">Cliques</a>
+        <a class="stage-tab" href="#leads" data-stage-target="leads">Leads</a>
+        <a class="stage-tab" href="#checkout" data-stage-target="checkout">Checkout</a>
+        <a class="stage-tab" href="#purchases" data-stage-target="purchases">Compras</a>
+        <a class="stage-tab" href="#calls" data-stage-target="calls">Calls</a>
+        <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
+        <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
+        <a class="stage-tab" href="#experiments" data-stage-target="experiments">Experimentos</a>
+        <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
       </div>
     </nav>
 
-    <div class="section-title section-anchor" id="overview-section">
-      <h2>Visão geral</h2>
+    <div class="section-title">
+      <h2 id="viewTitle">Visão geral</h2>
       <span class="updated" id="updatedAt">Carregando...</span>
     </div>
 
-    <div class="period-toolbar" aria-label="Filtro de período">
+    <div class="period-toolbar" id="periodToolbar" aria-label="Filtro de período">
       <div class="period-presets">
         <button class="period-btn active" type="button" data-period="all">Tudo</button>
         <button class="period-btn" type="button" data-period="today">Hoje</button>
@@ -969,303 +1193,185 @@
       </div>
     </div>
 
-    <section class="metrics">
-
-      <div class="card" id="stage-clicks">
-        <div class="metric-label" data-tooltip="Entradas rastreadas pelo Direct Response OS. Cada nova entrada pode ter um click_id próprio para preservar a atribuição.">Cliques</div>
-        <div class="metric-value" id="clicks">0</div>
-        <div class="metric-sub">Entradas rastreadas</div>
-      </div>
-
-      <div class="card" id="stage-leads">
-        <div class="metric-label" data-tooltip="Contatos capturados e atribuídos à origem de aquisição. A deduplicação evita contar o mesmo lead repetidamente.">Leads</div>
-        <div class="metric-value" id="leads">0</div>
-        <div class="metric-sub">Leads únicos</div>
-      </div>
-
-      <div class="card" id="stage-checkout">
-        <div class="metric-label" data-tooltip="Eventos checkout_started registrados antes da compra. Ajuda a identificar abandono entre intenção e pagamento.">Checkouts</div>
-        <div class="metric-value" id="checkouts">0</div>
-        <div class="metric-sub">Checkouts iniciados</div>
-      </div>
-
-      <div class="card" id="stage-purchases">
-        <div class="metric-label" data-tooltip="Compras aprovadas do produto front-end. A venda de mentoria é contabilizada separadamente no LTV.">Vendas</div>
-        <div class="metric-value" id="purchases">0</div>
-        <div class="metric-sub">Compras aprovadas</div>
-      </div>
-
-      <div class="card revenue">
-        <div class="metric-label" data-tooltip="Receita rastreada das compras front-end no período selecionado.">Receita</div>
-        <div class="metric-value" id="revenue">R$ 0</div>
-        <div class="metric-sub">Receita rastreada</div>
-      </div>
-
-    </section>
-
-    <section class="metrics media-metrics">
-
-      <div class="card invest">
-        <div class="metric-label" data-tooltip="Valor gasto em mídia paga importado para o período. Sem spend registrado, CPL, CPA e ROAS ficam sem cálculo.">Investimento</div>
-        <div class="metric-value" id="spend">R$ 0</div>
-        <div class="metric-sub">Gasto em mídia paga</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label" data-tooltip="Custo por lead: investimento em mídia dividido pela quantidade de leads atribuídos.">CPL</div>
-        <div class="metric-value" id="cpl">—</div>
-        <div class="metric-sub">Custo por lead</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label" data-tooltip="Custo por aquisição front-end: investimento dividido pelas compras aprovadas do produto principal.">CPA</div>
-        <div class="metric-value" id="cpa">—</div>
-        <div class="metric-sub">Custo por compra</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label" data-tooltip="ROAS front-end: receita do produto principal dividida pelo investimento em mídia. O ganho posterior com mentoria aparece no LTV.">ROAS</div>
-        <div class="metric-value" id="roas">—</div>
-        <div class="metric-sub">Retorno sobre o investimento</div>
-      </div>
-
-    </section>
-
-    <section class="offer-section section-anchor" id="stage-mentorship">
-      <div class="section-title">
-        <div>
-          <h2 data-tooltip="Visão econômica completa da aquisição, somando front-end, upsells, mentoria e descontando reembolsos quando aplicável.">Economia real</h2>
-          <span class="updated">Front-end + upsell + LTV</span>
+    <section class="dashboard-view active" data-view="overview" id="overview-view">
+      <div class="metrics overview-metrics">
+        <div class="card invest">
+          <div class="metric-label" data-tooltip="Valor total investido em mídia paga no período selecionado.">Investimento</div>
+          <div class="metric-value" id="overviewSpend">R$ 0</div>
+          <div class="metric-sub">Gasto em mídia</div>
         </div>
-      </div>
 
-      <div class="metrics offer-metrics">
         <div class="card">
-          <div class="metric-label" data-tooltip="Receita gerada pelo produto principal de entrada. No modelo atual, o ticket de referência é R$297.">Receita front-end</div>
-          <div class="metric-value" id="frontRevenue">R$ 0</div>
-          <div class="metric-sub">Produto principal</div>
+          <div class="metric-label" data-tooltip="Quantidade de compras front-end aprovadas no período.">Vendas</div>
+          <div class="metric-value" id="overviewPurchases">0</div>
+          <div class="metric-sub">Compras aprovadas</div>
         </div>
 
         <div class="card revenue">
-          <div class="metric-label" data-tooltip="Receita gerada pelas vendas de mentoria após a compra do produto front-end.">Receita mentoria</div>
-          <div class="metric-value" id="mentorshipRevenue">R$ 0</div>
-          <div class="metric-sub">Upsell de maior ticket</div>
+          <div class="metric-label" data-tooltip="Receita front-end atribuída às compras aprovadas no período.">Receita</div>
+          <div class="metric-value" id="overviewRevenue">R$ 0</div>
+          <div class="metric-sub">Receita front-end</div>
         </div>
 
         <div class="card">
-          <div class="metric-label" data-tooltip="Valor total líquido médio gerado por comprador front-end da coorte selecionada, incluindo monetização posterior atribuída ao mesmo comprador.">LTV por comprador</div>
-          <div class="metric-value" id="ltvPerBuyer">—</div>
-          <div class="metric-sub">Receita líquida média</div>
+          <div class="metric-label" data-tooltip="Receita front-end dividida pelo investimento em mídia.">ROAS</div>
+          <div class="metric-value" id="overviewRoas">—</div>
+          <div class="metric-sub">Retorno da mídia</div>
         </div>
 
         <div class="card">
-          <div class="metric-label" data-tooltip="Percentual de compradores front-end da coorte que também compraram uma mentoria.">Attach mentoria</div>
-          <div class="metric-value" id="mentorshipAttach">—</div>
-          <div class="metric-sub">Compradores que viraram mentoria</div>
+          <div class="metric-label" data-tooltip="Investimento em mídia dividido pelas compras front-end aprovadas.">CPA</div>
+          <div class="metric-value" id="overviewCpa">—</div>
+          <div class="metric-sub">Custo por compra</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label" data-tooltip="Valor líquido médio gerado por comprador front-end da coorte, incluindo monetização posterior.">LTV</div>
+          <div class="metric-value" id="overviewLtv">—</div>
+          <div class="metric-sub">Valor por comprador</div>
+        </div>
+      </div>
+
+      <div class="panel overview-chart-panel">
+        <div class="panel-head overview-chart-head">
+          <div>
+            <h3 data-tooltip="Evolução diária das três métricas fundamentais. Cada linha possui sua própria escala para não misturar reais, quantidade de vendas e ROAS.">Pulso da operação</h3>
+            <p id="overviewTrendRange">Investimento, vendas e ROAS por dia.</p>
+          </div>
+          <div class="trend-legend" aria-label="Métricas do gráfico">
+            <span class="trend-legend-item invest-dot">Investimento</span>
+            <span class="trend-legend-item sales-dot">Vendas</span>
+            <span class="trend-legend-item roas-dot">ROAS</span>
+          </div>
+        </div>
+        <div class="trend-stack" id="overviewTrend">
+          <div class="section-empty">Carregando evolução da operação...</div>
         </div>
       </div>
     </section>
 
-    <section class="layout">
+    <section class="dashboard-view" data-view="clicks" id="clicks-view">
+      <div class="metrics stage-metrics">
+        <div class="card">
+          <div class="metric-label" data-tooltip="Entradas rastreadas pelo Direct Response OS.">Cliques rastreados</div>
+          <div class="metric-value" id="clicks">0</div>
+          <div class="metric-sub">Entradas com atribuição</div>
+        </div>
+        <div class="card">
+          <div class="metric-label" data-tooltip="Percentual dos cliques rastreados que se tornaram leads.">Clique → Lead</div>
+          <div class="metric-value" id="convLead">0%</div>
+          <div class="metric-sub">Conversão de entrada</div>
+        </div>
+        <div class="card">
+          <div class="metric-label" data-tooltip="Leads gerados a partir do tráfego rastreado.">Leads gerados</div>
+          <div class="metric-value" id="stageClicksLeads">0</div>
+          <div class="metric-sub">Próxima etapa do funil</div>
+        </div>
+        <div class="card">
+          <div class="metric-label" data-tooltip="Conversão total do clique rastreado até a compra front-end.">Clique → Venda</div>
+          <div class="metric-value" id="convTotal">0%</div>
+          <div class="metric-sub">Conversão final</div>
+        </div>
+      </div>
 
       <div class="panel">
         <div class="panel-head">
-          <h3 data-tooltip="Mostra o volume em cada etapa principal do funil, do clique à compra front-end.">Funil de conversão</h3>
-          <p>Do clique até a compra.</p>
+          <h3 data-tooltip="Distribuição dos volumes do funil tendo o clique como base de comparação.">Funil a partir dos cliques</h3>
+          <p>Visão rápida da perda de volume entre as etapas.</p>
         </div>
-
         <div class="funnel">
-
-          <div class="funnel-row">
-            <div class="funnel-name">Cliques</div>
-            <div class="bar-track">
-              <div class="bar" id="barClicks"></div>
-            </div>
-            <div class="funnel-number" id="funnelClicks">0</div>
-          </div>
-
-          <div class="funnel-row">
-            <div class="funnel-name">Leads</div>
-            <div class="bar-track">
-              <div class="bar" id="barLeads"></div>
-            </div>
-            <div class="funnel-number" id="funnelLeads">0</div>
-          </div>
-
-          <div class="funnel-row">
-            <div class="funnel-name">Checkouts</div>
-            <div class="bar-track">
-              <div class="bar" id="barCheckouts"></div>
-            </div>
-            <div class="funnel-number" id="funnelCheckouts">0</div>
-          </div>
-
-          <div class="funnel-row">
-            <div class="funnel-name">Compras</div>
-            <div class="bar-track">
-              <div class="bar" id="barPurchases"></div>
-            </div>
-            <div class="funnel-number" id="funnelPurchases">0</div>
-          </div>
-
+          <div class="funnel-row"><div class="funnel-name">Cliques</div><div class="bar-track"><div class="bar" id="barClicks"></div></div><div class="funnel-number" id="funnelClicks">0</div></div>
+          <div class="funnel-row"><div class="funnel-name">Leads</div><div class="bar-track"><div class="bar" id="barLeads"></div></div><div class="funnel-number" id="funnelLeads">0</div></div>
+          <div class="funnel-row"><div class="funnel-name">Checkouts</div><div class="bar-track"><div class="bar" id="barCheckouts"></div></div><div class="funnel-number" id="funnelCheckouts">0</div></div>
+          <div class="funnel-row"><div class="funnel-name">Compras</div><div class="bar-track"><div class="bar" id="barPurchases"></div></div><div class="funnel-number" id="funnelPurchases">0</div></div>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h3 data-tooltip="Taxas de passagem entre as etapas do funil. Quedas grandes ajudam a localizar gargalos de página, checkout ou oferta.">Conversões</h3>
-          <p>Eficiência entre as etapas do funil.</p>
-        </div>
-
-        <div class="conversions">
-
-          <div class="conversion-item">
-            <span class="conversion-label" data-tooltip="Percentual de cliques rastreados que viraram lead.">Clique → Lead</span>
-            <span class="conversion-value" id="convLead">0%</span>
-          </div>
-
-          <div class="conversion-item">
-            <span class="conversion-label" data-tooltip="Percentual de leads que avançaram para checkout_started.">Lead → Checkout</span>
-            <span class="conversion-value" id="convCheckout">0%</span>
-          </div>
-
-          <div class="conversion-item">
-            <span class="conversion-label" data-tooltip="Percentual de checkouts iniciados que resultaram em compra front-end aprovada.">Checkout → Venda</span>
-            <span class="conversion-value" id="convSale">0%</span>
-          </div>
-
-          <div class="conversion-item">
-            <span class="conversion-label" data-tooltip="Conversão total do clique rastreado até a compra front-end.">Clique → Venda</span>
-            <span class="conversion-value" id="convTotal">0%</span>
-          </div>
-
-        </div>
-      </div>
-
     </section>
 
-    <section class="offer-section section-anchor" id="crm-section">
-      <div class="section-title">
-        <div>
-          <h2 data-tooltip="Visão resumida do estado comercial dos contatos. Temperatura e estágio são dimensões diferentes e não devem ser confundidas.">CRM operacional</h2>
-          <span class="updated">Temperatura e estágio são dimensões separadas</span>
-        </div>
+    <section class="dashboard-view" data-view="leads" id="leads-view">
+      <div class="metrics stage-metrics">
+        <div class="card"><div class="metric-label" data-tooltip="Leads únicos capturados e atribuídos.">Leads</div><div class="metric-value" id="leads">0</div><div class="metric-sub">Contatos únicos</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Investimento dividido pelos leads atribuídos.">CPL</div><div class="metric-value" id="cpl">—</div><div class="metric-sub">Custo por lead</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Percentual dos leads que iniciaram checkout.">Lead → Checkout</div><div class="metric-value" id="stageLeadToCheckout">0%</div><div class="metric-sub">Avanço do lead</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Compras front-end geradas dentro do período.">Vendas geradas</div><div class="metric-value" id="stageLeadPurchases">0</div><div class="metric-sub">Resultado final</div></div>
       </div>
+    </section>
 
+    <section class="dashboard-view" data-view="checkout" id="checkout-view">
+      <div class="metrics stage-metrics">
+        <div class="card"><div class="metric-label" data-tooltip="Eventos checkout_started registrados.">Checkouts</div><div class="metric-value" id="checkouts">0</div><div class="metric-sub">Intenções de compra</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Percentual de leads que chegaram ao checkout.">Lead → Checkout</div><div class="metric-value" id="convCheckout">0%</div><div class="metric-sub">Conversão intermediária</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Percentual dos checkouts que se converteram em compra aprovada.">Checkout → Venda</div><div class="metric-value" id="convSale">0%</div><div class="metric-sub">Eficiência do checkout</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Checkouts iniciados que ainda não resultaram em compra no período.">Abandono estimado</div><div class="metric-value" id="stageCheckoutAbandon">0</div><div class="metric-sub">Checkout sem compra</div></div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="purchases" id="purchases-view">
+      <div class="metrics stage-metrics">
+        <div class="card"><div class="metric-label" data-tooltip="Compras front-end aprovadas.">Vendas</div><div class="metric-value" id="purchases">0</div><div class="metric-sub">Compras aprovadas</div></div>
+        <div class="card revenue"><div class="metric-label" data-tooltip="Receita front-end rastreada no período.">Receita</div><div class="metric-value" id="revenue">R$ 0</div><div class="metric-sub">Receita rastreada</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Investimento dividido pelas compras aprovadas.">CPA</div><div class="metric-value" id="cpa">—</div><div class="metric-sub">Custo por aquisição</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Receita front-end dividida pelo investimento em mídia.">ROAS</div><div class="metric-value" id="roas">—</div><div class="metric-sub">Retorno front-end</div></div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="calls" id="calls-view">
+      <div class="metrics stage-metrics">
+        <div class="card"><div class="metric-label" data-tooltip="Calls de análise agendadas após a compra front-end.">Calls agendadas</div><div class="metric-value" id="stageCalls">0</div><div class="metric-sub">Agenda comercial</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Calls que efetivamente aconteceram.">Calls realizadas</div><div class="metric-value" id="stageCallsAttended">0</div><div class="metric-sub">Comparecimento</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Percentual das calls agendadas que foram realizadas.">Show rate</div><div class="metric-value" id="stageCallShowRate">—</div><div class="metric-sub">Taxa de comparecimento</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Contatos que já avançaram para oportunidade de mentoria.">Oportunidades</div><div class="metric-value" id="stageOpportunities">0</div><div class="metric-sub">Pipeline de mentoria</div></div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="mentorship" id="mentorship-view">
+      <div class="metrics offer-metrics">
+        <div class="card"><div class="metric-label" data-tooltip="Receita gerada pelo produto principal de entrada.">Receita front-end</div><div class="metric-value" id="frontRevenue">R$ 0</div><div class="metric-sub">Produto principal</div></div>
+        <div class="card revenue"><div class="metric-label" data-tooltip="Receita gerada pelas vendas de mentoria.">Receita mentoria</div><div class="metric-value" id="mentorshipRevenue">R$ 0</div><div class="metric-sub">Upsell de maior ticket</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Valor total líquido médio gerado por comprador front-end da coorte.">LTV por comprador</div><div class="metric-value" id="ltvPerBuyer">—</div><div class="metric-sub">Receita líquida média</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Percentual de compradores front-end que também compraram mentoria.">Attach mentoria</div><div class="metric-value" id="mentorshipAttach">—</div><div class="metric-sub">Conversão para mentoria</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Quantidade de vendas de mentoria atribuídas à coorte.">Vendas de mentoria</div><div class="metric-value" id="stageMentorshipSales">0</div><div class="metric-sub">High ticket</div></div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="crm" id="crm-view">
       <div class="crm-grid">
         <div class="panel">
-          <div class="panel-head">
-            <h3 data-tooltip="Prioridade/intenção comercial do contato: cold, warm ou hot. Não substitui a etapa atual do funil.">Temperatura</h3>
-            <p>Base para priorização comercial e remarketing.</p>
-          </div>
-
+          <div class="panel-head"><h3 data-tooltip="Prioridade/intenção comercial do contato: cold, warm ou hot.">Temperatura</h3><p>Base para priorização comercial e remarketing.</p></div>
           <div class="temperature-grid">
-            <div class="temperature-card cold">
-              <div class="temperature-label" data-tooltip="Leads com menor sinal de intenção comercial no momento.">Frios</div>
-              <div class="temperature-value" id="crmCold">0</div>
-            </div>
-            <div class="temperature-card warm">
-              <div class="temperature-label" data-tooltip="Leads com sinais intermediários de intenção, como retorno ou avanço no checkout.">Mornos</div>
-              <div class="temperature-value" id="crmWarm">0</div>
-            </div>
-            <div class="temperature-card hot">
-              <div class="temperature-label" data-tooltip="Leads com forte intenção ou avanço relevante no funil, como compra, call ou oportunidade de mentoria.">Quentes</div>
-              <div class="temperature-value" id="crmHot">0</div>
-            </div>
+            <div class="temperature-card cold"><div class="temperature-label" data-tooltip="Leads com menor sinal de intenção comercial no momento.">Frios</div><div class="temperature-value" id="crmCold">0</div></div>
+            <div class="temperature-card warm"><div class="temperature-label" data-tooltip="Leads com sinais intermediários de intenção.">Mornos</div><div class="temperature-value" id="crmWarm">0</div></div>
+            <div class="temperature-card hot"><div class="temperature-label" data-tooltip="Leads com forte intenção ou avanço relevante no funil.">Quentes</div><div class="temperature-value" id="crmHot">0</div></div>
           </div>
         </div>
-
         <div class="panel">
-          <div class="panel-head">
-            <h3 data-tooltip="Posição objetiva do contato no processo comercial, independente da temperatura atribuída a ele.">Estágio comercial</h3>
-            <p>Da captura até a venda da mentoria.</p>
-          </div>
-
+          <div class="panel-head"><h3 data-tooltip="Posição objetiva do contato no processo comercial, independente da temperatura.">Estágio comercial</h3><p>Da captura até a venda da mentoria.</p></div>
           <div class="stage-grid">
-            <div class="stage-card">
-              <div class="stage-label" data-tooltip="Contato capturado que ainda não avançou para uma etapa comercial posterior.">Leads</div>
-              <div class="stage-value" id="stageLeads">0</div>
-            </div>
-            <div class="stage-card">
-              <div class="stage-label" data-tooltip="Contato que iniciou o checkout e ainda não foi classificado em uma etapa posterior.">Checkout</div>
-              <div class="stage-value" id="stageCheckout">0</div>
-            </div>
-            <div class="stage-card">
-              <div class="stage-label" data-tooltip="Compradores do produto front-end que ainda não chegaram a uma etapa posterior da mentoria.">Clientes</div>
-              <div class="stage-value" id="stageCustomers">0</div>
-            </div>
-            <div class="stage-card" id="stage-calls">
-              <div class="stage-label" data-tooltip="Compradores ou oportunidades com call de análise já agendada.">Calls agendadas</div>
-              <div class="stage-value" id="stageCalls">0</div>
-            </div>
-            <div class="stage-card">
-              <div class="stage-label" data-tooltip="Contatos que já chegaram à etapa de análise/oferta da mentoria e ainda não foram marcados como venda concluída.">Oportunidades</div>
-              <div class="stage-value" id="stageOpportunities">0</div>
-            </div>
-            <div class="stage-card">
-              <div class="stage-label" data-tooltip="Clientes que concluíram uma compra de mentoria atribuída ao funil.">Mentorias</div>
-              <div class="stage-value" id="stageMentorship">0</div>
-            </div>
+            <div class="stage-card"><div class="stage-label">Leads</div><div class="stage-value" id="stageLeads">0</div></div>
+            <div class="stage-card"><div class="stage-label">Checkout</div><div class="stage-value" id="stageCheckout">0</div></div>
+            <div class="stage-card"><div class="stage-label">Clientes</div><div class="stage-value" id="stageCustomers">0</div></div>
+            <div class="stage-card"><div class="stage-label">Calls agendadas</div><div class="stage-value" id="crmStageCalls">0</div></div>
+            <div class="stage-card"><div class="stage-label">Oportunidades</div><div class="stage-value" id="crmStageOpportunities">0</div></div>
+            <div class="stage-card"><div class="stage-label">Mentorias</div><div class="stage-value" id="stageMentorship">0</div></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="offer-section section-anchor" id="experiments-section">
-      <div class="section-title">
-        <div>
-          <h2 data-tooltip="Experimentos distribuem visitantes entre múltiplas landing pages mantendo atribuição e afinidade com a variante enquanto ela continuar elegível.">Experiments</h2>
-          <span class="updated">Um link, múltiplas páginas, atribuição preservada</span>
-        </div>
-      </div>
-
+    <section class="dashboard-view" data-view="experiments" id="experiments-view">
       <div class="panel">
-        <div class="panel-head">
-          <h3 data-tooltip="Os pesos são relativos e configuráveis. Ex.: 70/30 e 7/3 geram a mesma proporção; peso 0 retira a LP da rotação.">Distribuição de landing pages</h3>
-          <p>Pesos atuais das variantes cadastradas.</p>
-        </div>
-        <div class="experiment-list" id="experimentList">
-          <div class="section-empty">Carregando experimentos...</div>
-        </div>
+        <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição de landing pages</h3><p>Pesos atuais das variantes cadastradas.</p></div>
+        <div class="experiment-list" id="experimentList"><div class="section-empty">Carregando experimentos...</div></div>
       </div>
     </section>
 
-<section class="campaign-section section-anchor" id="performance-section">
-
-  <div class="section-title campaign-title performance-head">
-    <div>
-      <h2 id="performanceTitle" data-tooltip="Compara aquisição e monetização por campanha, conjunto ou anúncio para localizar o tráfego que realmente gera resultado.">Performance por campanha</h2>
-      <span class="updated">Origem → Conversão → Receita</span>
-    </div>
-
-    <div class="breakdown-tabs" aria-label="Nível de detalhamento">
-      <button class="breakdown-btn active" type="button" data-level="campaign">Campanhas</button>
-      <button class="breakdown-btn" type="button" data-level="adset">Conjuntos</button>
-      <button class="breakdown-btn" type="button" data-level="ad">Anúncios</button>
-    </div>
-  </div>
-
-  <div class="panel campaign-panel">
-
-    <div class="table-wrap">
-      <table class="campaign-table">
-
-        <thead id="performanceTableHead"></thead>
-
-        <tbody id="performanceTableBody">
-          <tr>
-            <td colspan="13" class="table-loading">
-              Carregando performance...
-            </td>
-          </tr>
-        </tbody>
-
-      </table>
-    </div>
-
-  </div>
-
-</section>
+    <section class="dashboard-view" data-view="performance" id="performance-view">
+      <div class="section-title campaign-title performance-head">
+        <div><h2 id="performanceTitle" data-tooltip="Compara aquisição e monetização por campanha, conjunto ou anúncio.">Performance por campanha</h2><span class="updated">Origem → Conversão → Receita</span></div>
+        <div class="breakdown-tabs" aria-label="Nível de detalhamento"><button class="breakdown-btn active" type="button" data-level="campaign">Campanhas</button><button class="breakdown-btn" type="button" data-level="adset">Conjuntos</button><button class="breakdown-btn" type="button" data-level="ad">Anúncios</button></div>
+      </div>
+      <div class="panel campaign-panel"><div class="table-wrap"><table class="campaign-table"><thead id="performanceTableHead"></thead><tbody id="performanceTableBody"><tr><td colspan="13" class="table-loading">Carregando performance...</td></tr></tbody></table></div></div>
+    </section>
 
   </div>
 
@@ -1408,43 +1514,88 @@ function decorateTooltips(root = document) {
   });
 }
 
-function setActiveStage(targetId) {
+const dashboardViewTitles = {
+  overview: "Visão geral",
+  clicks: "Cliques",
+  leads: "Leads",
+  checkout: "Checkout",
+  purchases: "Compras",
+  calls: "Calls",
+  mentorship: "Mentoria",
+  crm: "CRM",
+  experiments: "Experimentos",
+  performance: "Performance"
+};
+
+const periodRelevantViews = new Set([
+  "overview",
+  "clicks",
+  "leads",
+  "checkout",
+  "purchases",
+  "calls",
+  "mentorship",
+  "performance"
+]);
+
+function setActiveStage(viewName) {
   const activeTab = document.querySelector(
-    '.stage-tab[data-stage-target="' + targetId + '"]'
+    '.stage-tab[data-stage-target="' + viewName + '"]'
   );
+  const activeView = document.querySelector(
+    '.dashboard-view[data-view="' + viewName + '"]'
+  );
+
+  if (!activeTab || !activeView) return;
 
   document.querySelectorAll(".stage-tab").forEach((tab) => {
     tab.classList.toggle("active", tab === activeTab);
   });
 
-  activeTab?.scrollIntoView({
+  document.querySelectorAll(".dashboard-view").forEach((view) => {
+    view.classList.toggle("active", view === activeView);
+  });
+
+  document.getElementById("viewTitle").textContent =
+    dashboardViewTitles[viewName] || "Direct Response OS";
+
+  document.getElementById("periodToolbar").hidden =
+    !periodRelevantViews.has(viewName);
+
+  activeTab.scrollIntoView({
     behavior: "smooth",
     block: "nearest",
     inline: "center"
   });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function initStageNavigation() {
   document.querySelectorAll(".stage-tab").forEach((tab) => {
     tab.addEventListener("click", (event) => {
-      const targetId = tab.dataset.stageTarget;
-      const target = document.getElementById(targetId);
-      if (!target) return;
+      const viewName = tab.dataset.stageTarget;
+      if (!document.querySelector('.dashboard-view[data-view="' + viewName + '"]')) {
+        return;
+      }
 
       event.preventDefault();
-      setActiveStage(targetId);
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveStage(viewName);
 
       if (history.replaceState) {
-        history.replaceState(null, "", "#" + targetId);
+        history.replaceState(null, "", "#" + viewName);
       }
     });
   });
 
   const hashTarget = location.hash.replace("#", "");
-  if (hashTarget && document.getElementById(hashTarget)) {
-    setActiveStage(hashTarget);
-  }
+  const initialView = document.querySelector(
+    '.dashboard-view[data-view="' + hashTarget + '"]'
+  )
+    ? hashTarget
+    : "overview";
+
+  setActiveStage(initialView);
 }
 
 document.addEventListener("click", (event) => {
@@ -1617,6 +1768,163 @@ function initPeriodControls() {
   updatePeriodUi();
 }
 
+function formatTrendDate(value) {
+  if (!value) return "—";
+  const date = new Date(String(value).slice(0, 10) + "T12:00:00");
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit"
+  });
+}
+
+function buildTrendSvg(values, className) {
+  const safeValues = values.map((value) =>
+    Number.isFinite(Number(value)) ? Number(value) : 0
+  );
+  const width = 1000;
+  const height = 84;
+  const topPadding = 8;
+  const bottomPadding = 8;
+  const usableHeight = height - topPadding - bottomPadding;
+  const max = Math.max(...safeValues, 0);
+  const min = Math.min(...safeValues, 0);
+  const range = max - min || 1;
+
+  const points = safeValues.map((value, index) => {
+    const x = safeValues.length <= 1
+      ? width / 2
+      : (index / (safeValues.length - 1)) * width;
+    const normalized = (value - min) / range;
+    const y = height - bottomPadding - (normalized * usableHeight);
+    return { x, y };
+  });
+
+  const polyline = points
+    .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+    .join(" ");
+
+  const areaPath = points.length
+    ? `M ${points[0].x.toFixed(2)} ${height} L ${points
+        .map((point) => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
+        .join(" L ")} L ${points[points.length - 1].x.toFixed(2)} ${height} Z`
+    : "";
+
+  return `
+    <svg class="trend-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+      <line class="trend-grid-line" x1="0" y1="18" x2="${width}" y2="18"></line>
+      <line class="trend-grid-line" x1="0" y1="42" x2="${width}" y2="42"></line>
+      <line class="trend-grid-line" x1="0" y1="66" x2="${width}" y2="66"></line>
+      <path class="trend-area ${className}" d="${areaPath}"></path>
+      <polyline class="trend-line ${className}" points="${polyline}"></polyline>
+    </svg>
+  `;
+}
+
+function renderTrendRow({
+  label,
+  total,
+  values,
+  className,
+  firstDate,
+  middleDate,
+  lastDate
+}) {
+  return `
+    <div class="trend-row">
+      <div class="trend-meta">
+        <div class="trend-name">${escapeHtml(label)}</div>
+        <div class="trend-total">${escapeHtml(total)}</div>
+      </div>
+      <div class="trend-chart-wrap">
+        ${buildTrendSvg(values, className)}
+        <div class="trend-axis">
+          <span>${escapeHtml(firstDate)}</span>
+          <span>${escapeHtml(middleDate)}</span>
+          <span>${escapeHtml(lastDate)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function loadOverviewTrend() {
+  const container = document.getElementById("overviewTrend");
+
+  try {
+    const response = await fetch(buildReportUrl("/api/overview/timeseries"), {
+      cache: "no-store"
+    });
+
+    if (!response.ok) throw new Error("Erro ao carregar evolução");
+
+    const data = await response.json();
+    const points = Array.isArray(data.points) ? data.points : [];
+
+    if (points.length === 0) {
+      container.innerHTML =
+        '<div class="section-empty">Sem dados para o gráfico neste período.</div>';
+      return;
+    }
+
+    const spendValues = points.map((point) => Number(point.spend || 0));
+    const purchaseValues = points.map((point) => Number(point.purchases || 0));
+    const roasValues = points.map((point) =>
+      point.roas == null ? 0 : Number(point.roas)
+    );
+    const totalSpend = spendValues.reduce((sum, value) => sum + value, 0);
+    const totalPurchases = purchaseValues.reduce((sum, value) => sum + value, 0);
+    const totalRevenue = points.reduce(
+      (sum, point) => sum + Number(point.revenue || 0),
+      0
+    );
+    const blendedRoas = totalSpend > 0 ? totalRevenue / totalSpend : null;
+    const firstDate = formatTrendDate(points[0]?.day);
+    const middleDate = formatTrendDate(
+      points[Math.floor((points.length - 1) / 2)]?.day
+    );
+    const lastDate = formatTrendDate(points[points.length - 1]?.day);
+
+    document.getElementById("overviewTrendRange").textContent =
+      reportRange.preset === "all"
+        ? "Últimos 30 dias no gráfico · KPIs acima permanecem no acumulado total."
+        : `${firstDate} → ${lastDate} · investimento, vendas e ROAS por dia.`;
+
+    container.innerHTML = [
+      renderTrendRow({
+        label: "Investimento",
+        total: formatMoney(totalSpend),
+        values: spendValues,
+        className: "invest",
+        firstDate,
+        middleDate,
+        lastDate
+      }),
+      renderTrendRow({
+        label: "Vendas",
+        total: totalPurchases.toLocaleString("pt-BR"),
+        values: purchaseValues,
+        className: "sales",
+        firstDate,
+        middleDate,
+        lastDate
+      }),
+      renderTrendRow({
+        label: "ROAS",
+        total: formatRoas(blendedRoas),
+        values: roasValues,
+        className: "roas",
+        firstDate,
+        middleDate,
+        lastDate
+      })
+    ].join("");
+  } catch (error) {
+    console.error(error);
+    container.innerHTML =
+      '<div class="section-empty">Erro ao carregar evolução da operação.</div>';
+  }
+}
+
 async function loadLtv() {
   try {
     const response = await fetch(buildReportUrl("/api/revenue/ltv"), {
@@ -1627,22 +1935,32 @@ async function loadLtv() {
 
     const data = await response.json();
     const ltv = data.ltv || {};
+    const ltvValue = ltv.ltv_per_front_buyer == null
+      ? "—"
+      : formatMoney(ltv.ltv_per_front_buyer);
+    const attachValue = ltv.mentorship_attach_rate_pct == null
+      ? "—"
+      : formatPercent(Number(ltv.mentorship_attach_rate_pct));
+    const showRateValue = ltv.call_show_rate_pct == null
+      ? "—"
+      : formatPercent(Number(ltv.call_show_rate_pct));
 
     document.getElementById("frontRevenue").textContent =
       formatMoney(ltv.front_revenue);
-
     document.getElementById("mentorshipRevenue").textContent =
       formatMoney(ltv.mentorship_revenue);
-
-    document.getElementById("ltvPerBuyer").textContent =
-      ltv.ltv_per_front_buyer == null
-        ? "—"
-        : formatMoney(ltv.ltv_per_front_buyer);
-
-    document.getElementById("mentorshipAttach").textContent =
-      ltv.mentorship_attach_rate_pct == null
-        ? "—"
-        : formatPercent(Number(ltv.mentorship_attach_rate_pct));
+    document.getElementById("ltvPerBuyer").textContent = ltvValue;
+    document.getElementById("mentorshipAttach").textContent = attachValue;
+    document.getElementById("overviewLtv").textContent = ltvValue;
+    document.getElementById("stageCalls").textContent =
+      Number(ltv.calls_booked || 0);
+    document.getElementById("stageCallsAttended").textContent =
+      Number(ltv.calls_attended || 0);
+    document.getElementById("stageCallShowRate").textContent = showRateValue;
+    document.getElementById("stageMentorshipSales").textContent =
+      Number(ltv.mentorship_purchases || 0);
+    document.getElementById("stageOpportunities").textContent =
+      Number(ltv.calls_attended || 0);
   } catch (error) {
     console.error(error);
   }
@@ -1665,8 +1983,8 @@ async function loadCrmSummary() {
     document.getElementById("stageLeads").textContent = Number(crm.leads || 0);
     document.getElementById("stageCheckout").textContent = Number(crm.checkout || 0);
     document.getElementById("stageCustomers").textContent = Number(crm.customers || 0);
-    document.getElementById("stageCalls").textContent = Number(crm.call_booked || 0);
-    document.getElementById("stageOpportunities").textContent =
+    document.getElementById("crmStageCalls").textContent = Number(crm.call_booked || 0);
+    document.getElementById("crmStageOpportunities").textContent =
       Number(crm.mentorship_opportunities || 0);
     document.getElementById("stageMentorship").textContent =
       Number(crm.mentorship_customers || 0);
@@ -1977,17 +2295,40 @@ function initBreakdownControls() {
         const checkouts = Number(summary.checkouts || 0);
         const purchases = Number(summary.purchases || 0);
         const revenue = Number(summary.revenue || 0);
+        const spend = Number(summary.spend || 0);
+
+        document.getElementById("overviewSpend").textContent = formatMoney(spend);
+        document.getElementById("overviewPurchases").textContent = purchases;
+        document.getElementById("overviewRevenue").textContent = formatMoney(revenue);
+        document.getElementById("overviewRoas").textContent = formatRoas(summary.roas);
+        document.getElementById("overviewCpa").textContent = formatCurrency(summary.cpa);
 
         document.getElementById("clicks").textContent = clicks;
+        document.getElementById("stageClicksLeads").textContent = leads;
         document.getElementById("leads").textContent = leads;
+        document.getElementById("stageLeadPurchases").textContent = purchases;
         document.getElementById("checkouts").textContent = checkouts;
         document.getElementById("purchases").textContent = purchases;
         document.getElementById("revenue").textContent = formatMoney(revenue);
 
-        document.getElementById("spend").textContent = formatMoney(summary.spend);
         document.getElementById("cpl").textContent = formatCurrency(summary.cpl);
         document.getElementById("cpa").textContent = formatCurrency(summary.cpa);
         document.getElementById("roas").textContent = formatRoas(summary.roas);
+
+        const clickToLead = percentage(leads, clicks);
+        const leadToCheckout = percentage(checkouts, leads);
+        const checkoutToSale = percentage(purchases, checkouts);
+        const clickToSale = percentage(purchases, clicks);
+        const estimatedAbandonment = Math.max(checkouts - purchases, 0);
+
+        document.getElementById("convLead").textContent = formatPercent(clickToLead);
+        document.getElementById("convCheckout").textContent = formatPercent(leadToCheckout);
+        document.getElementById("convSale").textContent = formatPercent(checkoutToSale);
+        document.getElementById("convTotal").textContent = formatPercent(clickToSale);
+        document.getElementById("stageLeadToCheckout").textContent =
+          formatPercent(leadToCheckout);
+        document.getElementById("stageCheckoutAbandon").textContent =
+          estimatedAbandonment;
 
         document.getElementById("funnelClicks").textContent = clicks;
         document.getElementById("funnelLeads").textContent = leads;
@@ -1999,24 +2340,10 @@ function initBreakdownControls() {
         document.getElementById("barClicks").style.width = "100%";
         document.getElementById("barLeads").style.width =
           Math.max(percentage(leads, max), 2) + "%";
-
         document.getElementById("barCheckouts").style.width =
           Math.max(percentage(checkouts, max), 2) + "%";
-
         document.getElementById("barPurchases").style.width =
           Math.max(percentage(purchases, max), 2) + "%";
-
-        document.getElementById("convLead").textContent =
-          formatPercent(percentage(leads, clicks));
-
-        document.getElementById("convCheckout").textContent =
-          formatPercent(percentage(checkouts, leads));
-
-        document.getElementById("convSale").textContent =
-          formatPercent(percentage(purchases, checkouts));
-
-        document.getElementById("convTotal").textContent =
-          formatPercent(percentage(purchases, clicks));
 
         document.getElementById("updatedAt").textContent =
           "Atualizado às " +
@@ -2037,6 +2364,7 @@ function initBreakdownControls() {
     function refreshAll() {
       return Promise.allSettled([
         loadDashboard(),
+        loadOverviewTrend(),
         loadLtv(),
         loadCrmSummary(),
         loadExperiments(),

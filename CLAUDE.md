@@ -74,6 +74,7 @@ Offer foundation routes:
 - PATCH `/api/experiments/:slug/weights` (requires `x-admin-secret`)
 - GET `/api/experiments/:slug/performance`
 - GET `/api/revenue/ltv`
+- GET `/api/overview/timeseries` (daily spend, purchases, revenue and ROAS for the overview chart; defaults to the latest 30 days when no date range is supplied)
 
 Lead-level CRM reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
 

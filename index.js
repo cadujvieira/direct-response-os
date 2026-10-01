@@ -381,6 +381,82 @@ app.get("/api/summary", async (req, res) => {
   }
 });
 
+app.get("/api/overview/timeseries", async (req, res) => {
+  try {
+    const { from, to } = parseReportRange(req.query);
+
+    const result = await pool.query(`
+      WITH bounds AS (
+        SELECT
+          COALESCE(
+            $1::date,
+            ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date - INTERVAL '29 days')::date
+          ) AS from_date,
+          COALESCE(
+            $2::date,
+            (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date
+          ) AS to_date
+      ),
+      days AS (
+        SELECT generate_series(
+          (SELECT from_date FROM bounds),
+          (SELECT to_date FROM bounds),
+          INTERVAL '1 day'
+        )::date AS day
+      ),
+      media AS (
+        SELECT
+          spend_date AS day,
+          COALESCE(SUM(spend), 0)::numeric AS spend
+        FROM dr_ad_spend, bounds
+        WHERE spend_date BETWEEN bounds.from_date AND bounds.to_date
+        GROUP BY spend_date
+      ),
+      sales AS (
+        SELECT
+          (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date) AS day,
+          COUNT(*) FILTER (WHERE event_name = 'purchase')::int AS purchases,
+          COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)::numeric AS revenue
+        FROM dr_events, bounds
+        WHERE (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date)
+          BETWEEN bounds.from_date AND bounds.to_date
+        GROUP BY 1
+      )
+      SELECT
+        d.day,
+        COALESCE(m.spend, 0)::numeric AS spend,
+        COALESCE(s.purchases, 0)::int AS purchases,
+        COALESCE(s.revenue, 0)::numeric AS revenue,
+        CASE
+          WHEN COALESCE(m.spend, 0) > 0
+            THEN ROUND(COALESCE(s.revenue, 0) / m.spend, 4)
+          ELSE NULL
+        END AS roas
+      FROM days d
+      LEFT JOIN media m ON m.day = d.day
+      LEFT JOIN sales s ON s.day = d.day
+      ORDER BY d.day ASC
+    `, [from, to]);
+
+    res.json({
+      ok: true,
+      requested_range: { from, to },
+      range: {
+        from: result.rows[0]?.day || null,
+        to: result.rows[result.rows.length - 1]?.day || null
+      },
+      points: result.rows
+    });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+
+    res.status(statusCode).json({
+      ok: false,
+      error: statusCode === 400 ? error.message : "erro interno"
+    });
+  }
+});
+
 app.post("/track/click", async (req, res) => {
   try {
     const {
