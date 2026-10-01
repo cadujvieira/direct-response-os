@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  buildEconomicsSummary,
   buildMcpUrl,
   normalizeDashboard,
   normalizeMetaObject,
@@ -132,4 +133,62 @@ test("performance usa nomes parentais e metricas do MCP", () => {
   assert.equal(row.revenue, 8.91);
   assert.equal(row.cpa, 1);
   assert.equal(row.roas, 2.97);
+});
+
+
+test("economia combina aquisicao UTMify com monetizacao interna sem duplicar receita", () => {
+  const summary = buildEconomicsSummary(
+    {
+      spend: 29000,
+      purchases: 100,
+      revenue: 29700
+    },
+    {
+      front_purchases: 96,
+      front_revenue: 28512,
+      mentorship_purchases: 10,
+      mentorship_revenue: 50000,
+      bump_revenue: 0,
+      refunds: 1000,
+      net_revenue: 77512,
+      ltv_per_front_buyer: 807.42,
+      mentorship_attach_rate_pct: 10.42
+    }
+  );
+
+  assert.equal(summary.spend, 29000);
+  assert.equal(summary.utmify_purchases, 100);
+  assert.equal(summary.utmify_front_revenue, 29700);
+  assert.equal(summary.utmify_cpa, 290);
+  assert.equal(summary.utmify_front_roas, 29700 / 29000);
+  assert.equal(summary.mentorship_revenue, 50000);
+  assert.equal(summary.tracked_net_revenue, 77512);
+  assert.equal(summary.tracked_total_roas, 77512 / 29000);
+  assert.equal(summary.purchase_tracking_coverage_pct, 96);
+  assert.equal(
+    summary.revenue_tracking_coverage_pct,
+    (28512 / 29700) * 100
+  );
+  assert.equal(summary.downstream_revenue, 49000);
+});
+
+test("economia retorna null para ratios sem denominador", () => {
+  const summary = buildEconomicsSummary(
+    { spend: 0, purchases: 0, revenue: 0 },
+    {
+      front_purchases: 0,
+      front_revenue: 0,
+      mentorship_purchases: 0,
+      mentorship_revenue: 0,
+      bump_revenue: 0,
+      refunds: 0,
+      net_revenue: 0
+    }
+  );
+
+  assert.equal(summary.utmify_cpa, null);
+  assert.equal(summary.utmify_front_roas, null);
+  assert.equal(summary.tracked_total_roas, null);
+  assert.equal(summary.purchase_tracking_coverage_pct, null);
+  assert.equal(summary.revenue_tracking_coverage_pct, null);
 });

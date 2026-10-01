@@ -641,6 +641,174 @@ async function getPerformance(pool, input = {}) {
   };
 }
 
+
+
+function safeRatio(numerator, denominator) {
+  const n = Number(numerator);
+  const d = Number(denominator);
+  return Number.isFinite(n) && Number.isFinite(d) && d > 0
+    ? n / d
+    : null;
+}
+
+function buildEconomicsSummary(media = {}, internal = {}) {
+  const spend = numberOrZero(media.spend);
+  const utmifyPurchases = numberOrZero(media.purchases);
+  const utmifyRevenue = numberOrZero(media.revenue);
+
+  const internalFrontPurchases = numberOrZero(internal.front_purchases);
+  const internalFrontRevenue = numberOrZero(internal.front_revenue);
+  const mentorshipRevenue = numberOrZero(internal.mentorship_revenue);
+  const bumpRevenue = numberOrZero(internal.bump_revenue);
+  const refunds = numberOrZero(internal.refunds);
+  const trackedNetRevenue = numberOrZero(internal.net_revenue);
+
+  return {
+    spend,
+    utmify_purchases: utmifyPurchases,
+    utmify_front_revenue: utmifyRevenue,
+    utmify_cpa: safeRatio(spend, utmifyPurchases),
+    utmify_front_roas: safeRatio(utmifyRevenue, spend),
+    internal_front_purchases: internalFrontPurchases,
+    internal_front_revenue: internalFrontRevenue,
+    mentorship_purchases: numberOrZero(internal.mentorship_purchases),
+    mentorship_revenue: mentorshipRevenue,
+    bump_revenue: bumpRevenue,
+    refunds,
+    tracked_net_revenue: trackedNetRevenue,
+    tracked_total_roas: safeRatio(trackedNetRevenue, spend),
+    ltv_per_front_buyer:
+      internal.ltv_per_front_buyer == null
+        ? null
+        : Number(internal.ltv_per_front_buyer),
+    mentorship_attach_rate_pct:
+      internal.mentorship_attach_rate_pct == null
+        ? null
+        : Number(internal.mentorship_attach_rate_pct),
+    purchase_tracking_coverage_pct:
+      utmifyPurchases > 0
+        ? (internalFrontPurchases / utmifyPurchases) * 100
+        : null,
+    revenue_tracking_coverage_pct:
+      utmifyRevenue > 0
+        ? (internalFrontRevenue / utmifyRevenue) * 100
+        : null,
+    downstream_revenue:
+      mentorshipRevenue + bumpRevenue - refunds
+  };
+}
+
+async function getInternalEconomics(pool, from, to) {
+  const result = await pool.query(`
+    WITH cohort_purchases AS (
+      SELECT event_id, click_id, value
+      FROM dr_events
+      WHERE event_name = 'purchase'
+        AND (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date)
+        AND (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date)
+    ),
+    cohort_clicks AS (
+      SELECT DISTINCT click_id
+      FROM cohort_purchases
+      WHERE click_id IS NOT NULL
+    ),
+    front AS (
+      SELECT
+        COUNT(DISTINCT COALESCE(click_id, 'event:' || event_id))::int AS front_purchases,
+        COALESCE(SUM(value),0)::numeric AS front_revenue
+      FROM cohort_purchases
+    ),
+    downstream AS (
+      SELECT
+        COUNT(DISTINCT e.click_id) FILTER (
+          WHERE e.event_name = 'mentorship_purchase'
+        )::int AS mentorship_purchases,
+        COALESCE(SUM(e.value) FILTER (
+          WHERE e.event_name = 'mentorship_purchase'
+        ),0)::numeric AS mentorship_revenue,
+        COALESCE(SUM(e.value) FILTER (
+          WHERE e.event_name = 'order_bump_purchase'
+        ),0)::numeric AS bump_revenue,
+        COALESCE(SUM(ABS(e.value)) FILTER (
+          WHERE e.event_name = 'refund'
+        ),0)::numeric AS refunds
+      FROM dr_events e
+      JOIN cohort_clicks c ON c.click_id = e.click_id
+    )
+    SELECT
+      f.front_purchases,
+      f.front_revenue,
+      d.mentorship_purchases,
+      d.mentorship_revenue,
+      d.bump_revenue,
+      d.refunds,
+      (
+        f.front_revenue +
+        d.mentorship_revenue +
+        d.bump_revenue -
+        d.refunds
+      )::numeric AS net_revenue,
+      CASE WHEN f.front_purchases > 0
+        THEN ROUND((
+          f.front_revenue +
+          d.mentorship_revenue +
+          d.bump_revenue -
+          d.refunds
+        ) / f.front_purchases, 2)
+        ELSE NULL END AS ltv_per_front_buyer,
+      CASE WHEN f.front_purchases > 0
+        THEN ROUND(
+          (d.mentorship_purchases::numeric / f.front_purchases) * 100,
+          2
+        )
+        ELSE NULL END AS mentorship_attach_rate_pct
+    FROM front f
+    CROSS JOIN downstream d
+  `, [from, to]);
+
+  return result.rows[0] || {};
+}
+
+async function getUtmifyMediaTotals(pool, syncId) {
+  const result = await pool.query(`
+    SELECT
+      COALESCE(SUM((metrics->>'spend')::numeric), 0)::numeric AS spend,
+      COALESCE(SUM((metrics->>'purchases')::numeric), 0)::numeric AS purchases,
+      COALESCE(SUM((metrics->>'revenue')::numeric), 0)::numeric AS revenue
+    FROM dr_utmify_ad_objects
+    WHERE sync_id = $1
+      AND level = 'campaign'
+  `, [syncId]);
+
+  return result.rows[0] || {};
+}
+
+async function getEconomics(pool, input = {}) {
+  const range = validateSyncRange(input.from, input.to);
+  const sync = await latestSyncForRange(pool, range.from, range.to);
+
+  if (!sync) {
+    const error = new Error("periodo ainda nao sincronizado com a UTMify");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const [media, internal] = await Promise.all([
+    getUtmifyMediaTotals(pool, sync.id),
+    getInternalEconomics(pool, range.from, range.to)
+  ]);
+
+  return {
+    sync: {
+      id: sync.id,
+      date_from: sync.date_from,
+      date_to: sync.date_to,
+      finished_at: sync.finished_at
+    },
+    economics: buildEconomicsSummary(media, internal)
+  };
+}
+
 function registerUtmifyRoutes(app, pool) {
   app.get("/api/integrations/utmify/status", async (req, res) => {
     if (!requireAdmin(req, res)) return;
@@ -709,14 +877,33 @@ function registerUtmifyRoutes(app, pool) {
       });
     }
   });
+
+  app.get("/api/integrations/utmify/economics", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    try {
+      const result = await getEconomics(pool, {
+        from: req.query.from,
+        to: req.query.to
+      });
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      res.status(error.statusCode || 500).json({
+        ok: false,
+        error: error.statusCode ? error.message : "erro interno"
+      });
+    }
+  });
 }
 
 module.exports = {
   ALLOWED_LEVELS,
   MAX_SYNC_DAYS,
+  buildEconomicsSummary,
   buildMcpUrl,
   callMcpTool,
   discoverUtmify,
+  getEconomics,
   getPerformance,
   initUtmifyDb,
   normalizeDashboard,

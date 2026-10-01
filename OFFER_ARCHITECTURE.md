@@ -175,11 +175,22 @@ The Performance screen keeps an explicit source switch:
 - `Oferta DR` uses internal attribution/spend tables;
 - `UTMify` uses a synchronized UTMify snapshot for the selected period.
 
+The protected `Economia` view intentionally keeps acquisition and monetization sources separate:
+- UTMify supplies spend, front-end purchases, front-end revenue, front CPA and front ROAS;
+- Oferta DR supplies the front-buyer cohort, mentorship revenue, bump revenue, refunds, tracked net revenue and LTV;
+- `tracked_total_roas = tracked_net_revenue / utmify_spend`;
+- purchase tracking coverage compares internal front purchases against UTMify purchases;
+- revenue tracking coverage compares internal front revenue against UTMify front revenue;
+- total tracked ROAS must be read together with those coverage values. If UTMify and internal front-end totals diverge materially, the UI explicitly warns that the ratio is mathematical but not yet validated attribution.
+
+UTMify front revenue is never added to Oferta DR front revenue in the same total, because that would double count the entry product.
+
 Protected routes:
 - `GET /api/integrations/utmify/status`;
 - `POST /api/integrations/utmify/discover`;
 - `POST /api/integrations/utmify/sync`;
-- `GET /api/integrations/utmify/performance`.
+- `GET /api/integrations/utmify/performance`;
+- `GET /api/integrations/utmify/economics`.
 
 All UTMify integration routes require `x-admin-secret`.
 

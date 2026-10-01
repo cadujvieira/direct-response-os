@@ -1937,6 +1937,212 @@
 
 
 
+    .economics-workspace[hidden],
+    .economics-auth-panel[hidden] {
+      display: none !important;
+    }
+
+    .economics-auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+    }
+
+    .economics-auth-panel h3 {
+      font-size: 15px;
+    }
+
+    .economics-auth-panel p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .economics-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .economics-kpi-card {
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,.018), transparent), var(--panel);
+    }
+
+    .economics-kpi-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+    }
+
+    .economics-kpi-card strong {
+      display: block;
+      margin-top: 9px;
+      font-size: 24px;
+      line-height: 1.05;
+    }
+
+    .economics-kpi-card small {
+      display: block;
+      margin-top: 7px;
+      color: #69717d;
+      font-size: 10px;
+    }
+
+    .economics-kpi-card.revenue strong,
+    .economics-kpi-card.success strong {
+      color: var(--green);
+    }
+
+    .economics-detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(300px, .8fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .economics-quality-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .economics-quality-item {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .economics-quality-item span {
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .economics-quality-item strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 18px;
+    }
+
+    .economics-quality-item small {
+      display: block;
+      margin-top: 5px;
+      color: #6f7783;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .economics-note {
+      margin: 0 14px 14px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: #8d96a2;
+      background: rgba(255,255,255,.01);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .economics-note.good {
+      color: #91eab9;
+      border-color: rgba(62,227,137,.2);
+      background: rgba(62,227,137,.05);
+    }
+
+    .economics-note.warn {
+      color: #e8cc78;
+      border-color: rgba(245,196,81,.2);
+      background: rgba(245,196,81,.05);
+    }
+
+    .economics-source-list {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .economics-source-list > div {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .economics-source-list strong {
+      display: block;
+      font-size: 11px;
+    }
+
+    .economics-source-list small {
+      display: block;
+      margin-top: 4px;
+      color: #747d89;
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .economics-source-dot {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      margin-top: 3px;
+      border-radius: 50%;
+      background: #7d8794;
+    }
+
+    .economics-source-dot.utmify {
+      background: #58a7ff;
+    }
+
+    .economics-source-dot.dr {
+      background: var(--green);
+    }
+
+    .economics-source-dot.blended {
+      background: var(--yellow);
+    }
+
+    @media (max-width: 1100px) {
+      .economics-kpi-grid,
+      .economics-quality-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .economics-detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .economics-auth-panel {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .economics-auth-panel .crm-primary-btn {
+        width: 100%;
+      }
+
+      .economics-kpi-grid,
+      .economics-quality-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .integration-workspace[hidden],
     .integration-auth-panel[hidden] {
       display: none !important;
@@ -2975,6 +3181,7 @@
         <a class="stage-tab" href="#purchases" data-stage-target="purchases">Compras</a>
         <a class="stage-tab" href="#calls" data-stage-target="calls">Calls</a>
         <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
+        <a class="stage-tab" href="#economics" data-stage-target="economics">Economia</a>
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
         <a class="stage-tab" href="#lists" data-stage-target="lists">Listas</a>
         <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
@@ -3156,6 +3363,123 @@
         <div class="card"><div class="metric-label" data-tooltip="Valor total líquido médio gerado por comprador front-end da coorte.">LTV por comprador</div><div class="metric-value" id="ltvPerBuyer">—</div><div class="metric-sub">Receita líquida média</div></div>
         <div class="card"><div class="metric-label" data-tooltip="Percentual de compradores front-end que também compraram mentoria.">Attach mentoria</div><div class="metric-value" id="mentorshipAttach">—</div><div class="metric-sub">Conversão para mentoria</div></div>
         <div class="card"><div class="metric-label" data-tooltip="Quantidade de vendas de mentoria atribuídas à coorte.">Vendas de mentoria</div><div class="metric-value" id="stageMentorshipSales">0</div><div class="metric-sub">High ticket</div></div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="economics" id="economics-view">
+      <div class="panel economics-auth-panel" id="economicsAuthPanel">
+        <div>
+          <h3>Economia protegida</h3>
+          <p>Conecte a sessão administrativa para combinar aquisição UTMify com monetização e LTV do Oferta DR.</p>
+        </div>
+        <button class="crm-primary-btn" id="economicsGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+
+      <div class="economics-workspace" id="economicsWorkspace" hidden>
+        <div class="economics-kpi-grid">
+          <div class="economics-kpi-card">
+            <span data-tooltip="Investimento total reportado pela UTMify no snapshot sincronizado para este período.">Investimento UTMify</span>
+            <strong id="economicsSpend">R$ 0</strong>
+            <small>Aquisição paga</small>
+          </div>
+          <div class="economics-kpi-card">
+            <span data-tooltip="Compras front-end aprovadas atribuídas pela UTMify no período.">Vendas front</span>
+            <strong id="economicsPurchases">0</strong>
+            <small>Fonte: UTMify</small>
+          </div>
+          <div class="economics-kpi-card">
+            <span data-tooltip="Receita front-end atribuída pela UTMify no período sincronizado.">Receita front</span>
+            <strong id="economicsFrontRevenue">R$ 0</strong>
+            <small>Fonte: UTMify</small>
+          </div>
+          <div class="economics-kpi-card">
+            <span data-tooltip="Investimento UTMify dividido pelas compras front-end atribuídas.">CPA front</span>
+            <strong id="economicsCpa">—</strong>
+            <small>Custo por compra</small>
+          </div>
+          <div class="economics-kpi-card">
+            <span data-tooltip="Receita front-end UTMify dividida pelo investimento UTMify.">ROAS front</span>
+            <strong id="economicsFrontRoas">—</strong>
+            <small>Retorno da entrada</small>
+          </div>
+          <div class="economics-kpi-card revenue">
+            <span data-tooltip="Receita de mentoria atribuída à coorte de compradores front-end rastreada pelo Oferta DR.">Receita mentoria</span>
+            <strong id="economicsMentorshipRevenue">R$ 0</strong>
+            <small>Fonte: Oferta DR</small>
+          </div>
+          <div class="economics-kpi-card">
+            <span data-tooltip="Receita líquida rastreada pelo Oferta DR para a coorte: front + mentoria + bump - reembolsos.">Receita líquida rastreada</span>
+            <strong id="economicsTrackedRevenue">R$ 0</strong>
+            <small>Coorte Oferta DR</small>
+          </div>
+          <div class="economics-kpi-card success">
+            <span data-tooltip="Receita líquida rastreada pelo Oferta DR dividida pelo investimento UTMify. Leia junto com a cobertura de tracking abaixo.">ROAS total rastreado</span>
+            <strong id="economicsTotalRoas">—</strong>
+            <small>Monetização total / mídia</small>
+          </div>
+        </div>
+
+        <div class="economics-detail-grid">
+          <div class="panel economics-quality-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Compara o front-end capturado internamente com o front-end atribuído pela UTMify. Quanto mais próximos, mais representativo é o ROAS total rastreado.">Qualidade da leitura</h3>
+                <p id="economicsRangeLabel">Aguardando período sincronizado.</p>
+              </div>
+              <button class="crm-secondary-btn" id="economicsRefresh" type="button">Atualizar</button>
+            </div>
+
+            <div class="economics-quality-grid">
+              <div class="economics-quality-item">
+                <span>Cobertura de compras</span>
+                <strong id="economicsPurchaseCoverage">—</strong>
+                <small>Compras DR ÷ compras UTMify</small>
+              </div>
+              <div class="economics-quality-item">
+                <span>Cobertura de receita front</span>
+                <strong id="economicsRevenueCoverage">—</strong>
+                <small>Receita front DR ÷ receita front UTMify</small>
+              </div>
+              <div class="economics-quality-item">
+                <span>LTV por comprador</span>
+                <strong id="economicsLtv">—</strong>
+                <small>Receita líquida rastreada / comprador front DR</small>
+              </div>
+              <div class="economics-quality-item">
+                <span>Attach mentoria</span>
+                <strong id="economicsAttach">—</strong>
+                <small>Compradores front DR que viraram mentoria</small>
+              </div>
+            </div>
+
+            <div class="economics-note" id="economicsNote">
+              Sincronize o período na UTMify para calcular a economia completa.
+            </div>
+          </div>
+
+          <div class="panel economics-source-panel">
+            <div class="panel-head">
+              <div>
+                <h3>Como ler</h3>
+                <p>As fontes permanecem separadas para evitar dupla contagem.</p>
+              </div>
+            </div>
+            <div class="economics-source-list">
+              <div>
+                <span class="economics-source-dot utmify"></span>
+                <div><strong>UTMify</strong><small>Investimento, vendas front, receita front, CPA e ROAS de aquisição.</small></div>
+              </div>
+              <div>
+                <span class="economics-source-dot dr"></span>
+                <div><strong>Oferta DR</strong><small>Mentoria, bump, reembolsos, receita líquida rastreada e LTV.</small></div>
+              </div>
+              <div>
+                <span class="economics-source-dot blended"></span>
+                <div><strong>Combinado</strong><small>ROAS total rastreado usa receita líquida DR sobre investimento UTMify.</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -3934,6 +4258,7 @@ const dashboardViewTitles = {
   purchases: "Compras",
   calls: "Calls",
   mentorship: "Mentoria",
+  economics: "Economia",
   crm: "CRM",
   lists: "Listas",
   automations: "Automações",
@@ -3950,6 +4275,7 @@ const periodRelevantViews = new Set([
   "purchases",
   "calls",
   "mentorship",
+  "economics",
   "integrations",
   "performance"
 ]);
@@ -3985,6 +4311,10 @@ function setActiveStage(viewName) {
   });
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (viewName === "economics") {
+    loadEconomics();
+  }
 
   if (viewName === "lists") {
     loadLists();
@@ -5762,6 +6092,176 @@ function initUtmifyIntegration() {
   );
 
   updateUtmifyPeriodText();
+}
+
+
+function economicsSetProtectedState(connected) {
+  document.getElementById("economicsAuthPanel").hidden = connected;
+  document.getElementById("economicsWorkspace").hidden = !connected;
+}
+
+function economicsReset() {
+  document.getElementById("economicsSpend").textContent = "R$ 0";
+  document.getElementById("economicsPurchases").textContent = "0";
+  document.getElementById("economicsFrontRevenue").textContent = "R$ 0";
+  document.getElementById("economicsCpa").textContent = "—";
+  document.getElementById("economicsFrontRoas").textContent = "—";
+  document.getElementById("economicsMentorshipRevenue").textContent = "R$ 0";
+  document.getElementById("economicsTrackedRevenue").textContent = "R$ 0";
+  document.getElementById("economicsTotalRoas").textContent = "—";
+  document.getElementById("economicsPurchaseCoverage").textContent = "—";
+  document.getElementById("economicsRevenueCoverage").textContent = "—";
+  document.getElementById("economicsLtv").textContent = "—";
+  document.getElementById("economicsAttach").textContent = "—";
+}
+
+function economicsCoverageNote(economics) {
+  const purchase = economics.purchase_tracking_coverage_pct;
+  const revenue = economics.revenue_tracking_coverage_pct;
+  const utmifyPurchases = Number(economics.utmify_purchases || 0);
+  const utmifyRevenue = Number(economics.utmify_front_revenue || 0);
+  const internalPurchases = Number(economics.internal_front_purchases || 0);
+  const internalRevenue = Number(economics.internal_front_revenue || 0);
+
+  if (
+    (utmifyPurchases === 0 && internalPurchases > 0) ||
+    (utmifyRevenue === 0 && internalRevenue > 0)
+  ) {
+    return {
+      tone: "warn",
+      text: "As fontes estão divergentes neste período: a UTMify não atribuiu vendas/receita front, mas o Oferta DR possui eventos internos. O ROAS total rastreado é matemático, porém não deve ser lido como atribuição validada até alinharmos a origem."
+    };
+  }
+
+  if (purchase == null && revenue == null) {
+    return {
+      tone: "",
+      text: "Ainda não há base suficiente para comparar a cobertura do tracking interno com a UTMify."
+    };
+  }
+
+  const parts = [];
+  if (purchase != null) {
+    parts.push("compras " + formatPercent(Number(purchase)));
+  }
+  if (revenue != null) {
+    parts.push("receita front " + formatPercent(Number(revenue)));
+  }
+
+  const values = [purchase, revenue]
+    .filter((value) => value != null)
+    .map(Number);
+  const closeToParity = values.length > 0 &&
+    values.every((value) => value >= 90 && value <= 110);
+
+  return {
+    tone: closeToParity ? "good" : "warn",
+    text: closeToParity
+      ? "Cobertura próxima entre as fontes (" + parts.join(" · ") + "). O ROAS total rastreado tende a representar melhor a economia da coorte."
+      : "Há diferença entre UTMify e tracking interno (" + parts.join(" · ") + "). Leia o ROAS total rastreado como parcial até aproximarmos a cobertura."
+  };
+}
+
+function renderEconomics(data) {
+  const economics = data.economics || {};
+  const sync = data.sync || {};
+
+  document.getElementById("economicsSpend").textContent =
+    formatMoney(economics.spend);
+  document.getElementById("economicsPurchases").textContent =
+    Number(economics.utmify_purchases || 0).toLocaleString("pt-BR");
+  document.getElementById("economicsFrontRevenue").textContent =
+    formatMoney(economics.utmify_front_revenue);
+  document.getElementById("economicsCpa").textContent =
+    formatCurrency(economics.utmify_cpa);
+  document.getElementById("economicsFrontRoas").textContent =
+    formatRoas(economics.utmify_front_roas);
+  document.getElementById("economicsMentorshipRevenue").textContent =
+    formatMoney(economics.mentorship_revenue);
+  document.getElementById("economicsTrackedRevenue").textContent =
+    formatMoney(economics.tracked_net_revenue);
+  document.getElementById("economicsTotalRoas").textContent =
+    formatRoas(economics.tracked_total_roas);
+  document.getElementById("economicsPurchaseCoverage").textContent =
+    economics.purchase_tracking_coverage_pct == null
+      ? "—"
+      : formatPercent(Number(economics.purchase_tracking_coverage_pct));
+  document.getElementById("economicsRevenueCoverage").textContent =
+    economics.revenue_tracking_coverage_pct == null
+      ? "—"
+      : formatPercent(Number(economics.revenue_tracking_coverage_pct));
+  document.getElementById("economicsLtv").textContent =
+    economics.ltv_per_front_buyer == null
+      ? "—"
+      : formatMoney(economics.ltv_per_front_buyer);
+  document.getElementById("economicsAttach").textContent =
+    economics.mentorship_attach_rate_pct == null
+      ? "—"
+      : formatPercent(Number(economics.mentorship_attach_rate_pct));
+
+  const from = utmifyDateOnly(sync.date_from);
+  const to = utmifyDateOnly(sync.date_to);
+  document.getElementById("economicsRangeLabel").textContent =
+    from && to
+      ? displayIsoDate(from) + " → " + displayIsoDate(to) +
+        " · snapshot UTMify #" + Number(sync.id || 0)
+      : "Período sincronizado";
+
+  const note = economicsCoverageNote(economics);
+  const noteNode = document.getElementById("economicsNote");
+  noteNode.textContent = note.text;
+  noteNode.className = "economics-note" + (note.tone ? " " + note.tone : "");
+}
+
+async function loadEconomics() {
+  const secret = utmifyAdminSecret();
+
+  if (!secret) {
+    economicsSetProtectedState(false);
+    return;
+  }
+
+  if (!crmState.secret) crmState.secret = secret;
+  economicsSetProtectedState(true);
+
+  const range = utmifyPerformanceRange();
+  const params = new URLSearchParams({
+    from: range.from,
+    to: range.to
+  });
+
+  try {
+    const data = await utmifyFetch(
+      "/api/integrations/utmify/economics?" + params.toString()
+    );
+    renderEconomics(data);
+  } catch (error) {
+    economicsReset();
+
+    const noteNode = document.getElementById("economicsNote");
+    noteNode.className = "economics-note warn";
+
+    if (error.status === 404) {
+      noteNode.textContent =
+        "Este período ainda não possui snapshot UTMify. Abra Integrações → UTMify, sincronize o período e volte para Economia.";
+    } else {
+      noteNode.textContent = error.message;
+    }
+  }
+}
+
+function initEconomics() {
+  document.getElementById("economicsGoCrm").addEventListener("click", () => {
+    setActiveStage("crm");
+    if (history.replaceState) {
+      history.replaceState(null, "", "#crm");
+    }
+  });
+
+  document.getElementById("economicsRefresh").addEventListener(
+    "click",
+    loadEconomics
+  );
 }
 
 
@@ -7605,6 +8105,10 @@ function initBreakdownControls() {
       }
 
       const activeView = document.querySelector(".dashboard-view.active")?.dataset.view;
+      if (activeView === "economics") {
+        tasks.push(loadEconomics());
+      }
+
       if (activeView === "automations") {
         tasks.push(loadAutomations());
       }
@@ -7621,6 +8125,7 @@ function initBreakdownControls() {
     initPeriodControls();
     initBreakdownControls();
     initCrm();
+    initEconomics();
     initLists();
     initAutomations();
     initUtmifyIntegration();
