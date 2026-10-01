@@ -120,6 +120,146 @@
       box-shadow: 0 0 12px rgba(62, 227, 137, .7);
     }
 
+    .stage-nav-shell {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      margin: 0 0 28px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 9, 12, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .stage-nav {
+      display: flex;
+      align-items: stretch;
+      gap: 22px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      white-space: nowrap;
+    }
+
+    .stage-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .stage-tab {
+      position: relative;
+      flex: 0 0 auto;
+      padding: 15px 1px 14px;
+      border: 0;
+      background: transparent;
+      color: #a3a9b4;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 650;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color .18s ease;
+    }
+
+    .stage-tab:hover,
+    .stage-tab:focus-visible {
+      color: var(--text);
+      outline: none;
+    }
+
+    .stage-tab.active {
+      color: var(--text);
+    }
+
+    .stage-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      border-radius: 999px 999px 0 0;
+      background: var(--green);
+    }
+
+    .section-anchor,
+    [id^="stage-"] {
+      scroll-margin-top: 72px;
+    }
+
+    .tooltip-trigger {
+      display: inline-grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      margin-left: 5px;
+      padding: 0;
+      border: 1px solid #3a404b;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.025);
+      color: #7d8592;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1;
+      vertical-align: 1px;
+      cursor: help;
+      transition: .15s ease;
+    }
+
+    .tooltip-trigger:hover,
+    .tooltip-trigger:focus-visible,
+    .tooltip-trigger[aria-expanded="true"] {
+      color: #08110b;
+      border-color: var(--green);
+      background: var(--green);
+      outline: none;
+    }
+
+    .global-tooltip {
+      position: fixed;
+      z-index: 9999;
+      max-width: 300px;
+      padding: 10px 12px;
+      border: 1px solid #333946;
+      border-radius: 10px;
+      background: #171a20;
+      color: #e6e9ee;
+      box-shadow: 0 14px 34px rgba(0,0,0,.34);
+      font-size: 12px;
+      line-height: 1.45;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .12s ease, transform .12s ease;
+    }
+
+    .global-tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 620px) {
+      .stage-nav-shell {
+        margin-left: -14px;
+        margin-right: -14px;
+        padding: 0 14px;
+      }
+
+      .stage-nav {
+        gap: 20px;
+      }
+
+      .stage-tab {
+        padding-top: 14px;
+        padding-bottom: 13px;
+        font-size: 12px;
+      }
+
+      .global-tooltip {
+        max-width: min(300px, calc(100vw - 24px));
+      }
+    }
+
     .section-title {
       display: flex;
       align-items: flex-end;
@@ -780,7 +920,22 @@
       </div>
     </header>
 
-    <div class="section-title">
+    <nav class="stage-nav-shell" aria-label="Etapas do painel">
+      <div class="stage-nav" id="stageNav">
+        <a class="stage-tab active" href="#overview-section" data-stage-target="overview-section">Visão geral</a>
+        <a class="stage-tab" href="#stage-clicks" data-stage-target="stage-clicks">Cliques</a>
+        <a class="stage-tab" href="#stage-leads" data-stage-target="stage-leads">Leads</a>
+        <a class="stage-tab" href="#stage-checkout" data-stage-target="stage-checkout">Checkout</a>
+        <a class="stage-tab" href="#stage-purchases" data-stage-target="stage-purchases">Compras</a>
+        <a class="stage-tab" href="#stage-calls" data-stage-target="stage-calls">Calls</a>
+        <a class="stage-tab" href="#stage-mentorship" data-stage-target="stage-mentorship">Mentoria</a>
+        <a class="stage-tab" href="#crm-section" data-stage-target="crm-section">CRM</a>
+        <a class="stage-tab" href="#experiments-section" data-stage-target="experiments-section">Experimentos</a>
+        <a class="stage-tab" href="#performance-section" data-stage-target="performance-section">Performance</a>
+      </div>
+    </nav>
+
+    <div class="section-title section-anchor" id="overview-section">
       <h2>Visão geral</h2>
       <span class="updated" id="updatedAt">Carregando...</span>
     </div>
@@ -809,39 +964,39 @@
       </div>
 
       <div class="period-feedback">
-        <span class="active-period" id="activePeriod">Período: Tudo</span>
+        <span class="active-period" id="activePeriod" data-tooltip="O período filtra aquisição e performance. No LTV, ele define a coorte de compradores front-end e acompanha a monetização posterior desses mesmos compradores.">Período: Tudo</span>
         <span class="period-error" id="periodError"></span>
       </div>
     </div>
 
     <section class="metrics">
 
-      <div class="card">
-        <div class="metric-label">Cliques</div>
+      <div class="card" id="stage-clicks">
+        <div class="metric-label" data-tooltip="Entradas rastreadas pelo Direct Response OS. Cada nova entrada pode ter um click_id próprio para preservar a atribuição.">Cliques</div>
         <div class="metric-value" id="clicks">0</div>
         <div class="metric-sub">Entradas rastreadas</div>
       </div>
 
-      <div class="card">
-        <div class="metric-label">Leads</div>
+      <div class="card" id="stage-leads">
+        <div class="metric-label" data-tooltip="Contatos capturados e atribuídos à origem de aquisição. A deduplicação evita contar o mesmo lead repetidamente.">Leads</div>
         <div class="metric-value" id="leads">0</div>
         <div class="metric-sub">Leads únicos</div>
       </div>
 
-      <div class="card">
-        <div class="metric-label">Checkouts</div>
+      <div class="card" id="stage-checkout">
+        <div class="metric-label" data-tooltip="Eventos checkout_started registrados antes da compra. Ajuda a identificar abandono entre intenção e pagamento.">Checkouts</div>
         <div class="metric-value" id="checkouts">0</div>
         <div class="metric-sub">Checkouts iniciados</div>
       </div>
 
-      <div class="card">
-        <div class="metric-label">Vendas</div>
+      <div class="card" id="stage-purchases">
+        <div class="metric-label" data-tooltip="Compras aprovadas do produto front-end. A venda de mentoria é contabilizada separadamente no LTV.">Vendas</div>
         <div class="metric-value" id="purchases">0</div>
         <div class="metric-sub">Compras aprovadas</div>
       </div>
 
       <div class="card revenue">
-        <div class="metric-label">Receita</div>
+        <div class="metric-label" data-tooltip="Receita rastreada das compras front-end no período selecionado.">Receita</div>
         <div class="metric-value" id="revenue">R$ 0</div>
         <div class="metric-sub">Receita rastreada</div>
       </div>
@@ -851,60 +1006,60 @@
     <section class="metrics media-metrics">
 
       <div class="card invest">
-        <div class="metric-label">Investimento</div>
+        <div class="metric-label" data-tooltip="Valor gasto em mídia paga importado para o período. Sem spend registrado, CPL, CPA e ROAS ficam sem cálculo.">Investimento</div>
         <div class="metric-value" id="spend">R$ 0</div>
         <div class="metric-sub">Gasto em mídia paga</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">CPL</div>
+        <div class="metric-label" data-tooltip="Custo por lead: investimento em mídia dividido pela quantidade de leads atribuídos.">CPL</div>
         <div class="metric-value" id="cpl">—</div>
         <div class="metric-sub">Custo por lead</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">CPA</div>
+        <div class="metric-label" data-tooltip="Custo por aquisição front-end: investimento dividido pelas compras aprovadas do produto principal.">CPA</div>
         <div class="metric-value" id="cpa">—</div>
         <div class="metric-sub">Custo por compra</div>
       </div>
 
       <div class="card">
-        <div class="metric-label">ROAS</div>
+        <div class="metric-label" data-tooltip="ROAS front-end: receita do produto principal dividida pelo investimento em mídia. O ganho posterior com mentoria aparece no LTV.">ROAS</div>
         <div class="metric-value" id="roas">—</div>
         <div class="metric-sub">Retorno sobre o investimento</div>
       </div>
 
     </section>
 
-    <section class="offer-section">
+    <section class="offer-section section-anchor" id="stage-mentorship">
       <div class="section-title">
         <div>
-          <h2>Economia real</h2>
+          <h2 data-tooltip="Visão econômica completa da aquisição, somando front-end, upsells, mentoria e descontando reembolsos quando aplicável.">Economia real</h2>
           <span class="updated">Front-end + upsell + LTV</span>
         </div>
       </div>
 
       <div class="metrics offer-metrics">
         <div class="card">
-          <div class="metric-label">Receita front-end</div>
+          <div class="metric-label" data-tooltip="Receita gerada pelo produto principal de entrada. No modelo atual, o ticket de referência é R$297.">Receita front-end</div>
           <div class="metric-value" id="frontRevenue">R$ 0</div>
           <div class="metric-sub">Produto principal</div>
         </div>
 
         <div class="card revenue">
-          <div class="metric-label">Receita mentoria</div>
+          <div class="metric-label" data-tooltip="Receita gerada pelas vendas de mentoria após a compra do produto front-end.">Receita mentoria</div>
           <div class="metric-value" id="mentorshipRevenue">R$ 0</div>
           <div class="metric-sub">Upsell de maior ticket</div>
         </div>
 
         <div class="card">
-          <div class="metric-label">LTV por comprador</div>
+          <div class="metric-label" data-tooltip="Valor total líquido médio gerado por comprador front-end da coorte selecionada, incluindo monetização posterior atribuída ao mesmo comprador.">LTV por comprador</div>
           <div class="metric-value" id="ltvPerBuyer">—</div>
           <div class="metric-sub">Receita líquida média</div>
         </div>
 
         <div class="card">
-          <div class="metric-label">Attach mentoria</div>
+          <div class="metric-label" data-tooltip="Percentual de compradores front-end da coorte que também compraram uma mentoria.">Attach mentoria</div>
           <div class="metric-value" id="mentorshipAttach">—</div>
           <div class="metric-sub">Compradores que viraram mentoria</div>
         </div>
@@ -915,7 +1070,7 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h3>Funil de conversão</h3>
+          <h3 data-tooltip="Mostra o volume em cada etapa principal do funil, do clique à compra front-end.">Funil de conversão</h3>
           <p>Do clique até a compra.</p>
         </div>
 
@@ -958,29 +1113,29 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h3>Conversões</h3>
+          <h3 data-tooltip="Taxas de passagem entre as etapas do funil. Quedas grandes ajudam a localizar gargalos de página, checkout ou oferta.">Conversões</h3>
           <p>Eficiência entre as etapas do funil.</p>
         </div>
 
         <div class="conversions">
 
           <div class="conversion-item">
-            <span class="conversion-label">Clique → Lead</span>
+            <span class="conversion-label" data-tooltip="Percentual de cliques rastreados que viraram lead.">Clique → Lead</span>
             <span class="conversion-value" id="convLead">0%</span>
           </div>
 
           <div class="conversion-item">
-            <span class="conversion-label">Lead → Checkout</span>
+            <span class="conversion-label" data-tooltip="Percentual de leads que avançaram para checkout_started.">Lead → Checkout</span>
             <span class="conversion-value" id="convCheckout">0%</span>
           </div>
 
           <div class="conversion-item">
-            <span class="conversion-label">Checkout → Venda</span>
+            <span class="conversion-label" data-tooltip="Percentual de checkouts iniciados que resultaram em compra front-end aprovada.">Checkout → Venda</span>
             <span class="conversion-value" id="convSale">0%</span>
           </div>
 
           <div class="conversion-item">
-            <span class="conversion-label">Clique → Venda</span>
+            <span class="conversion-label" data-tooltip="Conversão total do clique rastreado até a compra front-end.">Clique → Venda</span>
             <span class="conversion-value" id="convTotal">0%</span>
           </div>
 
@@ -989,10 +1144,10 @@
 
     </section>
 
-    <section class="offer-section">
+    <section class="offer-section section-anchor" id="crm-section">
       <div class="section-title">
         <div>
-          <h2>CRM operacional</h2>
+          <h2 data-tooltip="Visão resumida do estado comercial dos contatos. Temperatura e estágio são dimensões diferentes e não devem ser confundidas.">CRM operacional</h2>
           <span class="updated">Temperatura e estágio são dimensões separadas</span>
         </div>
       </div>
@@ -1000,21 +1155,21 @@
       <div class="crm-grid">
         <div class="panel">
           <div class="panel-head">
-            <h3>Temperatura</h3>
+            <h3 data-tooltip="Prioridade/intenção comercial do contato: cold, warm ou hot. Não substitui a etapa atual do funil.">Temperatura</h3>
             <p>Base para priorização comercial e remarketing.</p>
           </div>
 
           <div class="temperature-grid">
             <div class="temperature-card cold">
-              <div class="temperature-label">Frios</div>
+              <div class="temperature-label" data-tooltip="Leads com menor sinal de intenção comercial no momento.">Frios</div>
               <div class="temperature-value" id="crmCold">0</div>
             </div>
             <div class="temperature-card warm">
-              <div class="temperature-label">Mornos</div>
+              <div class="temperature-label" data-tooltip="Leads com sinais intermediários de intenção, como retorno ou avanço no checkout.">Mornos</div>
               <div class="temperature-value" id="crmWarm">0</div>
             </div>
             <div class="temperature-card hot">
-              <div class="temperature-label">Quentes</div>
+              <div class="temperature-label" data-tooltip="Leads com forte intenção ou avanço relevante no funil, como compra, call ou oportunidade de mentoria.">Quentes</div>
               <div class="temperature-value" id="crmHot">0</div>
             </div>
           </div>
@@ -1022,33 +1177,33 @@
 
         <div class="panel">
           <div class="panel-head">
-            <h3>Estágio comercial</h3>
+            <h3 data-tooltip="Posição objetiva do contato no processo comercial, independente da temperatura atribuída a ele.">Estágio comercial</h3>
             <p>Da captura até a venda da mentoria.</p>
           </div>
 
           <div class="stage-grid">
             <div class="stage-card">
-              <div class="stage-label">Leads</div>
+              <div class="stage-label" data-tooltip="Contato capturado que ainda não avançou para uma etapa comercial posterior.">Leads</div>
               <div class="stage-value" id="stageLeads">0</div>
             </div>
             <div class="stage-card">
-              <div class="stage-label">Checkout</div>
+              <div class="stage-label" data-tooltip="Contato que iniciou o checkout e ainda não foi classificado em uma etapa posterior.">Checkout</div>
               <div class="stage-value" id="stageCheckout">0</div>
             </div>
             <div class="stage-card">
-              <div class="stage-label">Clientes</div>
+              <div class="stage-label" data-tooltip="Compradores do produto front-end que ainda não chegaram a uma etapa posterior da mentoria.">Clientes</div>
               <div class="stage-value" id="stageCustomers">0</div>
             </div>
-            <div class="stage-card">
-              <div class="stage-label">Calls agendadas</div>
+            <div class="stage-card" id="stage-calls">
+              <div class="stage-label" data-tooltip="Compradores ou oportunidades com call de análise já agendada.">Calls agendadas</div>
               <div class="stage-value" id="stageCalls">0</div>
             </div>
             <div class="stage-card">
-              <div class="stage-label">Oportunidades</div>
+              <div class="stage-label" data-tooltip="Contatos que já chegaram à etapa de análise/oferta da mentoria e ainda não foram marcados como venda concluída.">Oportunidades</div>
               <div class="stage-value" id="stageOpportunities">0</div>
             </div>
             <div class="stage-card">
-              <div class="stage-label">Mentorias</div>
+              <div class="stage-label" data-tooltip="Clientes que concluíram uma compra de mentoria atribuída ao funil.">Mentorias</div>
               <div class="stage-value" id="stageMentorship">0</div>
             </div>
           </div>
@@ -1056,17 +1211,17 @@
       </div>
     </section>
 
-    <section class="offer-section">
+    <section class="offer-section section-anchor" id="experiments-section">
       <div class="section-title">
         <div>
-          <h2>Experiments</h2>
+          <h2 data-tooltip="Experimentos distribuem visitantes entre múltiplas landing pages mantendo atribuição e afinidade com a variante enquanto ela continuar elegível.">Experiments</h2>
           <span class="updated">Um link, múltiplas páginas, atribuição preservada</span>
         </div>
       </div>
 
       <div class="panel">
         <div class="panel-head">
-          <h3>Distribuição de landing pages</h3>
+          <h3 data-tooltip="Os pesos são relativos e configuráveis. Ex.: 70/30 e 7/3 geram a mesma proporção; peso 0 retira a LP da rotação.">Distribuição de landing pages</h3>
           <p>Pesos atuais das variantes cadastradas.</p>
         </div>
         <div class="experiment-list" id="experimentList">
@@ -1075,11 +1230,11 @@
       </div>
     </section>
 
-<section class="campaign-section">
+<section class="campaign-section section-anchor" id="performance-section">
 
   <div class="section-title campaign-title performance-head">
     <div>
-      <h2 id="performanceTitle">Performance por campanha</h2>
+      <h2 id="performanceTitle" data-tooltip="Compara aquisição e monetização por campanha, conjunto ou anúncio para localizar o tráfego que realmente gera resultado.">Performance por campanha</h2>
       <span class="updated">Origem → Conversão → Receita</span>
     </div>
 
@@ -1157,6 +1312,157 @@ function escapeHtml(value) {
   })[char]);
 }
 
+let activeTooltipTrigger = null;
+
+function ensureGlobalTooltip() {
+  let tooltip = document.getElementById("globalTooltip");
+
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = "globalTooltip";
+    tooltip.className = "global-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    document.body.appendChild(tooltip);
+  }
+
+  return tooltip;
+}
+
+function positionTooltip(trigger) {
+  const tooltip = ensureGlobalTooltip();
+  const rect = trigger.getBoundingClientRect();
+  const gap = 9;
+  const viewportPadding = 12;
+
+  tooltip.style.visibility = "hidden";
+  tooltip.classList.add("visible");
+
+  const tipRect = tooltip.getBoundingClientRect();
+  let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+  left = Math.max(
+    viewportPadding,
+    Math.min(left, window.innerWidth - tipRect.width - viewportPadding)
+  );
+
+  let top = rect.top - tipRect.height - gap;
+  if (top < viewportPadding) {
+    top = rect.bottom + gap;
+  }
+
+  tooltip.style.left = Math.round(left) + "px";
+  tooltip.style.top = Math.round(top) + "px";
+  tooltip.style.visibility = "visible";
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById("globalTooltip");
+  if (tooltip) tooltip.classList.remove("visible");
+
+  if (activeTooltipTrigger) {
+    activeTooltipTrigger.setAttribute("aria-expanded", "false");
+  }
+
+  activeTooltipTrigger = null;
+}
+
+function showTooltip(trigger) {
+  const text = trigger.dataset.tooltipText;
+  if (!text) return;
+
+  hideTooltip();
+
+  const tooltip = ensureGlobalTooltip();
+  tooltip.textContent = text;
+  activeTooltipTrigger = trigger;
+  trigger.setAttribute("aria-expanded", "true");
+  positionTooltip(trigger);
+}
+
+function decorateTooltips(root = document) {
+  root.querySelectorAll("[data-tooltip]").forEach((host) => {
+    if (host.dataset.tooltipReady === "true") return;
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "tooltip-trigger";
+    trigger.textContent = "?";
+    trigger.dataset.tooltipText = host.dataset.tooltip;
+    trigger.setAttribute("aria-label", "Explicar " + host.textContent.trim());
+    trigger.setAttribute("aria-expanded", "false");
+
+    trigger.addEventListener("mouseenter", () => showTooltip(trigger));
+    trigger.addEventListener("mouseleave", hideTooltip);
+    trigger.addEventListener("focus", () => showTooltip(trigger));
+    trigger.addEventListener("blur", hideTooltip);
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (activeTooltipTrigger === trigger) {
+        hideTooltip();
+      } else {
+        showTooltip(trigger);
+      }
+    });
+
+    host.appendChild(trigger);
+    host.dataset.tooltipReady = "true";
+  });
+}
+
+function setActiveStage(targetId) {
+  const activeTab = document.querySelector(
+    '.stage-tab[data-stage-target="' + targetId + '"]'
+  );
+
+  document.querySelectorAll(".stage-tab").forEach((tab) => {
+    tab.classList.toggle("active", tab === activeTab);
+  });
+
+  activeTab?.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest",
+    inline: "center"
+  });
+}
+
+function initStageNavigation() {
+  document.querySelectorAll(".stage-tab").forEach((tab) => {
+    tab.addEventListener("click", (event) => {
+      const targetId = tab.dataset.stageTarget;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      event.preventDefault();
+      setActiveStage(targetId);
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      if (history.replaceState) {
+        history.replaceState(null, "", "#" + targetId);
+      }
+    });
+  });
+
+  const hashTarget = location.hash.replace("#", "");
+  if (hashTarget && document.getElementById(hashTarget)) {
+    setActiveStage(hashTarget);
+  }
+}
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".tooltip-trigger")) hideTooltip();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") hideTooltip();
+});
+
+window.addEventListener("resize", () => {
+  if (activeTooltipTrigger) positionTooltip(activeTooltipTrigger);
+});
+
+window.addEventListener("scroll", () => {
+  if (activeTooltipTrigger) hideTooltip();
+}, { passive: true });
+
 const reportRange = {
   from: null,
   to: null,
@@ -1200,8 +1506,10 @@ function showPeriodError(message = "") {
 }
 
 function updatePeriodUi() {
-  document.getElementById("activePeriod").textContent =
-    "Período: " + reportRange.label;
+  const activePeriod = document.getElementById("activePeriod");
+  activePeriod.textContent = "Período: " + reportRange.label;
+  delete activePeriod.dataset.tooltipReady;
+  decorateTooltips(activePeriod.parentElement);
 
   document.getElementById("fromDate").value = reportRange.from || "";
   document.getElementById("toDate").value = reportRange.to || "";
@@ -1411,7 +1719,10 @@ async function loadExperiments() {
                 <div class="weight-track">
                   <div class="weight-bar" style="width:${Math.max(percent, 0)}%"></div>
                 </div>
-                <div class="variant-weight">${formatPercent(percent)}</div>
+                <div
+                  class="variant-weight"
+                  data-tooltip="Percentual efetivo de tráfego desta LP considerando apenas variantes ativas com peso maior que zero."
+                >${formatPercent(percent)}</div>
               </div>
             `;
           }).join("")
@@ -1432,6 +1743,8 @@ async function loadExperiments() {
         </div>
       `;
     }).join("");
+
+    decorateTooltips(container);
   } catch (error) {
     console.error(error);
     container.innerHTML =
@@ -1493,20 +1806,52 @@ function performanceMetricHeaders() {
   ];
 }
 
+const performanceHeaderTooltips = {
+  "Campanha": "Campanha atribuída ao clique ou ao gasto de mídia importado.",
+  "Conjunto": "Conjunto de anúncios atribuído ao tráfego e à conversão.",
+  "Anúncio": "Anúncio atribuído ao clique e aos eventos posteriores.",
+  "Cliques rastreados": "Entradas registradas pelo Direct Response OS com click_id.",
+  "Cliques mídia": "Cliques reportados/importados pela plataforma de mídia. Podem diferir dos cliques rastreados no site.",
+  "Impressões": "Quantidade de exibições do anúncio reportadas pela plataforma de mídia.",
+  "Leads": "Leads atribuídos à campanha, conjunto ou anúncio.",
+  "Checkouts": "Eventos checkout_started atribuídos ao mesmo nível de mídia.",
+  "Vendas": "Compras front-end atribuídas ao tráfego.",
+  "Conv.": "Taxa de compra calculada sobre os cliques rastreados.",
+  "Receita": "Receita front-end atribuída neste nível de mídia.",
+  "Investimento": "Gasto de mídia importado para a campanha, conjunto ou anúncio.",
+  "CPL": "Investimento dividido pelos leads atribuídos.",
+  "CPA": "Investimento dividido pelas compras front-end atribuídas.",
+  "ROAS": "Receita front-end dividida pelo investimento de mídia."
+};
+
 function renderPerformanceHead(config) {
   const headers = [
     ...config.identityHeaders,
     ...performanceMetricHeaders()
   ];
 
-  document.getElementById("performanceTableHead").innerHTML =
+  const head = document.getElementById("performanceTableHead");
+
+  head.innerHTML =
     "<tr>" +
-    headers.map((label, index) =>
-      `<th class="${index < config.identityHeaders.length ? "identity-head" : ""}">${escapeHtml(label)}</th>`
-    ).join("") +
+    headers.map((label, index) => {
+      const tooltip = performanceHeaderTooltips[label] || "";
+      const tooltipAttr = tooltip
+        ? ` data-tooltip="${escapeHtml(tooltip)}"`
+        : "";
+
+      return `<th class="${index < config.identityHeaders.length ? "identity-head" : ""}"${tooltipAttr}>${escapeHtml(label)}</th>`;
+    }).join("") +
     "</tr>";
 
-  document.getElementById("performanceTitle").textContent = config.title;
+  const title = document.getElementById("performanceTitle");
+  title.textContent = config.title;
+  title.dataset.tooltip =
+    "Compara aquisição e monetização por campanha, conjunto ou anúncio para localizar o tráfego que realmente gera resultado.";
+  delete title.dataset.tooltipReady;
+
+  decorateTooltips(head);
+  decorateTooltips(title.parentElement);
 }
 
 async function loadPerformance() {
@@ -1699,6 +2044,8 @@ function initBreakdownControls() {
       ]);
     }
 
+    decorateTooltips();
+    initStageNavigation();
     initPeriodControls();
     initBreakdownControls();
     refreshAll();
