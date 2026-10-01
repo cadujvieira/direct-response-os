@@ -31,7 +31,9 @@ It:
 
 Traffic allocation is fully dynamic and uses relative weights, not a hard-coded 20/20/20/20/20 split. Examples: 50/20/15/10/5, 80/20/0/0/0, or equal weights. Weights can be changed without changing the public /go link. A weight of zero removes that variant from routing immediately, including previously sticky visitors.
 
-Administrative weight changes use `PATCH /api/experiments/:slug/weights` with `x-admin-secret`. The body is `{ "weights": { "LP_A": 80, "LP_B": 20, "LP_C": 0 } }`. At least one active variant must keep a positive weight.
+Experiment configuration is not hard-coded. `PUT /api/experiments/:slug` with `x-admin-secret` creates or updates the experiment and its landing-page variants, including destination URLs, active flags and weights. Variants omitted from that configuration are disabled.
+
+Administrative weight-only changes use `PATCH /api/experiments/:slug/weights` with `x-admin-secret`. The body is `{ "weights": { "LP_A": 80, "LP_B": 20, "LP_C": 0 } }`. At least one active variant must keep a positive weight.
 
 ## CRM model
 

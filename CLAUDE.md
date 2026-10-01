@@ -68,6 +68,7 @@ Offer foundation routes:
 - GET `/api/crm/leads` (requires `x-admin-secret`)
 - PATCH `/api/crm/leads/:id` (requires `x-admin-secret`)
 - GET `/api/experiments`
+- PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
 - PATCH `/api/experiments/:slug/weights` (requires `x-admin-secret`)
 - GET `/api/experiments/:slug/performance`
 - GET `/api/revenue/ltv`

@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   deriveCrmState,
+  normalizeExperimentConfig,
   normalizeWeightUpdates
 } = require("./offerFoundation");
 
@@ -71,5 +72,46 @@ test("weight updates reject negative values", () => {
   assert.throws(
     () => normalizeWeightUpdates({ LP_A: -1 }),
     /peso deve ser/
+  );
+});
+
+test("experiment config accepts custom traffic weights and urls", () => {
+  const config = normalizeExperimentConfig({
+    name: "Oferta Dolar",
+    variants: [
+      { name: "LP_A", destination_url: "https://example.com/a", weight: 70 },
+      { name: "LP_B", destination_url: "https://example.com/b", weight: 30 },
+      { name: "LP_C", destination_url: "https://example.com/c", weight: 0 }
+    ]
+  });
+
+  assert.equal(config.name, "Oferta Dolar");
+  assert.equal(config.variants[0].weight, 70);
+  assert.equal(config.variants[2].weight, 0);
+});
+
+test("experiment config rejects duplicate variant names", () => {
+  assert.throws(
+    () => normalizeExperimentConfig({
+      name: "Teste",
+      variants: [
+        { name: "LP_A", destination_url: "https://example.com/a", weight: 50 },
+        { name: "LP_A", destination_url: "https://example.com/b", weight: 50 }
+      ]
+    }),
+    /unicos/
+  );
+});
+
+test("experiment config rejects an all-zero active mix", () => {
+  assert.throws(
+    () => normalizeExperimentConfig({
+      name: "Teste",
+      variants: [
+        { name: "LP_A", destination_url: "https://example.com/a", weight: 0 },
+        { name: "LP_B", destination_url: "https://example.com/b", weight: 0 }
+      ]
+    }),
+    /peso maior que zero/
   );
 });

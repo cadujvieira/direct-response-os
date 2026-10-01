@@ -56,6 +56,80 @@ function deriveCrmState(currentStage, currentTemp, eventName) {
   return { lifecycle_stage: nextStage, temperature: nextTemp };
 }
 
+function normalizeExperimentConfig(body = {}) {
+  const name = String(body.name || "").trim();
+  const active = body.active !== false;
+  const variants = Array.isArray(body.variants) ? body.variants : [];
+
+  if (!name) {
+    const error = new Error("name obrigatorio");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (variants.length === 0) {
+    const error = new Error("informe pelo menos uma variante");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const seen = new Set();
+  const normalizedVariants = variants.map((variant) => {
+    const variantName = String(variant?.name || "").trim();
+    const destinationUrl = String(variant?.destination_url || "").trim();
+    const weight = Number(variant?.weight);
+    const variantActive = variant?.active !== false;
+
+    if (!variantName || seen.has(variantName)) {
+      const error = new Error("nomes de variantes devem ser unicos e nao vazios");
+      error.statusCode = 400;
+      throw error;
+    }
+    seen.add(variantName);
+
+    let parsed;
+    try {
+      parsed = new URL(destinationUrl);
+    } catch {
+      const error = new Error("destination_url invalida para " + variantName);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      const error = new Error("destination_url deve usar http ou https");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!Number.isFinite(weight) || weight < 0) {
+      const error = new Error("peso deve ser um numero maior ou igual a zero");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return {
+      name: variantName,
+      destination_url: parsed.toString(),
+      weight,
+      active: variantActive
+    };
+  });
+
+  const totalActiveWeight = normalizedVariants.reduce(
+    (sum, variant) => sum + (variant.active ? variant.weight : 0),
+    0
+  );
+
+  if (!(totalActiveWeight > 0)) {
+    const error = new Error("ao menos uma variante ativa precisa ter peso maior que zero");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { name, active, variants: normalizedVariants };
+}
+
 function normalizeWeightUpdates(weights) {
   if (!weights || typeof weights !== "object" || Array.isArray(weights)) {
     const error = new Error("weights deve ser um objeto por nome de variante");
@@ -625,6 +699,105 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
     }
   });
 
+  app.put("/api/experiments/:slug", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const slug = String(req.params.slug || "").trim().toLowerCase();
+
+    if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(slug)) {
+      return res.status(400).json({ ok: false, error: "slug invalido" });
+    }
+
+    let config;
+
+    try {
+      config = normalizeExperimentConfig(req.body || {});
+    } catch (error) {
+      return res.status(error.statusCode || 400).json({
+        ok: false,
+        error: error.message
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const experimentResult = await client.query(`
+        INSERT INTO dr_experiments (slug, name, active, updated_at)
+        VALUES ($1,$2,$3,NOW())
+        ON CONFLICT (slug)
+        DO UPDATE SET
+          name = EXCLUDED.name,
+          active = EXCLUDED.active,
+          updated_at = NOW()
+        RETURNING id, slug, name, active
+      `, [slug, config.name, config.active]);
+
+      const experiment = experimentResult.rows[0];
+
+      for (const variant of config.variants) {
+        await client.query(`
+          INSERT INTO dr_experiment_variants (
+            experiment_id,
+            name,
+            destination_url,
+            weight,
+            active,
+            updated_at
+          )
+          VALUES ($1,$2,$3,$4,$5,NOW())
+          ON CONFLICT (experiment_id, name)
+          DO UPDATE SET
+            destination_url = EXCLUDED.destination_url,
+            weight = EXCLUDED.weight,
+            active = EXCLUDED.active,
+            updated_at = NOW()
+        `, [
+          experiment.id,
+          variant.name,
+          variant.destination_url,
+          variant.weight,
+          variant.active
+        ]);
+      }
+
+      const keepNames = config.variants.map((variant) => variant.name);
+
+      await client.query(`
+        UPDATE dr_experiment_variants
+        SET active = FALSE,
+            weight = 0,
+            updated_at = NOW()
+        WHERE experiment_id = $1
+          AND NOT (name = ANY($2::text[]))
+      `, [experiment.id, keepNames]);
+
+      const variantsResult = await client.query(`
+        SELECT id, name, destination_url, weight, active
+        FROM dr_experiment_variants
+        WHERE experiment_id = $1
+        ORDER BY id
+      `, [experiment.id]);
+
+      await client.query("COMMIT");
+
+      return res.json({
+        ok: true,
+        experiment: {
+          ...experiment,
+          variants: variantsResult.rows
+        }
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      return res.status(500).json({ ok: false, error: "erro interno" });
+    } finally {
+      client.release();
+    }
+  });
+
   app.get("/api/experiments", async (req, res) => {
     try {
       const result = await pool.query(`
@@ -877,6 +1050,7 @@ module.exports = {
   registerOfferRoutes,
   syncLeadCrmFromEvent,
   deriveCrmState,
+  normalizeExperimentConfig,
   normalizeWeightUpdates,
   LIFECYCLE_STAGES,
   TEMPERATURES
