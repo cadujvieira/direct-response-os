@@ -101,6 +101,49 @@ Protected routes:
 
 All Automation Hub routes require `x-admin-secret` and share the same browser session secret as CRM.
 
+## List Activation
+
+The `Listas` view is the operational bridge between CRM segmentation and external communication tools. Oferta DR does not send outbound messages directly; it prepares controlled, auditable contact batches that can be uploaded or pasted into the tool chosen by the operator.
+
+The list source reuses the CRM model:
+- built-in offer segments such as checkout abandoned, front-end buyer without call, no-show and mentorship opportunity;
+- cold/warm/hot temperature;
+- saved CRM segments;
+- the filters currently applied in the CRM.
+
+Supported generic output formats:
+- `contacts`: name, phone, BR E.164 helper, email and attribution;
+- `phone`: phone-oriented file for phone/WhatsApp workflows;
+- `email`: email-oriented file;
+- `audience`: normalized phone/email identity columns for generic audience import;
+- `crm`: full operational CRM context.
+
+Persistence:
+- `dr_activation_exports` stores an immutable export batch with name, format, stored filter metadata, repeat window and aggregate counts;
+- `dr_activation_export_leads` stores which lead IDs belonged to that batch.
+
+Repeat protection can be disabled or configured for 7, 30, 90 days, or never-exported-before. Eligibility is checked both during preview and again inside the export transaction, so two browser sessions cannot safely cause the same recently exported contact to slip into a protected batch.
+
+Format validation also runs server-side. A phone-only batch excludes contacts without a phone; an email-only batch excludes contacts without email. Export requests are capped at 5,000 contacts and stored filter metadata is allowlisted and length-bounded.
+
+The dashboard supports:
+- choosing the source segment;
+- choosing output format;
+- choosing repeat-protection window;
+- choosing a batch size from 100 to 5,000;
+- preview counts for found, valid, recently exported and ready contacts;
+- copying ready phone numbers or emails;
+- generating the CSV;
+- reviewing recent export history.
+
+Protected routes:
+- `POST /api/activation/eligibility`;
+- `POST /api/activation/exports`;
+- `GET /api/activation/exports`;
+- `GET /api/activation/exports/:id/lead-ids`.
+
+All List Activation routes require `x-admin-secret` and share the same browser session secret as CRM.
+
 ## Revenue and LTV
 
 `GET /api/revenue/ltv` is cohort-based: the selected date range chooses the front-end buyers, then downstream revenue for those same attributed buyers is accumulated through the present.

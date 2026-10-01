@@ -1911,6 +1911,289 @@
     }
 
 
+
+    .list-workspace[hidden],
+    .list-auth-panel[hidden] {
+      display: none !important;
+    }
+
+    .list-auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+    }
+
+    .list-auth-panel h3 {
+      font-size: 15px;
+    }
+
+    .list-auth-panel p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .list-builder-panel {
+      margin-bottom: 14px;
+    }
+
+    .list-builder-actions,
+    .list-copy-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .list-builder-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1.05fr 1.15fr .75fr;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .list-builder-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+    }
+
+    .list-name-field {
+      grid-column: 1 / -1;
+    }
+
+    .list-builder-status {
+      min-height: 18px;
+      padding: 0 14px 14px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .list-builder-status.ok {
+      color: var(--green);
+    }
+
+    .list-builder-status.error {
+      color: var(--red);
+    }
+
+    .list-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .list-kpi-card {
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,.018), transparent), var(--panel);
+    }
+
+    .list-kpi-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+    }
+
+    .list-kpi-card strong {
+      display: block;
+      margin-top: 9px;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .list-kpi-card small {
+      display: block;
+      margin-top: 8px;
+      color: #666e7b;
+      font-size: 10px;
+    }
+
+    .list-kpi-card.success strong {
+      color: var(--green);
+    }
+
+    .list-kpi-card.warn strong {
+      color: var(--yellow);
+    }
+
+    .list-main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(310px, .8fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .list-preview-panel,
+    .list-history-panel {
+      min-width: 0;
+    }
+
+    .list-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .list-table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: collapse;
+    }
+
+    .list-table th,
+    .list-table td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 10px;
+    }
+
+    .list-table th {
+      color: var(--muted);
+      background: rgba(255,255,255,.014);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .list-contact-name {
+      color: #e1e5eb;
+      font-weight: 720;
+    }
+
+    .list-contact-meta {
+      margin-top: 3px;
+      color: #707986;
+      font-size: 9px;
+    }
+
+    .list-history {
+      display: grid;
+      gap: 8px;
+      max-height: 610px;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .list-history-item {
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .list-history-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      color: #e4e8ee;
+      font-size: 11px;
+      font-weight: 720;
+    }
+
+    .list-history-count {
+      color: var(--green);
+      font-size: 16px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .list-history-meta {
+      margin-top: 5px;
+      color: #747d89;
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .list-history-badges {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .list-history-badge {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 6px;
+      color: #aeb5bf;
+      background: #171a20;
+      font-size: 8px;
+    }
+
+    @media (max-width: 1180px) {
+      .list-main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .list-history {
+        max-height: 360px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .list-builder-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .list-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .list-auth-panel,
+      .list-builder-panel .panel-head,
+      .list-preview-panel .panel-head,
+      .list-history-panel .panel-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .list-auth-panel .crm-primary-btn {
+        width: 100%;
+      }
+
+      .list-builder-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .list-name-field {
+        grid-column: auto;
+      }
+
+      .list-builder-actions,
+      .list-copy-actions {
+        width: 100%;
+      }
+
+      .list-builder-actions > *,
+      .list-copy-actions > * {
+        flex: 1 1 auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .list-kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .automation-workspace[hidden],
     .automation-auth-panel[hidden] {
       display: none !important;
@@ -2449,6 +2732,7 @@
         <a class="stage-tab" href="#calls" data-stage-target="calls">Calls</a>
         <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
+        <a class="stage-tab" href="#lists" data-stage-target="lists">Listas</a>
         <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
         <a class="stage-tab" href="#router" data-stage-target="router">Router</a>
         <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
@@ -2789,6 +3073,159 @@
             <div class="crm-timeline-section"><div class="crm-timeline-head"><h4>Timeline completa</h4><span id="crmTimelineCount">0 eventos</span></div><div class="crm-timeline" id="crmTimeline"><div class="crm-table-empty">Carregando timeline...</div></div></div>
           </div>
         </aside>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="lists" id="lists-view">
+      <div class="panel list-auth-panel" id="listAuthPanel">
+        <div>
+          <h3>Central de listas protegida</h3>
+          <p>Use a mesma sessão administrativa do CRM para preparar lotes de contatos para disparo externo.</p>
+        </div>
+        <button class="crm-primary-btn" id="listGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+
+      <div class="list-workspace" id="listWorkspace" hidden>
+        <div class="panel list-builder-panel">
+          <div class="panel-head">
+            <div>
+              <h3 data-tooltip="Monte um lote a partir dos mesmos segmentos e filtros usados pelo CRM. O Oferta DR não envia a mensagem; ele prepara a lista pronta para subir na ferramenta externa.">Preparar lista</h3>
+              <p>Escolha público, formato, tamanho do lote e política de repetição.</p>
+            </div>
+            <div class="list-builder-actions">
+              <button class="crm-secondary-btn" id="listRefreshPreview" type="button">Atualizar prévia</button>
+              <button class="crm-primary-btn" id="listGenerateExport" type="button">Gerar CSV</button>
+            </div>
+          </div>
+
+          <div class="list-builder-grid">
+            <label>
+              Público
+              <select class="crm-control" id="listSource">
+                <option value="segment:checkout_abandoned">Checkout abandonado</option>
+                <option value="segment:frontend_no_call">Front sem call</option>
+                <option value="segment:call_booked">Call agendada</option>
+                <option value="segment:no_show">No-show</option>
+                <option value="segment:mentorship_opportunity">Oportunidade mentoria</option>
+                <option value="segment:mentorship_customer">Cliente mentoria</option>
+                <option value="temperature:hot">Leads quentes</option>
+                <option value="temperature:warm">Leads warm</option>
+                <option value="temperature:cold">Leads cold</option>
+                <option value="all">Todos os contatos</option>
+                <option value="crm-current">Filtros atuais do CRM</option>
+              </select>
+            </label>
+
+            <label>
+              Formato
+              <select class="crm-control" id="listFormat">
+                <option value="contacts">Contatos — nome, telefone e e-mail</option>
+                <option value="phone">Telefone / WhatsApp</option>
+                <option value="email">E-mail</option>
+                <option value="audience">Audiência — telefone + e-mail</option>
+                <option value="crm">CRM completo</option>
+              </select>
+            </label>
+
+            <label>
+              Evitar repetição
+              <select class="crm-control" id="listExclusionDays">
+                <option value="0">Não excluir exportados</option>
+                <option value="7" selected>Não exportados nos últimos 7 dias</option>
+                <option value="30">Não exportados nos últimos 30 dias</option>
+                <option value="90">Não exportados nos últimos 90 dias</option>
+                <option value="-1">Nunca exportados antes</option>
+              </select>
+            </label>
+
+            <label>
+              Tamanho do lote
+              <select class="crm-control" id="listBatchSize">
+                <option value="100">100 contatos</option>
+                <option value="250">250 contatos</option>
+                <option value="500" selected>500 contatos</option>
+                <option value="1000">1.000 contatos</option>
+                <option value="5000">Até 5.000 contatos</option>
+              </select>
+            </label>
+
+            <label class="list-name-field">
+              Nome do lote
+              <input class="crm-control" id="listExportName" type="text" maxlength="120" placeholder="Ex.: Front sem call — lote manhã" />
+            </label>
+          </div>
+
+          <div class="list-builder-status" id="listBuilderStatus"></div>
+        </div>
+
+        <div class="list-kpi-grid">
+          <div class="list-kpi-card">
+            <span data-tooltip="Quantidade encontrada no CRM antes das regras de canal e repetição.">Encontrados</span>
+            <strong id="listFoundCount">0</strong>
+            <small>No segmento selecionado</small>
+          </div>
+          <div class="list-kpi-card">
+            <span data-tooltip="Contatos que possuem o dado necessário para o formato escolhido, como telefone ou e-mail.">Válidos</span>
+            <strong id="listValidCount">0</strong>
+            <small>Com canal utilizável</small>
+          </div>
+          <div class="list-kpi-card warn">
+            <span data-tooltip="Contatos removidos porque já entraram em uma exportação dentro da janela escolhida.">Já exportados</span>
+            <strong id="listExcludedCount">0</strong>
+            <small>Removidos por repetição</small>
+          </div>
+          <div class="list-kpi-card success">
+            <span data-tooltip="Quantidade final que entrará no arquivo respeitando formato, janela de repetição e tamanho do lote.">Prontos</span>
+            <strong id="listReadyCount">0</strong>
+            <small>Entram no próximo CSV</small>
+          </div>
+        </div>
+
+        <div class="list-main-grid">
+          <div class="panel list-preview-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Prévia dos primeiros contatos prontos para o próximo lote.">Prévia da lista</h3>
+                <p id="listPreviewSubtitle">Selecione um público para carregar.</p>
+              </div>
+              <div class="list-copy-actions">
+                <button class="crm-secondary-btn" id="listCopyPhones" type="button">Copiar telefones</button>
+                <button class="crm-secondary-btn" id="listCopyEmails" type="button">Copiar e-mails</button>
+              </div>
+            </div>
+
+            <div class="list-table-wrap">
+              <table class="list-table">
+                <thead>
+                  <tr>
+                    <th>Contato</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Segmento</th>
+                    <th>Origem</th>
+                    <th>Campanha</th>
+                  </tr>
+                </thead>
+                <tbody id="listPreviewBody">
+                  <tr><td colspan="6" class="section-empty">Carregando prévia...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel list-history-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Cada CSV gerado vira um lote auditável. Isso ajuda a controlar quais contatos já foram trabalhados.">Histórico de exportações</h3>
+                <p>Últimos lotes preparados pelo Oferta DR.</p>
+              </div>
+              <button class="crm-secondary-btn" id="listRefreshHistory" type="button">Atualizar</button>
+            </div>
+            <div class="list-history" id="listHistory">
+              <div class="section-empty">Nenhuma exportação registrada.</div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -3156,6 +3593,7 @@ const dashboardViewTitles = {
   calls: "Calls",
   mentorship: "Mentoria",
   crm: "CRM",
+  lists: "Listas",
   automations: "Automações",
   router: "Router",
   performance: "Performance"
@@ -3203,6 +3641,10 @@ function setActiveStage(viewName) {
   });
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (viewName === "lists") {
+    loadLists();
+  }
 
   if (viewName === "automations") {
     loadAutomations();
@@ -4699,6 +5141,827 @@ function initCrm() {
   });
 }
 
+const listState = {
+  rows: [],
+  validRows: [],
+  readyRows: [],
+  savedSegments: [],
+  history: [],
+  filters: {},
+  totalFound: 0,
+  loading: false
+};
+
+const listFormatLabels = {
+  contacts: "Contatos",
+  phone: "Telefone / WhatsApp",
+  email: "E-mail",
+  audience: "Audiência",
+  crm: "CRM completo"
+};
+
+const listBuiltInSources = [
+  ["segment:checkout_abandoned", "Checkout abandonado"],
+  ["segment:frontend_no_call", "Front sem call"],
+  ["segment:call_booked", "Call agendada"],
+  ["segment:no_show", "No-show"],
+  ["segment:mentorship_opportunity", "Oportunidade mentoria"],
+  ["segment:mentorship_customer", "Cliente mentoria"],
+  ["temperature:hot", "Leads quentes"],
+  ["temperature:warm", "Leads warm"],
+  ["temperature:cold", "Leads cold"],
+  ["all", "Todos os contatos"],
+  ["crm-current", "Filtros atuais do CRM"]
+];
+
+async function listFetch(path, options = {}) {
+  const secret = crmState.secret ||
+    sessionStorage.getItem("dr_admin_secret") ||
+    "";
+
+  if (!secret) {
+    const error = new Error("Conecte a sessão administrativa pelo CRM.");
+    error.status = 401;
+    throw error;
+  }
+
+  const headers = new Headers(options.headers || {});
+  headers.set("x-admin-secret", secret);
+
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(path, {
+    ...options,
+    headers,
+    cache: "no-store"
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error(data.error || "Erro na Central de Listas");
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+function listSetProtectedState(isConnected) {
+  document.getElementById("listAuthPanel").hidden = isConnected;
+  document.getElementById("listWorkspace").hidden = !isConnected;
+}
+
+function listSourceLabel(value) {
+  const builtin = listBuiltInSources.find(([key]) => key === value);
+  if (builtin) return builtin[1];
+
+  if (String(value).startsWith("saved:")) {
+    const id = Number(String(value).split(":")[1]);
+    return listState.savedSegments.find((item) => Number(item.id) === id)?.name ||
+      "Segmento salvo";
+  }
+
+  return "Lista";
+}
+
+function listRenderSourceOptions() {
+  const select = document.getElementById("listSource");
+  const current = select.value || "segment:checkout_abandoned";
+
+  const builtins = listBuiltInSources.map(([value, label]) =>
+    `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`
+  ).join("");
+
+  const saved = listState.savedSegments.length
+    ? '<optgroup label="Segmentos salvos">' +
+      listState.savedSegments.map((segment) =>
+        `<option value="saved:${Number(segment.id)}">${escapeHtml(segment.name)}</option>`
+      ).join("") +
+      "</optgroup>"
+    : "";
+
+  select.innerHTML = builtins + saved;
+
+  if (Array.from(select.options).some((option) => option.value === current)) {
+    select.value = current;
+  }
+}
+
+async function loadListSavedSegments() {
+  const data = await listFetch("/api/crm/saved-segments");
+  listState.savedSegments = Array.isArray(data.segments) ? data.segments : [];
+  listRenderSourceOptions();
+}
+
+function listCurrentFilters() {
+  const source = document.getElementById("listSource").value;
+
+  if (source === "all") {
+    return { sort: "recent" };
+  }
+
+  if (source === "crm-current") {
+    return {
+      ...crmCurrentFilterSnapshot(),
+      sort: crmCurrentFilterSnapshot().sort || "recent"
+    };
+  }
+
+  if (source.startsWith("segment:")) {
+    return {
+      segment: source.slice("segment:".length),
+      sort: "recent"
+    };
+  }
+
+  if (source.startsWith("temperature:")) {
+    return {
+      temperature: source.slice("temperature:".length),
+      sort: "recent"
+    };
+  }
+
+  if (source.startsWith("saved:")) {
+    const id = Number(source.split(":")[1]);
+    const segment = listState.savedSegments.find(
+      (item) => Number(item.id) === id
+    );
+    return {
+      ...(segment?.filters || {}),
+      sort: segment?.filters?.sort || "recent"
+    };
+  }
+
+  return { sort: "recent" };
+}
+
+function listBuildLeadUrl(filters, offset = 0, limit = 200) {
+  const params = new URLSearchParams();
+  const allowed = [
+    "search",
+    "temperature",
+    "lifecycle_stage",
+    "utm_source",
+    "utm_campaign",
+    "segment",
+    "sort"
+  ];
+
+  for (const key of allowed) {
+    const value = filters?.[key];
+    if (value != null && String(value).trim() !== "") {
+      params.set(key, String(value));
+    }
+  }
+
+  params.set("limit", String(limit));
+  params.set("offset", String(offset));
+
+  return "/api/crm/leads?" + params.toString();
+}
+
+function listFormatAllowsRow(row, format) {
+  const phone = String(row.telefone || "").replace(/[^0-9]/g, "");
+  const email = String(row.email || "").trim();
+
+  if (format === "phone") return Boolean(phone);
+  if (format === "email") return Boolean(email);
+  if (format === "crm") return true;
+
+  return Boolean(phone || email);
+}
+
+function listDedupeRows(rows, format) {
+  const seen = new Set();
+  const output = [];
+
+  for (const row of rows) {
+    if (!listFormatAllowsRow(row, format)) continue;
+
+    const phone = String(row.telefone || "").replace(/[^0-9]/g, "");
+    const email = String(row.email || "").trim().toLowerCase();
+
+    let key;
+    if (format === "phone") key = phone ? "p:" + phone : "id:" + row.id;
+    else if (format === "email") key = email ? "e:" + email : "id:" + row.id;
+    else if (phone) key = "p:" + phone;
+    else if (email) key = "e:" + email;
+    else key = "id:" + row.id;
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push(row);
+  }
+
+  return output;
+}
+
+function listPhoneDigits(value) {
+  return String(value || "").replace(/[^0-9]/g, "");
+}
+
+function listPhoneE164Br(value) {
+  const digits = listPhoneDigits(value);
+  if (!digits) return "";
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) {
+    return "+" + digits;
+  }
+  if (digits.length === 10 || digits.length === 11) {
+    return "+55" + digits;
+  }
+  return digits;
+}
+
+function listUpdateDefaultName() {
+  const input = document.getElementById("listExportName");
+  if (input.dataset.manual === "true" && input.value.trim()) return;
+
+  const label = listSourceLabel(document.getElementById("listSource").value);
+  const date = new Date().toLocaleDateString("pt-BR");
+  input.value = label + " — " + date;
+  input.dataset.manual = "false";
+}
+
+function listSetStatus(message, tone = "") {
+  const node = document.getElementById("listBuilderStatus");
+  node.textContent = message || "";
+  node.className = "list-builder-status" + (tone ? " " + tone : "");
+}
+
+function listRenderPreview() {
+  const tbody = document.getElementById("listPreviewBody");
+
+  document.getElementById("listFoundCount").textContent =
+    Number(listState.totalFound || 0);
+  document.getElementById("listValidCount").textContent =
+    Number(listState.validRows.length || 0);
+
+  const readyIds = new Set(listState.readyRows.map((row) => Number(row.id)));
+  const excludedCount = Math.max(
+    Number(listState.validRows.length || 0) -
+    Number(listState.eligibleCount || 0),
+    0
+  );
+
+  document.getElementById("listExcludedCount").textContent = excludedCount;
+  document.getElementById("listReadyCount").textContent =
+    Number(listState.readyRows.length || 0);
+
+  const sourceLabel = listSourceLabel(
+    document.getElementById("listSource").value
+  );
+  const analyzed = listState.rows.length;
+
+  document.getElementById("listPreviewSubtitle").textContent =
+    sourceLabel + " · " +
+    listState.readyRows.length + " prontos · " +
+    analyzed + " analisados" +
+    (listState.totalFound > analyzed ? " de " + listState.totalFound : "");
+
+  if (!listState.readyRows.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="6" class="section-empty">Nenhum contato pronto com estas regras.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = listState.readyRows.slice(0, 100).map((row) => `
+    <tr>
+      <td>
+        <div class="list-contact-name">${escapeHtml(row.nome || "Sem nome")}</div>
+        <div class="list-contact-meta">ID ${Number(row.id)} · ${escapeHtml(row.temperature || "—")}</div>
+      </td>
+      <td>${escapeHtml(row.telefone || "—")}</td>
+      <td>${escapeHtml(row.email || "—")}</td>
+      <td>${escapeHtml(crmSegmentLabels[row.crm_segment] || row.crm_segment || "Lead")}</td>
+      <td>${escapeHtml(row.utm_source || "Direto / sem origem")}</td>
+      <td>${escapeHtml(row.utm_campaign || "Sem campanha")}</td>
+    </tr>
+  `).join("");
+}
+
+async function loadListPreview() {
+  if (listState.loading) return;
+
+  const secret = crmState.secret ||
+    sessionStorage.getItem("dr_admin_secret") ||
+    "";
+
+  if (!secret) {
+    listSetProtectedState(false);
+    return;
+  }
+
+  if (!crmState.secret) crmState.secret = secret;
+
+  listState.loading = true;
+  listSetStatus("Montando prévia...");
+
+  try {
+    const filters = listCurrentFilters();
+    const rows = [];
+    let offset = 0;
+    let total = 0;
+    const maxAnalyze = 5000;
+
+    while (offset < maxAnalyze) {
+      const data = await listFetch(
+        listBuildLeadUrl(filters, offset, 200)
+      );
+      const batch = Array.isArray(data.leads) ? data.leads : [];
+      total = Number(data.total || total || 0);
+      rows.push(...batch);
+      offset += batch.length;
+
+      if (
+        batch.length < 200 ||
+        offset >= total ||
+        offset >= maxAnalyze
+      ) {
+        break;
+      }
+    }
+
+    const format = document.getElementById("listFormat").value;
+    const validRows = listDedupeRows(rows, format);
+    const exclusionDays = Number(
+      document.getElementById("listExclusionDays").value
+    );
+    const batchSize = Number(document.getElementById("listBatchSize").value);
+
+    let eligibleIds = validRows.map((row) => Number(row.id));
+
+    if (eligibleIds.length && exclusionDays !== 0) {
+      const eligibility = await listFetch("/api/activation/eligibility", {
+        method: "POST",
+        body: JSON.stringify({
+          lead_ids: eligibleIds,
+          exclusion_days: exclusionDays
+        })
+      });
+      eligibleIds = Array.isArray(eligibility.eligible_ids)
+        ? eligibility.eligible_ids.map(Number)
+        : [];
+    }
+
+    const eligibleSet = new Set(eligibleIds);
+    const eligibleRows = validRows.filter((row) =>
+      eligibleSet.has(Number(row.id))
+    );
+
+    listState.rows = rows;
+    listState.validRows = validRows;
+    listState.eligibleCount = eligibleRows.length;
+    listState.readyRows = eligibleRows.slice(0, batchSize);
+    listState.filters = filters;
+    listState.totalFound = total;
+
+    listUpdateDefaultName();
+    listRenderPreview();
+
+    const notes = [];
+    if (rows.length < total) {
+      notes.push("Analisando os primeiros " + rows.length + " de " + total + " contatos.");
+    }
+
+    const invalid = rows.length - validRows.length;
+    if (invalid > 0) {
+      notes.push(invalid + " sem canal válido ou duplicado(s) foram removidos.");
+    }
+
+    if (!notes.length) {
+      notes.push("Prévia pronta para exportação.");
+    }
+
+    listSetStatus(notes.join(" "), "ok");
+    listSetProtectedState(true);
+  } catch (error) {
+    listSetStatus(error.message, "error");
+    if (error.status === 401) {
+      listSetProtectedState(false);
+      sessionStorage.removeItem("dr_admin_secret");
+      crmState.secret = "";
+    }
+  } finally {
+    listState.loading = false;
+  }
+}
+
+function listCsvDefinition(format) {
+  if (format === "phone") {
+    return {
+      headers: [
+        "nome",
+        "telefone",
+        "telefone_digitos",
+        "telefone_e164",
+        "segmento",
+        "origem",
+        "campanha"
+      ],
+      row: (item) => [
+        item.nome,
+        item.telefone,
+        listPhoneDigits(item.telefone),
+        listPhoneE164Br(item.telefone),
+        item.crm_segment,
+        item.utm_source,
+        item.utm_campaign
+      ]
+    };
+  }
+
+  if (format === "email") {
+    return {
+      headers: ["nome", "email", "segmento", "origem", "campanha"],
+      row: (item) => [
+        item.nome,
+        item.email,
+        item.crm_segment,
+        item.utm_source,
+        item.utm_campaign
+      ]
+    };
+  }
+
+  if (format === "audience") {
+    return {
+      headers: [
+        "email",
+        "telefone_e164",
+        "telefone_digitos",
+        "nome"
+      ],
+      row: (item) => [
+        item.email,
+        listPhoneE164Br(item.telefone),
+        listPhoneDigits(item.telefone),
+        item.nome
+      ]
+    };
+  }
+
+  if (format === "crm") {
+    return {
+      headers: [
+        "nome",
+        "email",
+        "telefone",
+        "telefone_e164",
+        "temperatura",
+        "etapa",
+        "score",
+        "segmento",
+        "origem",
+        "campanha",
+        "ultimo_evento",
+        "receita_front",
+        "receita_mentoria",
+        "receita_total",
+        "proximo_followup",
+        "prioridade_followup",
+        "nota_followup",
+        "ultima_atividade"
+      ],
+      row: (item) => [
+        item.nome,
+        item.email,
+        item.telefone,
+        listPhoneE164Br(item.telefone),
+        item.temperature,
+        item.lifecycle_stage,
+        item.lead_score,
+        item.crm_segment,
+        item.utm_source,
+        item.utm_campaign,
+        item.last_event,
+        item.front_revenue,
+        item.mentorship_revenue,
+        item.total_revenue,
+        item.next_followup_at,
+        item.next_followup_priority,
+        item.next_followup_note,
+        item.last_activity_at
+      ]
+    };
+  }
+
+  return {
+    headers: [
+      "nome",
+      "telefone",
+      "telefone_e164",
+      "email",
+      "segmento",
+      "origem",
+      "campanha"
+    ],
+    row: (item) => [
+      item.nome,
+      item.telefone,
+      listPhoneE164Br(item.telefone),
+      item.email,
+      item.crm_segment,
+      item.utm_source,
+      item.utm_campaign
+    ]
+  };
+}
+
+function listSlug(value) {
+  return String(value || "lista")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70) || "lista";
+}
+
+function listDownloadCsv(rows, format, exportId, name) {
+  const definition = listCsvDefinition(format);
+  const lines = [
+    definition.headers.join(";"),
+    ...rows.map((row) =>
+      definition.row(row).map(crmCsvValue).join(";")
+    )
+  ];
+
+  const blob = new Blob(["\ufeff" + lines.join("\n")], {
+    type: "text/csv;charset=utf-8"
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download =
+    "oferta-dr-lote-" + exportId + "-" + listSlug(name) + ".csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function generateListExport() {
+  if (!listState.readyRows.length) {
+    listSetStatus("Não há contatos prontos para exportar.", "error");
+    return;
+  }
+
+  const name = document.getElementById("listExportName").value.trim();
+  if (!name) {
+    document.getElementById("listExportName").focus();
+    listSetStatus("Dê um nome para o lote.", "error");
+    return;
+  }
+
+  const button = document.getElementById("listGenerateExport");
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Gerando...";
+
+  try {
+    const sourceValue = document.getElementById("listSource").value;
+    const sourceLabel = listSourceLabel(sourceValue);
+    const format = document.getElementById("listFormat").value;
+    const exclusionDays = Number(
+      document.getElementById("listExclusionDays").value
+    );
+
+    const data = await listFetch("/api/activation/exports", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        export_format: format,
+        exclusion_days: exclusionDays,
+        lead_ids: listState.readyRows.map((row) => Number(row.id)),
+        filters: {
+          ...listState.filters,
+          _source_value: sourceValue,
+          _source_label: sourceLabel,
+          _batch_size: Number(document.getElementById("listBatchSize").value)
+        }
+      })
+    });
+
+    const exportedIds = new Set(
+      (data.exported_lead_ids || []).map(Number)
+    );
+    const rows = listState.readyRows.filter((row) =>
+      exportedIds.has(Number(row.id))
+    );
+
+    if (!rows.length) {
+      listSetStatus(
+        "Nenhum contato novo entrou no lote. A base pode ter sido exportada em outra sessão.",
+        "error"
+      );
+      await Promise.all([loadListHistory(), loadListPreview()]);
+      return;
+    }
+
+    listDownloadCsv(
+      rows,
+      format,
+      data.export.id,
+      name
+    );
+
+    const successMessage =
+      "Lote #" + data.export.id + " criado com " + rows.length +
+      " contato(s). O CSV foi preparado para download.";
+
+    document.getElementById("listExportName").dataset.manual = "false";
+
+    await Promise.all([
+      loadListHistory(),
+      loadListPreview()
+    ]);
+
+    listSetStatus(successMessage, "ok");
+  } catch (error) {
+    listSetStatus(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
+async function listCopyText(values, label) {
+  const unique = Array.from(new Set(values.filter(Boolean)));
+
+  if (!unique.length) {
+    listSetStatus("Nenhum " + label + " disponível nesta lista.", "error");
+    return;
+  }
+
+  const text = unique.join("\n");
+
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+
+  listSetStatus(
+    unique.length + " " + label + " copiado(s) para a área de transferência.",
+    "ok"
+  );
+}
+
+function listHistoryFilterLabel(filters = {}) {
+  if (filters._source_label) return filters._source_label;
+  if (filters.segment) return crmSegmentLabels[filters.segment] || filters.segment;
+  if (filters.temperature) return "Temperatura: " + filters.temperature;
+  return "Lista personalizada";
+}
+
+function listExclusionLabel(days) {
+  const value = Number(days);
+  if (value === -1) return "Nunca exportados";
+  if (value === 0) return "Sem exclusão";
+  return "Janela " + value + "d";
+}
+
+function renderListHistory() {
+  const container = document.getElementById("listHistory");
+
+  if (!listState.history.length) {
+    container.innerHTML =
+      '<div class="section-empty">Nenhuma exportação registrada.</div>';
+    return;
+  }
+
+  container.innerHTML = listState.history.map((item) => `
+    <div class="list-history-item">
+      <div class="list-history-title">
+        <span>${escapeHtml(item.name || "Lote #" + item.id)}</span>
+        <strong class="list-history-count">${Number(item.exported_count || 0)}</strong>
+      </div>
+      <div class="list-history-meta">
+        #${Number(item.id)} · ${escapeHtml(crmFormatDateTime(item.created_at))}<br>
+        ${escapeHtml(listHistoryFilterLabel(item.filters || {}))}
+      </div>
+      <div class="list-history-badges">
+        <span class="list-history-badge">${escapeHtml(listFormatLabels[item.export_format] || item.export_format)}</span>
+        <span class="list-history-badge">${escapeHtml(listExclusionLabel(item.exclusion_days))}</span>
+        ${Number(item.excluded_recent_count || 0) > 0
+          ? `<span class="list-history-badge">${Number(item.excluded_recent_count)} repetido(s) removido(s)</span>`
+          : ""}
+        ${Number(item.invalid_contact_count || 0) > 0
+          ? `<span class="list-history-badge">${Number(item.invalid_contact_count)} inválido(s)</span>`
+          : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
+async function loadListHistory() {
+  const data = await listFetch("/api/activation/exports?limit=40");
+  listState.history = Array.isArray(data.exports) ? data.exports : [];
+  renderListHistory();
+}
+
+async function loadLists() {
+  const secret = crmState.secret ||
+    sessionStorage.getItem("dr_admin_secret") ||
+    "";
+
+  if (!secret) {
+    listSetProtectedState(false);
+    return;
+  }
+
+  if (!crmState.secret) crmState.secret = secret;
+
+  try {
+    await Promise.all([
+      loadListSavedSegments(),
+      loadListHistory()
+    ]);
+    listSetProtectedState(true);
+    await loadListPreview();
+    decorateTooltips(document.getElementById("lists-view"));
+  } catch (error) {
+    listSetProtectedState(false);
+    if (error.status === 401) {
+      sessionStorage.removeItem("dr_admin_secret");
+      crmState.secret = "";
+    }
+  }
+}
+
+function initLists() {
+  document.getElementById("listGoCrm").addEventListener("click", () => {
+    setActiveStage("crm");
+    if (history.replaceState) {
+      history.replaceState(null, "", "#crm");
+    }
+  });
+
+  document.getElementById("listRefreshPreview").addEventListener(
+    "click",
+    loadListPreview
+  );
+
+  document.getElementById("listRefreshHistory").addEventListener(
+    "click",
+    loadListHistory
+  );
+
+  document.getElementById("listGenerateExport").addEventListener(
+    "click",
+    generateListExport
+  );
+
+  document.getElementById("listCopyPhones").addEventListener("click", () => {
+    listCopyText(
+      listState.readyRows.map((row) => listPhoneE164Br(row.telefone)),
+      "telefone(s)"
+    );
+  });
+
+  document.getElementById("listCopyEmails").addEventListener("click", () => {
+    listCopyText(
+      listState.readyRows.map((row) => String(row.email || "").trim()),
+      "e-mail(s)"
+    );
+  });
+
+  [
+    "listSource",
+    "listFormat",
+    "listExclusionDays",
+    "listBatchSize"
+  ].forEach((id) => {
+    document.getElementById(id).addEventListener("change", () => {
+      if (id === "listSource") {
+        document.getElementById("listExportName").dataset.manual = "false";
+        listUpdateDefaultName();
+      }
+      loadListPreview();
+    });
+  });
+
+  document.getElementById("listExportName").addEventListener("input", () => {
+    document.getElementById("listExportName").dataset.manual = "true";
+  });
+}
+
+
 const automationState = {
   rules: [],
   runs: [],
@@ -5634,6 +6897,7 @@ function initBreakdownControls() {
     initPeriodControls();
     initBreakdownControls();
     initCrm();
+    initLists();
     initAutomations();
     refreshAll();
 

@@ -65,6 +65,8 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_crm_saved_segments`: reusable CRM filter views saved by admin.
 - `dr_automation_rules`: persistent Automation Hub rules (trigger, delay, conditions and action configuration).
 - `dr_automation_runs`: durable queue and audit history for every scheduled automation execution.
+- `dr_activation_exports`: immutable list-export batches with format, filters, repeat window and counts.
+- `dr_activation_export_leads`: lead membership for each exported batch, used to prevent accidental repeat activation.
 
 Offer foundation routes:
 - GET `/admin` serves the experiment administration UI.
@@ -81,6 +83,10 @@ Offer foundation routes:
 - GET/POST `/api/automations/rules`, PATCH/DELETE `/api/automations/rules/:id` (requires `x-admin-secret`)
 - GET `/api/automations/runs` (requires `x-admin-secret`; includes protected contact identity and safe run result)
 - POST `/api/automations/process` (requires `x-admin-secret`; manually processes currently due runs)
+- POST `/api/activation/eligibility` (requires `x-admin-secret`; excludes contacts exported within the configured window)
+- POST `/api/activation/exports` (requires `x-admin-secret`; creates an immutable export batch and records its lead membership)
+- GET `/api/activation/exports` (requires `x-admin-secret`; recent export history)
+- GET `/api/activation/exports/:id/lead-ids` (requires `x-admin-secret`; batch membership)
 - GET `/api/experiments` (public-safe summary, no destination URLs)
 - GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)
 - PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
@@ -89,7 +95,18 @@ Offer foundation routes:
 - GET `/api/revenue/ltv`
 - GET `/api/overview/timeseries` (daily spend, purchases, revenue and ROAS for the overview chart; defaults to the latest 30 days when no date range is supplied)
 
-Lead-level CRM and Automation Hub reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+Lead-level CRM, Automation Hub and List Activation reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+
+List Activation rules:
+- the dashboard `Listas` tab reuses CRM filters and saved segments; do not create a separate segmentation model;
+- supported export formats are generic: contacts, phone/WhatsApp, email, audience and full CRM;
+- phone exports include raw phone digits and a BR E.164 helper only when the number shape is confidently Brazilian;
+- every generated CSV is registered as an immutable batch before download;
+- repeat protection supports none, 7, 30, 90 days, or never-exported-before;
+- export membership is stored by lead ID so the next batch can automatically skip recently worked contacts;
+- server-side format validation prevents phone-only exports from including contacts without a phone, and likewise for email;
+- export payloads are capped at 5,000 leads and stored filter metadata is allowlisted/bounded;
+- this module prepares lists only. It does not send WhatsApp, email or other outbound messages.
 
 Automation Hub worker rules:
 - the PostgreSQL queue is the source of truth; delayed actions are never kept only in memory;
@@ -138,6 +155,7 @@ At minimum run:
 ```bash
 node --check index.js
 node --check automationHub.js
+node --check activationHub.js
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js
 node --check /tmp/dashboard.js
 git diff --check

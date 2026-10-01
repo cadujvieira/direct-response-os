@@ -22,6 +22,10 @@ const {
   registerAutomationRoutes,
   startAutomationWorker
 } = require("./automationHub");
+const {
+  initActivationDb,
+  registerActivationRoutes
+} = require("./activationHub");
 
 const app = express();
 
@@ -247,6 +251,7 @@ await pool.query(`
 
 registerOfferRoutes({ app, pool, hashIp, parseReportRange });
 registerAutomationRoutes(app, pool);
+registerActivationRoutes(app, pool);
 
 app.get("/", async (req, res) => {
 
@@ -1239,6 +1244,7 @@ async function start() {
     await initDb();
     await initOfferDb(pool);
     await initAutomationDb(pool);
+    await initActivationDb(pool);
     startAutomationWorker(pool);
 
     app.listen(PORT, () => {
