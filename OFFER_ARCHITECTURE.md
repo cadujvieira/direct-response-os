@@ -53,10 +53,13 @@ CRM routes:
 - `GET /api/crm/summary` exposes aggregate counts only;
 - `GET /api/crm/facets` exposes protected segment counts and source/campaign filter options;
 - `GET /api/crm/leads` exposes protected lead-level data with filters, sorting, pagination, attributed revenue and derived offer segments;
-- `GET /api/crm/leads/:id/timeline` combines funnel events with the CRM audit trail;
-- `PATCH /api/crm/leads/:id` updates lifecycle, temperature, score and notes.
+- `GET /api/crm/leads/:id/timeline` combines funnel events, CRM audit history and follow-up activity;
+- `PATCH /api/crm/leads/:id` updates lifecycle, temperature, score and notes;
+- `POST /api/crm/bulk-update` applies audited lifecycle/temperature/score/note changes to selected leads;
+- `GET/POST /api/crm/followups` plus `PATCH /api/crm/followups/:id` power a persistent follow-up queue with due date, priority and completion state;
+- `GET/POST/DELETE /api/crm/saved-segments` stores reusable dynamic filter views for commercial lists.
 
-Offer-specific quick segments currently include: checkout abandoned, front-end buyer without a booked call, call booked, no-show, mentorship opportunity and mentorship customer.
+Offer-specific quick segments currently include: checkout abandoned, front-end buyer without a booked call, call booked, no-show, mentorship opportunity and mentorship customer. The CRM UI can save any filter combination as a reusable dynamic segment and export filtered or selected contacts to CSV.
 
 Lead-level read/write routes require `DR_ADMIN_SECRET`. This variable must exist only in environment configuration, never in source.
 

@@ -310,6 +310,47 @@ async function initOfferDb(pool) {
     CREATE INDEX IF NOT EXISTS dr_leads_crm_stage_idx
     ON dr_leads (lifecycle_stage, temperature, updated_at DESC);
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS dr_crm_followups (
+      id BIGSERIAL PRIMARY KEY,
+      lead_id INTEGER NOT NULL REFERENCES dr_leads(id) ON DELETE CASCADE,
+      due_at TIMESTAMPTZ NOT NULL,
+      priority TEXT NOT NULL DEFAULT 'normal',
+      status TEXT NOT NULL DEFAULT 'pending',
+      note TEXT,
+      created_by TEXT,
+      completed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS dr_crm_followups_queue_idx
+    ON dr_crm_followups (status, due_at ASC, priority);
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS dr_crm_followups_lead_idx
+    ON dr_crm_followups (lead_id, status, due_at ASC);
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS dr_crm_saved_segments (
+      id BIGSERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      filters JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_by TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS dr_crm_saved_segments_name_idx
+    ON dr_crm_saved_segments (LOWER(name));
+  `);
 }
 
 async function findLeadForEvent(client, payload = {}) {
@@ -716,6 +757,14 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
         conditions.push(sql.replace("?", "$" + values.length));
       };
 
+      if (req.query.lead_id) {
+        const leadId = Number(req.query.lead_id);
+        if (!Number.isInteger(leadId) || leadId <= 0) {
+          return res.status(400).json({ ok: false, error: "lead_id invalido" });
+        }
+        add("id = ?", leadId);
+      }
+
       if (req.query.lifecycle_stage) {
         add("lifecycle_stage = ?", String(req.query.lifecycle_stage));
       }
@@ -795,6 +844,9 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
             l.crm_updated_at,
             ev.last_event,
             ev.last_event_at,
+            fu.due_at AS next_followup_at,
+            fu.priority AS next_followup_priority,
+            fu.note AS next_followup_note,
             COALESCE(ev.front_revenue, 0)::numeric AS front_revenue,
             COALESCE(ev.mentorship_revenue, 0)::numeric AS mentorship_revenue,
             COALESCE(ev.bump_revenue, 0)::numeric AS bump_revenue,
@@ -872,6 +924,14 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
               BOOL_OR(event_name = 'refund') AS has_refund
             FROM matched_events
           ) ev ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT due_at, priority, note
+            FROM dr_crm_followups
+            WHERE lead_id = l.id
+              AND status = 'pending'
+            ORDER BY due_at ASC, id ASC
+            LIMIT 1
+          ) fu ON TRUE
         ),
         filtered AS (
           SELECT *
@@ -967,6 +1027,48 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
         LIMIT 200
       `, [leadId]);
 
+      const followupResult = await pool.query(`
+        SELECT
+          id,
+          due_at,
+          priority,
+          status,
+          note,
+          completed_at,
+          created_at,
+          updated_at
+        FROM dr_crm_followups
+        WHERE lead_id = $1
+        ORDER BY created_at DESC, id DESC
+        LIMIT 200
+      `, [leadId]);
+
+      const followupTimeline = followupResult.rows.flatMap((followup) => {
+        const entries = [{
+          type: "followup",
+          action: "scheduled",
+          created_at: followup.created_at,
+          due_at: followup.due_at,
+          priority: followup.priority,
+          status: followup.status,
+          note: followup.note
+        }];
+
+        if (followup.status !== "pending") {
+          entries.push({
+            type: "followup",
+            action: followup.status,
+            created_at: followup.completed_at || followup.updated_at,
+            due_at: followup.due_at,
+            priority: followup.priority,
+            status: followup.status,
+            note: followup.note
+          });
+        }
+
+        return entries;
+      });
+
       const timeline = [
         ...eventResult.rows.map((event) => ({
           type: "event",
@@ -986,7 +1088,8 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
           new_lead_score: history.new_lead_score,
           note: history.note,
           actor: history.actor
-        }))
+        })),
+        ...followupTimeline
       ].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -1074,6 +1177,410 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
       res.status(500).json({ ok: false, error: "erro interno" });
     } finally {
       client.release();
+    }
+  });
+
+  app.post("/api/crm/bulk-update", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const leadIds = Array.from(new Set(
+      (Array.isArray(req.body.lead_ids) ? req.body.lead_ids : [])
+        .map(Number)
+        .filter((id) => Number.isInteger(id) && id > 0)
+    ));
+
+    if (leadIds.length > 500) {
+      return res.status(400).json({ ok: false, error: "limite de 500 leads por acao" });
+    }
+
+    if (leadIds.length === 0) {
+      return res.status(400).json({ ok: false, error: "selecione pelo menos um lead" });
+    }
+
+    const requestedStage = req.body.lifecycle_stage;
+    const requestedTemp = req.body.temperature;
+    const requestedScore = req.body.lead_score;
+    const note = String(req.body.note || "").trim() || null;
+
+    if (requestedStage != null && !LIFECYCLE_STAGES.includes(requestedStage)) {
+      return res.status(400).json({ ok: false, error: "lifecycle_stage invalido" });
+    }
+    if (requestedTemp != null && !TEMPERATURES.includes(requestedTemp)) {
+      return res.status(400).json({ ok: false, error: "temperature invalida" });
+    }
+    if (
+      requestedScore != null &&
+      (!Number.isInteger(Number(requestedScore)) ||
+        Number(requestedScore) < 0 ||
+        Number(requestedScore) > 100)
+    ) {
+      return res.status(400).json({ ok: false, error: "lead_score deve estar entre 0 e 100" });
+    }
+
+    if (
+      requestedStage == null &&
+      requestedTemp == null &&
+      requestedScore == null &&
+      !note
+    ) {
+      return res.status(400).json({ ok: false, error: "nenhuma alteracao informada" });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const currentResult = await client.query(`
+        SELECT id, lifecycle_stage, temperature, lead_score
+        FROM dr_leads
+        WHERE id = ANY($1::int[])
+        ORDER BY id
+        FOR UPDATE
+      `, [leadIds]);
+
+      for (const current of currentResult.rows) {
+        const nextStage =
+          requestedStage ?? current.lifecycle_stage ?? "lead";
+        const nextTemp =
+          requestedTemp ?? current.temperature ?? "cold";
+        const nextScore =
+          requestedScore == null
+            ? Number(current.lead_score || 0)
+            : Number(requestedScore);
+
+        await client.query(`
+          UPDATE dr_leads
+          SET lifecycle_stage = $1,
+              temperature = $2,
+              lead_score = $3,
+              crm_updated_at = NOW(),
+              updated_at = NOW()
+          WHERE id = $4
+        `, [nextStage, nextTemp, nextScore, current.id]);
+
+        await client.query(`
+          INSERT INTO dr_lead_crm_history (
+            lead_id, old_lifecycle_stage, new_lifecycle_stage,
+            old_temperature, new_temperature,
+            old_lead_score, new_lead_score, note, actor
+          )
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        `, [
+          current.id,
+          current.lifecycle_stage,
+          nextStage,
+          current.temperature,
+          nextTemp,
+          Number(current.lead_score || 0),
+          nextScore,
+          note,
+          "admin:bulk"
+        ]);
+      }
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        updated: currentResult.rows.length
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      res.status(500).json({ ok: false, error: "erro interno" });
+    } finally {
+      client.release();
+    }
+  });
+
+  app.get("/api/crm/followups", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const scope = String(req.query.scope || "all");
+    const status = String(req.query.status || "pending");
+    const allowedScopes = new Set(["all", "overdue", "today", "upcoming"]);
+    const allowedStatuses = new Set(["pending", "done", "cancelled"]);
+
+    if (!allowedScopes.has(scope) || !allowedStatuses.has(status)) {
+      return res.status(400).json({ ok: false, error: "filtro de follow-up invalido" });
+    }
+
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+    const conditions = ["f.status = $1"];
+    const values = [status];
+
+    if (scope === "overdue") {
+      conditions.push("f.due_at < NOW()");
+    } else if (scope === "today") {
+      conditions.push(`
+        (f.due_at AT TIME ZONE 'America/Sao_Paulo')::date =
+        (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+      `);
+    } else if (scope === "upcoming") {
+      conditions.push(`
+        (f.due_at AT TIME ZONE 'America/Sao_Paulo')::date >
+        (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+      `);
+    }
+
+    values.push(limit);
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          f.id,
+          f.lead_id,
+          f.due_at,
+          f.priority,
+          f.status,
+          f.note,
+          f.created_by,
+          f.completed_at,
+          f.created_at,
+          l.nome,
+          l.email,
+          l.telefone,
+          l.temperature,
+          l.lifecycle_stage,
+          l.utm_source,
+          l.utm_campaign
+        FROM dr_crm_followups f
+        JOIN dr_leads l ON l.id = f.lead_id
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY
+          CASE f.priority
+            WHEN 'urgent' THEN 0
+            WHEN 'high' THEN 1
+            WHEN 'normal' THEN 2
+            ELSE 3
+          END,
+          f.due_at ASC,
+          f.id ASC
+        LIMIT $${values.length}
+      `, values);
+
+      const countsResult = await pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'pending' AND due_at < NOW())::int AS overdue,
+          COUNT(*) FILTER (
+            WHERE status = 'pending'
+              AND (due_at AT TIME ZONE 'America/Sao_Paulo')::date =
+                  (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+          )::int AS today,
+          COUNT(*) FILTER (
+            WHERE status = 'pending'
+              AND (due_at AT TIME ZONE 'America/Sao_Paulo')::date >
+                  (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+          )::int AS upcoming,
+          COUNT(*) FILTER (WHERE status = 'pending')::int AS pending
+        FROM dr_crm_followups
+      `);
+
+      res.json({
+        ok: true,
+        followups: result.rows,
+        counts: countsResult.rows[0]
+      });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
+  app.post("/api/crm/followups", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const leadIds = Array.from(new Set(
+      (Array.isArray(req.body.lead_ids) ? req.body.lead_ids : [])
+        .map(Number)
+        .filter((id) => Number.isInteger(id) && id > 0)
+    ));
+
+    if (leadIds.length > 500) {
+      return res.status(400).json({ ok: false, error: "limite de 500 leads por acao" });
+    }
+
+    const dueAt = new Date(req.body.due_at);
+    const priority = String(req.body.priority || "normal");
+    const note = String(req.body.note || "").trim() || null;
+    const allowedPriorities = new Set(["low", "normal", "high", "urgent"]);
+
+    if (leadIds.length === 0) {
+      return res.status(400).json({ ok: false, error: "selecione pelo menos um lead" });
+    }
+    if (Number.isNaN(dueAt.getTime())) {
+      return res.status(400).json({ ok: false, error: "data de follow-up invalida" });
+    }
+    if (!allowedPriorities.has(priority)) {
+      return res.status(400).json({ ok: false, error: "prioridade invalida" });
+    }
+
+    try {
+      const result = await pool.query(`
+        INSERT INTO dr_crm_followups (
+          lead_id, due_at, priority, note, created_by
+        )
+        SELECT
+          id, $2::timestamptz, $3, $4, 'admin:crm'
+        FROM dr_leads
+        WHERE id = ANY($1::int[])
+        RETURNING id, lead_id, due_at, priority, status, note
+      `, [leadIds, dueAt.toISOString(), priority, note]);
+
+      res.status(201).json({
+        ok: true,
+        created: result.rows.length,
+        followups: result.rows
+      });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
+  app.patch("/api/crm/followups/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const followupId = Number(req.params.id);
+    const status = req.body.status == null ? null : String(req.body.status);
+    const priority = req.body.priority == null ? null : String(req.body.priority);
+    const note = req.body.note == null ? null : String(req.body.note).trim();
+    const dueAt =
+      req.body.due_at == null ? null : new Date(req.body.due_at);
+    const allowedStatuses = new Set(["pending", "done", "cancelled"]);
+    const allowedPriorities = new Set(["low", "normal", "high", "urgent"]);
+
+    if (!Number.isInteger(followupId) || followupId <= 0) {
+      return res.status(400).json({ ok: false, error: "follow-up invalido" });
+    }
+    if (status != null && !allowedStatuses.has(status)) {
+      return res.status(400).json({ ok: false, error: "status invalido" });
+    }
+    if (priority != null && !allowedPriorities.has(priority)) {
+      return res.status(400).json({ ok: false, error: "prioridade invalida" });
+    }
+    if (dueAt && Number.isNaN(dueAt.getTime())) {
+      return res.status(400).json({ ok: false, error: "data invalida" });
+    }
+
+    try {
+      const result = await pool.query(`
+        UPDATE dr_crm_followups
+        SET status = COALESCE($1, status),
+            priority = COALESCE($2, priority),
+            note = CASE WHEN $3::text IS NULL THEN note ELSE $3 END,
+            due_at = COALESCE($4::timestamptz, due_at),
+            completed_at = CASE
+              WHEN COALESCE($1, status) = 'done' THEN COALESCE(completed_at, NOW())
+              WHEN COALESCE($1, status) = 'pending' THEN NULL
+              ELSE completed_at
+            END,
+            updated_at = NOW()
+        WHERE id = $5
+        RETURNING id, lead_id, due_at, priority, status, note, completed_at
+      `, [
+        status,
+        priority,
+        req.body.note == null ? null : note,
+        dueAt ? dueAt.toISOString() : null,
+        followupId
+      ]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ ok: false, error: "follow-up nao encontrado" });
+      }
+
+      res.json({ ok: true, followup: result.rows[0] });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
+  app.get("/api/crm/saved-segments", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    try {
+      const result = await pool.query(`
+        SELECT id, name, filters, created_by, created_at, updated_at
+        FROM dr_crm_saved_segments
+        ORDER BY LOWER(name), id
+      `);
+
+      res.json({ ok: true, segments: result.rows });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
+  app.post("/api/crm/saved-segments", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const name = String(req.body.name || "").trim().slice(0, 80);
+    const filters =
+      req.body.filters &&
+      typeof req.body.filters === "object" &&
+      !Array.isArray(req.body.filters)
+        ? req.body.filters
+        : null;
+
+    if (!name || !filters) {
+      return res.status(400).json({ ok: false, error: "nome e filtros sao obrigatorios" });
+    }
+
+    const allowedKeys = new Set([
+      "search",
+      "temperature",
+      "lifecycle_stage",
+      "utm_source",
+      "utm_campaign",
+      "segment",
+      "sort"
+    ]);
+
+    const sanitized = {};
+    for (const [key, value] of Object.entries(filters)) {
+      if (allowedKeys.has(key) && value != null && String(value).trim() !== "") {
+        sanitized[key] = String(value).trim().slice(0, 250);
+      }
+    }
+
+    try {
+      const result = await pool.query(`
+        INSERT INTO dr_crm_saved_segments (name, filters, created_by)
+        VALUES ($1, $2::jsonb, 'admin:crm')
+        ON CONFLICT (LOWER(name))
+        DO UPDATE SET
+          filters = EXCLUDED.filters,
+          updated_at = NOW()
+        RETURNING id, name, filters, created_at, updated_at
+      `, [name, JSON.stringify(sanitized)]);
+
+      res.status(201).json({ ok: true, segment: result.rows[0] });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
+
+  app.delete("/api/crm/saved-segments/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const segmentId = Number(req.params.id);
+    if (!Number.isInteger(segmentId) || segmentId <= 0) {
+      return res.status(400).json({ ok: false, error: "segmento invalido" });
+    }
+
+    try {
+      const result = await pool.query(`
+        DELETE FROM dr_crm_saved_segments
+        WHERE id = $1
+        RETURNING id
+      `, [segmentId]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ ok: false, error: "segmento nao encontrado" });
+      }
+
+      res.json({ ok: true, deleted: segmentId });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: "erro interno" });
     }
   });
 

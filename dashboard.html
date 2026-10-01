@@ -1046,6 +1046,7 @@
 
     .crm-workspace[hidden],
     .crm-drawer-backdrop[hidden],
+    .crm-modal-backdrop[hidden],
     .crm-selection-bar[hidden] {
       display: none !important;
     }
@@ -1209,6 +1210,223 @@
       color: #07120b;
     }
 
+    .crm-ops-grid {
+      display: grid;
+      grid-template-columns: minmax(320px, .8fr) minmax(520px, 1.5fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .crm-saved-panel,
+    .crm-followup-panel {
+      min-width: 0;
+    }
+
+    .crm-saved-body {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 14px;
+    }
+
+    .crm-followup-counters {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      padding: 12px 14px 0;
+    }
+
+    .crm-followup-counters button {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 9px;
+      background: rgba(255,255,255,.015);
+      color: var(--muted);
+      font: inherit;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .crm-followup-counters strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .crm-followup-list {
+      display: grid;
+      gap: 7px;
+      max-height: 258px;
+      overflow-y: auto;
+      padding: 12px 14px 14px;
+    }
+
+    .crm-followup-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .crm-followup-item.overdue {
+      border-color: rgba(255,107,107,.25);
+      background: rgba(255,107,107,.04);
+    }
+
+    .crm-followup-name {
+      font-size: 11px;
+      font-weight: 750;
+      color: #e5e9ee;
+    }
+
+    .crm-followup-meta {
+      margin-top: 4px;
+      color: #78818e;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .crm-followup-note {
+      margin-top: 5px;
+      color: #9da5b0;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .crm-followup-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .crm-followup-actions button {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 7px;
+      background: #191c22;
+      color: #d8dde5;
+      font: inherit;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .crm-followup-priority {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 5px;
+      padding: 2px 5px;
+      border-radius: 999px;
+      background: #20242b;
+      color: #aab1bc;
+      font-size: 8px;
+      text-transform: uppercase;
+    }
+
+    .crm-followup-priority.high,
+    .crm-followup-priority.urgent {
+      color: #ffabab;
+      background: rgba(255,107,107,.08);
+    }
+
+    .crm-next-followup {
+      color: #d7dce4;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .crm-next-followup.overdue {
+      color: #ff9b9b;
+    }
+
+    .crm-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9100;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2,4,7,.68);
+      backdrop-filter: blur(3px);
+    }
+
+    .crm-modal {
+      width: min(640px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #0f1116;
+      box-shadow: 0 24px 70px rgba(0,0,0,.45);
+    }
+
+    .crm-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .crm-modal-head h3 {
+      font-size: 15px;
+    }
+
+    .crm-modal-head p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .crm-modal-body {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 16px 18px;
+    }
+
+    .crm-modal-body label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .crm-modal-wide {
+      grid-column: 1 / -1;
+    }
+
+    .crm-modal-status {
+      grid-column: 1 / -1;
+      min-height: 16px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .crm-modal-status.error {
+      color: var(--red);
+    }
+
+    .crm-modal-status.ok {
+      color: var(--green);
+    }
+
+    .crm-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 18px 16px;
+      border-top: 1px solid var(--border);
+    }
+
     .crm-main-panel {
       overflow: visible;
     }
@@ -1249,7 +1467,7 @@
 
     .crm-table {
       width: 100%;
-      min-width: 1320px;
+      min-width: 1480px;
       border-collapse: collapse;
     }
 
@@ -1595,6 +1813,10 @@
       background: var(--green);
     }
 
+    .crm-timeline-item.followup .crm-timeline-dot {
+      background: var(--yellow);
+    }
+
     .crm-timeline-title {
       color: #dce1e8;
       font-size: 11px;
@@ -1617,6 +1839,10 @@
     @media (max-width: 1180px) {
       .crm-kpi-grid {
         grid-template-columns: repeat(3, 1fr);
+      }
+
+      .crm-ops-grid {
+        grid-template-columns: 1fr;
       }
 
       .crm-filter-shell {
@@ -1654,8 +1880,18 @@
       }
 
       .crm-edit-grid,
-      .crm-detail-grid {
+      .crm-detail-grid,
+      .crm-modal-body {
         grid-template-columns: 1fr;
+      }
+
+      .crm-modal-wide {
+        grid-column: auto;
+      }
+
+      .crm-selection-bar > div {
+        display: flex;
+        flex-wrap: wrap;
       }
 
       .crm-drawer {
@@ -2038,6 +2274,48 @@
           <button class="crm-segment-btn" type="button" data-segment="mentorship_customer">Cliente mentoria <span id="crmSegMentorship">0</span></button>
         </div>
 
+        <div class="crm-ops-grid">
+          <div class="panel crm-saved-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Salve a combinação atual de filtros para reutilizar uma lista comercial sem reconstruí-la toda vez.">Segmentos salvos</h3>
+                <p>Listas dinâmicas baseadas nos filtros atuais.</p>
+              </div>
+            </div>
+            <div class="crm-saved-body">
+              <select class="crm-control" id="crmSavedSegmentSelect">
+                <option value="">Selecionar segmento salvo...</option>
+              </select>
+              <input class="crm-control" id="crmSavedSegmentName" type="text" maxlength="80" placeholder="Nome da lista" />
+              <button class="crm-primary-btn" id="crmSaveSegment" type="button">Salvar visão</button>
+              <button class="crm-secondary-btn" id="crmDeleteSegment" type="button">Excluir</button>
+            </div>
+          </div>
+
+          <div class="panel crm-followup-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Fila persistente de próximos contatos comerciais. Atrasados aparecem primeiro e cada tarefa fica ligada ao lead.">Fila de follow-up</h3>
+                <p>Quem precisa de contato e quando.</p>
+              </div>
+              <select class="crm-control" id="crmFollowupScope">
+                <option value="all">Pendentes</option>
+                <option value="overdue">Atrasados</option>
+                <option value="today">Hoje</option>
+                <option value="upcoming">Próximos</option>
+              </select>
+            </div>
+            <div class="crm-followup-counters">
+              <button type="button" data-followup-scope="overdue">Atrasados <strong id="crmFollowupOverdue">0</strong></button>
+              <button type="button" data-followup-scope="today">Hoje <strong id="crmFollowupToday">0</strong></button>
+              <button type="button" data-followup-scope="upcoming">Próximos <strong id="crmFollowupUpcoming">0</strong></button>
+            </div>
+            <div class="crm-followup-list" id="crmFollowupList">
+              <div class="crm-table-empty">Sem follow-ups pendentes.</div>
+            </div>
+          </div>
+        </div>
+
         <div class="panel crm-main-panel">
           <div class="crm-filter-shell">
             <input class="crm-control crm-search" id="crmSearch" type="search" placeholder="Buscar nome, email ou telefone..." />
@@ -2050,10 +2328,57 @@
             <button class="crm-secondary-btn" id="crmExportCsv" type="button">Exportar CSV</button>
           </div>
 
-          <div class="crm-selection-bar" id="crmSelectionBar" hidden><span><strong id="crmSelectedCount">0</strong> selecionado(s)</span><div><button class="crm-secondary-btn small" id="crmExportSelected" type="button">Exportar selecionados</button><button class="crm-secondary-btn small" id="crmClearSelection" type="button">Limpar seleção</button></div></div>
+          <div class="crm-selection-bar" id="crmSelectionBar" hidden>
+            <span><strong id="crmSelectedCount">0</strong> selecionado(s)</span>
+            <div>
+              <button class="crm-secondary-btn small" id="crmBulkFollowup" type="button">Agendar follow-up</button>
+              <button class="crm-secondary-btn small" id="crmBulkUpdate" type="button">Atualizar CRM</button>
+              <button class="crm-secondary-btn small" id="crmExportSelected" type="button">Exportar selecionados</button>
+              <button class="crm-secondary-btn small" id="crmClearSelection" type="button">Limpar seleção</button>
+            </div>
+          </div>
 
-          <div class="crm-table-wrap"><table class="crm-table"><thead><tr><th><input id="crmSelectPage" type="checkbox" aria-label="Selecionar página" /></th><th>Contato</th><th data-tooltip="Prioridade comercial atual: cold, warm ou hot.">Temperatura</th><th data-tooltip="Posição objetiva do contato no processo comercial.">Etapa</th><th data-tooltip="Pontuação manual de 0 a 100 para priorização comercial.">Score</th><th>Origem / campanha</th><th data-tooltip="Evento mais recente atribuído ao contato no funil.">Último evento</th><th data-tooltip="Receita líquida atribuída ao contato, incluindo front-end e mentoria menos reembolsos.">Receita</th><th>Última atividade</th><th></th></tr></thead><tbody id="crmTableBody"><tr><td colspan="10" class="crm-table-empty">Conecte o CRM para carregar a base.</td></tr></tbody></table></div>
+          <div class="crm-table-wrap"><table class="crm-table"><thead><tr><th><input id="crmSelectPage" type="checkbox" aria-label="Selecionar página" /></th><th>Contato</th><th data-tooltip="Prioridade comercial atual: cold, warm ou hot.">Temperatura</th><th data-tooltip="Posição objetiva do contato no processo comercial.">Etapa</th><th data-tooltip="Pontuação manual de 0 a 100 para priorização comercial.">Score</th><th>Origem / campanha</th><th data-tooltip="Evento mais recente atribuído ao contato no funil.">Último evento</th><th data-tooltip="Receita líquida atribuída ao contato, incluindo front-end e mentoria menos reembolsos.">Receita</th><th data-tooltip="Próxima tarefa comercial pendente ligada a este contato.">Próximo follow-up</th><th>Última atividade</th><th></th></tr></thead><tbody id="crmTableBody"><tr><td colspan="11" class="crm-table-empty">Conecte o CRM para carregar a base.</td></tr></tbody></table></div>
           <div class="crm-table-footer"><div id="crmTableStatus">0 contatos</div><div class="crm-pagination"><button class="crm-secondary-btn small" id="crmPrevPage" type="button">← Anterior</button><span id="crmPageLabel">Página 1</span><button class="crm-secondary-btn small" id="crmNextPage" type="button">Próxima →</button></div></div>
+        </div>
+      </div>
+
+      <div class="crm-modal-backdrop" id="crmFollowupModal" hidden>
+        <div class="crm-modal">
+          <div class="crm-modal-head">
+            <div><h3>Agendar follow-up</h3><p id="crmFollowupModalCount">0 contato(s) selecionado(s)</p></div>
+            <button class="crm-drawer-close" type="button" data-close-crm-modal="crmFollowupModal">×</button>
+          </div>
+          <div class="crm-modal-body">
+            <label>Data e hora<input class="crm-control" id="crmFollowupDueAt" type="datetime-local" /></label>
+            <label>Prioridade<select class="crm-control" id="crmFollowupPriority"><option value="low">Baixa</option><option value="normal" selected>Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label>
+            <label class="crm-modal-wide">Nota<textarea class="crm-control crm-note" id="crmFollowupNote" rows="3" placeholder="Ex.: retornar proposta, confirmar presença na call..."></textarea></label>
+            <div class="crm-modal-status" id="crmFollowupModalStatus"></div>
+          </div>
+          <div class="crm-modal-footer">
+            <button class="crm-secondary-btn" type="button" data-close-crm-modal="crmFollowupModal">Cancelar</button>
+            <button class="crm-primary-btn" id="crmFollowupSave" type="button">Agendar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="crm-modal-backdrop" id="crmBulkUpdateModal" hidden>
+        <div class="crm-modal">
+          <div class="crm-modal-head">
+            <div><h3>Atualizar contatos em massa</h3><p id="crmBulkModalCount">0 contato(s) selecionado(s)</p></div>
+            <button class="crm-drawer-close" type="button" data-close-crm-modal="crmBulkUpdateModal">×</button>
+          </div>
+          <div class="crm-modal-body">
+            <label>Temperatura<select class="crm-control" id="crmBulkTemperature"><option value="">Manter atual</option><option value="cold">Cold</option><option value="warm">Warm</option><option value="hot">Hot</option></select></label>
+            <label>Etapa<select class="crm-control" id="crmBulkStage"><option value="">Manter atual</option><option value="lead">Lead</option><option value="checkout">Checkout</option><option value="customer">Cliente front</option><option value="call_booked">Call agendada</option><option value="mentorship_opportunity">Oportunidade</option><option value="mentorship_customer">Cliente mentoria</option><option value="refunded">Reembolsado</option></select></label>
+            <label>Score<input class="crm-control" id="crmBulkScore" type="number" min="0" max="100" placeholder="Manter atual" /></label>
+            <label class="crm-modal-wide">Nota / motivo<textarea class="crm-control crm-note" id="crmBulkNote" rows="3" placeholder="Ex.: priorização comercial após análise da lista"></textarea></label>
+            <div class="crm-modal-status" id="crmBulkModalStatus"></div>
+          </div>
+          <div class="crm-modal-footer">
+            <button class="crm-secondary-btn" type="button" data-close-crm-modal="crmBulkUpdateModal">Cancelar</button>
+            <button class="crm-primary-btn" id="crmBulkUpdateSave" type="button">Aplicar atualização</button>
+          </div>
         </div>
       </div>
 
@@ -2695,7 +3020,9 @@ const crmState = {
   total: 0,
   rows: [],
   selected: new Map(),
+  savedSegments: [],
   activeLeadId: null,
+  followupScope: "all",
   searchTimer: null
 };
 
@@ -2882,7 +3209,7 @@ function crmRenderRows() {
 
   if (crmState.rows.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="10" class="crm-table-empty">Nenhum contato encontrado com estes filtros.</td></tr>';
+      '<tr><td colspan="11" class="crm-table-empty">Nenhum contato encontrado com estes filtros.</td></tr>';
     crmUpdateSelectionBar();
     return;
   }
@@ -2894,6 +3221,17 @@ function crmRenderRows() {
     const campaign = row.utm_campaign || "Sem campanha";
     const lastEvent = crmEventLabels[row.last_event] || row.last_event || "Lead criado";
     const isSelected = crmState.selected.has(Number(row.id));
+    const followupAt = row.next_followup_at
+      ? new Date(row.next_followup_at)
+      : null;
+    const followupOverdue =
+      followupAt && !Number.isNaN(followupAt.getTime()) && followupAt.getTime() < Date.now();
+    const followupHtml = followupAt
+      ? `<div class="crm-next-followup ${followupOverdue ? "overdue" : ""}">
+          ${escapeHtml(crmFormatDateTime(row.next_followup_at))}
+          <div class="crm-source-sub">${escapeHtml(row.next_followup_priority || "normal")}</div>
+        </div>`
+      : '<span class="crm-source-sub">—</span>';
 
     return `
       <tr>
@@ -2905,6 +3243,7 @@ function crmRenderRows() {
         <td><div class="crm-source">${escapeHtml(source)}</div><div class="crm-source-sub">${escapeHtml(campaign)}</div></td>
         <td><div>${escapeHtml(lastEvent)}</div><div class="crm-source-sub">${escapeHtml(crmSegmentLabels[row.crm_segment] || row.crm_segment || "")}</div></td>
         <td class="crm-revenue">${formatMoney(row.total_revenue)}</td>
+        <td>${followupHtml}</td>
         <td>${escapeHtml(crmFormatDateTime(row.last_activity_at))}</td>
         <td><button class="crm-row-btn" type="button" data-crm-open="${Number(row.id)}">Abrir</button></td>
       </tr>
@@ -2934,7 +3273,7 @@ function crmRenderRows() {
 async function loadCrmLeads() {
   const tbody = document.getElementById("crmTableBody");
   tbody.innerHTML =
-    '<tr><td colspan="10" class="crm-table-empty">Carregando contatos...</td></tr>';
+    '<tr><td colspan="11" class="crm-table-empty">Carregando contatos...</td></tr>';
 
   try {
     const data = await crmFetch(crmBuildLeadUrl());
@@ -2961,7 +3300,7 @@ async function loadCrmLeads() {
       (crmState.page + 1) >= totalPages;
   } catch (error) {
     tbody.innerHTML =
-      `<tr><td colspan="10" class="crm-table-empty">${escapeHtml(error.message)}</td></tr>`;
+      `<tr><td colspan="11" class="crm-table-empty">${escapeHtml(error.message)}</td></tr>`;
   }
 }
 
@@ -2983,7 +3322,11 @@ async function connectCrm() {
     sessionStorage.setItem("dr_admin_secret", secret);
     document.getElementById("crmWorkspace").hidden = false;
     crmSetAuthStatus("Conectado.", "ok");
-    await loadCrmLeads();
+    await Promise.all([
+      loadCrmSavedSegments(),
+      loadCrmFollowups(),
+      loadCrmLeads()
+    ]);
   } catch (error) {
     crmState.connected = false;
     document.getElementById("crmWorkspace").hidden = true;
@@ -3019,7 +3362,13 @@ function crmClearFilters() {
 }
 
 function crmCsvValue(value) {
-  const text = String(value ?? "");
+  let text = String(value ?? "");
+  const trimmed = text.trimStart();
+
+  if (/^[=+\-@]/.test(trimmed)) {
+    text = "'" + text;
+  }
+
   return '"' + text.replace(/"/g, '""') + '"';
 }
 
@@ -3027,7 +3376,8 @@ function crmDownloadCsv(rows, filename) {
   const headers = [
     "nome", "email", "telefone", "temperatura", "etapa", "score",
     "segmento", "origem", "campanha", "ultimo_evento",
-    "receita_front", "receita_mentoria", "receita_total", "ultima_atividade"
+    "receita_front", "receita_mentoria", "receita_total",
+    "proximo_followup", "prioridade_followup", "nota_followup", "ultima_atividade"
   ];
 
   const lines = [
@@ -3046,6 +3396,9 @@ function crmDownloadCsv(rows, filename) {
       row.front_revenue,
       row.mentorship_revenue,
       row.total_revenue,
+      row.next_followup_at,
+      row.next_followup_priority,
+      row.next_followup_note,
       row.last_activity_at
     ].map(crmCsvValue).join(";"))
   ];
@@ -3091,6 +3444,324 @@ function crmExportSelected() {
   );
 }
 
+function crmCurrentFilterSnapshot() {
+  return {
+    search: document.getElementById("crmSearch").value.trim(),
+    temperature: document.getElementById("crmTemperatureFilter").value,
+    lifecycle_stage: document.getElementById("crmStageFilter").value,
+    utm_source: document.getElementById("crmSourceFilter").value,
+    utm_campaign: document.getElementById("crmCampaignFilter").value,
+    segment: crmState.segment,
+    sort: document.getElementById("crmSort").value
+  };
+}
+
+function crmSyncSegmentButtons() {
+  document.querySelectorAll(".crm-segment-btn").forEach((button) => {
+    button.classList.toggle(
+      "active",
+      button.dataset.segment === crmState.segment
+    );
+  });
+}
+
+function crmApplyFilterSnapshot(filters = {}) {
+  document.getElementById("crmSearch").value = filters.search || "";
+  document.getElementById("crmTemperatureFilter").value =
+    filters.temperature || "";
+  document.getElementById("crmStageFilter").value =
+    filters.lifecycle_stage || "";
+  document.getElementById("crmSourceFilter").value =
+    filters.utm_source || "";
+  document.getElementById("crmCampaignFilter").value =
+    filters.utm_campaign || "";
+  document.getElementById("crmSort").value =
+    filters.sort || "recent";
+  crmState.segment = filters.segment || "";
+  crmState.page = 0;
+  crmSyncSegmentButtons();
+  loadCrmLeads();
+}
+
+async function loadCrmSavedSegments() {
+  const data = await crmFetch("/api/crm/saved-segments");
+  crmState.savedSegments = Array.isArray(data.segments)
+    ? data.segments
+    : [];
+
+  const select = document.getElementById("crmSavedSegmentSelect");
+  const current = select.value;
+
+  select.innerHTML =
+    '<option value="">Selecionar segmento salvo...</option>' +
+    crmState.savedSegments.map((segment) =>
+      `<option value="${Number(segment.id)}">${escapeHtml(segment.name)}</option>`
+    ).join("");
+
+  if (crmState.savedSegments.some((segment) => String(segment.id) === current)) {
+    select.value = current;
+  }
+}
+
+async function crmSaveCurrentSegment() {
+  const nameInput = document.getElementById("crmSavedSegmentName");
+  const name = nameInput.value.trim();
+
+  if (!name) {
+    nameInput.focus();
+    return;
+  }
+
+  const data = await crmFetch("/api/crm/saved-segments", {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      filters: crmCurrentFilterSnapshot()
+    })
+  });
+
+  await loadCrmSavedSegments();
+  document.getElementById("crmSavedSegmentSelect").value =
+    String(data.segment.id);
+}
+
+async function crmDeleteSavedSegment() {
+  const select = document.getElementById("crmSavedSegmentSelect");
+  const id = Number(select.value);
+  if (!id) return;
+
+  await crmFetch("/api/crm/saved-segments/" + id, {
+    method: "DELETE"
+  });
+
+  document.getElementById("crmSavedSegmentName").value = "";
+  await loadCrmSavedSegments();
+}
+
+function crmLocalInputValue(date) {
+  const local = new Date(
+    date.getTime() - (date.getTimezoneOffset() * 60000)
+  );
+  return local.toISOString().slice(0, 16);
+}
+
+function crmPriorityLabel(value) {
+  return {
+    low: "baixa",
+    normal: "normal",
+    high: "alta",
+    urgent: "urgente"
+  }[value] || value || "normal";
+}
+
+async function loadCrmFollowups() {
+  const scope = document.getElementById("crmFollowupScope").value || "all";
+  crmState.followupScope = scope;
+
+  const data = await crmFetch(
+    "/api/crm/followups?status=pending&scope=" +
+      encodeURIComponent(scope) +
+      "&limit=30"
+  );
+
+  const counts = data.counts || {};
+  document.getElementById("crmFollowupOverdue").textContent =
+    Number(counts.overdue || 0);
+  document.getElementById("crmFollowupToday").textContent =
+    Number(counts.today || 0);
+  document.getElementById("crmFollowupUpcoming").textContent =
+    Number(counts.upcoming || 0);
+
+  const container = document.getElementById("crmFollowupList");
+  const followups = Array.isArray(data.followups) ? data.followups : [];
+
+  if (followups.length === 0) {
+    container.innerHTML =
+      '<div class="crm-table-empty">Sem follow-ups neste filtro.</div>';
+    return;
+  }
+
+  container.innerHTML = followups.map((item) => {
+    const due = new Date(item.due_at);
+    const overdue = due.getTime() < Date.now();
+
+    return `
+      <div class="crm-followup-item ${overdue ? "overdue" : ""}">
+        <div>
+          <div class="crm-followup-name">
+            ${escapeHtml(item.nome || "Sem nome")}
+            <span class="crm-followup-priority ${escapeHtml(item.priority || "")}">
+              ${escapeHtml(crmPriorityLabel(item.priority))}
+            </span>
+          </div>
+          <div class="crm-followup-meta">
+            ${overdue ? "Atrasado · " : ""}${escapeHtml(crmFormatDateTime(item.due_at))}
+            · ${escapeHtml(item.telefone || item.email || "sem contato")}
+          </div>
+          ${item.note ? `<div class="crm-followup-note">${escapeHtml(item.note)}</div>` : ""}
+        </div>
+        <div class="crm-followup-actions">
+          <button type="button" data-followup-open="${Number(item.lead_id)}">Abrir</button>
+          <button type="button" data-followup-done="${Number(item.id)}">Concluir</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  container.querySelectorAll("[data-followup-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openCrmDrawer(Number(button.dataset.followupOpen));
+    });
+  });
+
+  container.querySelectorAll("[data-followup-done]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await crmFetch(
+          "/api/crm/followups/" + Number(button.dataset.followupDone),
+          {
+            method: "PATCH",
+            body: JSON.stringify({ status: "done" })
+          }
+        );
+        await Promise.all([loadCrmFollowups(), loadCrmLeads()]);
+        if (crmState.activeLeadId) {
+          await openCrmDrawer(crmState.activeLeadId);
+        }
+      } catch (error) {
+        button.disabled = false;
+      }
+    });
+  });
+}
+
+function crmSelectedIds() {
+  return Array.from(crmState.selected.keys());
+}
+
+function crmOpenModal(id) {
+  document.getElementById(id).hidden = false;
+}
+
+function crmCloseModal(id) {
+  document.getElementById(id).hidden = true;
+}
+
+function crmOpenFollowupModal() {
+  const ids = crmSelectedIds();
+  if (ids.length === 0) return;
+
+  document.getElementById("crmFollowupModalCount").textContent =
+    `${ids.length} contato(s) selecionado(s)`;
+
+  const dueInput = document.getElementById("crmFollowupDueAt");
+  if (!dueInput.value) {
+    const defaultDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    defaultDate.setMinutes(0, 0, 0);
+    dueInput.value = crmLocalInputValue(defaultDate);
+  }
+
+  document.getElementById("crmFollowupModalStatus").textContent = "";
+  crmOpenModal("crmFollowupModal");
+}
+
+async function crmScheduleSelectedFollowup() {
+  const ids = crmSelectedIds();
+  const dueValue = document.getElementById("crmFollowupDueAt").value;
+  const status = document.getElementById("crmFollowupModalStatus");
+
+  if (ids.length === 0 || !dueValue) {
+    status.textContent = "Selecione contatos e informe a data.";
+    status.className = "crm-modal-status error";
+    return;
+  }
+
+  status.textContent = "Agendando...";
+  status.className = "crm-modal-status";
+
+  try {
+    const data = await crmFetch("/api/crm/followups", {
+      method: "POST",
+      body: JSON.stringify({
+        lead_ids: ids,
+        due_at: new Date(dueValue).toISOString(),
+        priority: document.getElementById("crmFollowupPriority").value,
+        note: document.getElementById("crmFollowupNote").value.trim() || null
+      })
+    });
+
+    status.textContent = `${data.created} follow-up(s) criado(s).`;
+    status.className = "crm-modal-status ok";
+
+    crmState.selected.clear();
+    crmCloseModal("crmFollowupModal");
+    document.getElementById("crmFollowupNote").value = "";
+
+    await Promise.all([loadCrmFollowups(), loadCrmLeads()]);
+  } catch (error) {
+    status.textContent = error.message;
+    status.className = "crm-modal-status error";
+  }
+}
+
+function crmOpenBulkUpdateModal() {
+  const ids = crmSelectedIds();
+  if (ids.length === 0) return;
+
+  document.getElementById("crmBulkModalCount").textContent =
+    `${ids.length} contato(s) selecionado(s)`;
+  document.getElementById("crmBulkModalStatus").textContent = "";
+  crmOpenModal("crmBulkUpdateModal");
+}
+
+async function crmApplyBulkUpdate() {
+  const ids = crmSelectedIds();
+  const status = document.getElementById("crmBulkModalStatus");
+  const temperature = document.getElementById("crmBulkTemperature").value;
+  const lifecycleStage = document.getElementById("crmBulkStage").value;
+  const scoreInput = document.getElementById("crmBulkScore").value;
+  const note = document.getElementById("crmBulkNote").value.trim();
+
+  const body = { lead_ids: ids };
+  if (temperature) body.temperature = temperature;
+  if (lifecycleStage) body.lifecycle_stage = lifecycleStage;
+  if (scoreInput !== "") body.lead_score = Number(scoreInput);
+  if (note) body.note = note;
+
+  if (Object.keys(body).length === 1) {
+    status.textContent = "Escolha pelo menos uma alteração.";
+    status.className = "crm-modal-status error";
+    return;
+  }
+
+  status.textContent = "Atualizando...";
+  status.className = "crm-modal-status";
+
+  try {
+    const data = await crmFetch("/api/crm/bulk-update", {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+
+    status.textContent = `${data.updated} contato(s) atualizado(s).`;
+    status.className = "crm-modal-status ok";
+
+    crmState.selected.clear();
+    crmCloseModal("crmBulkUpdateModal");
+    document.getElementById("crmBulkTemperature").value = "";
+    document.getElementById("crmBulkStage").value = "";
+    document.getElementById("crmBulkScore").value = "";
+    document.getElementById("crmBulkNote").value = "";
+
+    await Promise.all([loadCrmFacets(), loadCrmLeads()]);
+  } catch (error) {
+    status.textContent = error.message;
+    status.className = "crm-modal-status error";
+  }
+}
+
+
 function crmWhatsAppNumber(phone) {
   const digits = String(phone || "").replace(/[^0-9]/g, "");
   if (!digits) return "";
@@ -3117,9 +3788,16 @@ function crmRenderTimeline(items) {
 
   container.innerHTML = items.map((item) => {
     const isCrm = item.type === "crm";
+    const isFollowup = item.type === "followup";
     const title = isCrm
       ? "Atualização do CRM"
-      : (crmEventLabels[item.event_name] || item.event_name || "Evento");
+      : isFollowup
+        ? ({
+            scheduled: "Follow-up agendado",
+            done: "Follow-up concluído",
+            cancelled: "Follow-up cancelado"
+          }[item.action] || "Follow-up")
+        : (crmEventLabels[item.event_name] || item.event_name || "Evento");
     const parts = [];
 
     if (isCrm) {
@@ -3133,12 +3811,20 @@ function crmRenderTimeline(items) {
         parts.push("Score: " + item.new_lead_score);
       }
       if (item.note) parts.push(item.note);
+    } else if (isFollowup) {
+      if (item.due_at) {
+        parts.push("Prazo: " + crmFormatDateTime(item.due_at));
+      }
+      if (item.priority) {
+        parts.push("Prioridade: " + crmPriorityLabel(item.priority));
+      }
+      if (item.note) parts.push(item.note);
     } else if (Number(item.value || 0) !== 0) {
       parts.push(formatMoney(item.value));
     }
 
     return `
-      <div class="crm-timeline-item ${isCrm ? "crm" : ""}">
+      <div class="crm-timeline-item ${isCrm ? "crm" : isFollowup ? "followup" : ""}">
         <span class="crm-timeline-dot"></span>
         <div>
           <div class="crm-timeline-title">${escapeHtml(title)}</div>
@@ -3151,7 +3837,19 @@ function crmRenderTimeline(items) {
 }
 
 async function openCrmDrawer(leadId) {
-  const row = crmState.rows.find((item) => Number(item.id) === Number(leadId));
+  let row = crmState.rows.find((item) => Number(item.id) === Number(leadId));
+
+  if (!row) {
+    try {
+      const data = await crmFetch(
+        "/api/crm/leads?lead_id=" + encodeURIComponent(leadId) + "&limit=1"
+      );
+      row = Array.isArray(data.leads) ? data.leads[0] : null;
+    } catch {
+      row = null;
+    }
+  }
+
   if (!row) return;
 
   crmState.activeLeadId = Number(leadId);
@@ -3294,6 +3992,80 @@ function initCrm() {
     crmRenderRows();
   });
 
+  document.getElementById("crmSavedSegmentSelect").addEventListener("change", (event) => {
+    const id = Number(event.target.value);
+    const segment = crmState.savedSegments.find(
+      (item) => Number(item.id) === id
+    );
+
+    if (!segment) {
+      document.getElementById("crmSavedSegmentName").value = "";
+      return;
+    }
+
+    document.getElementById("crmSavedSegmentName").value = segment.name || "";
+    crmApplyFilterSnapshot(segment.filters || {});
+  });
+
+  document.getElementById("crmSaveSegment").addEventListener("click", async () => {
+    try {
+      await crmSaveCurrentSegment();
+    } catch (error) {
+      crmSetAuthStatus(error.message, "error");
+    }
+  });
+
+  document.getElementById("crmDeleteSegment").addEventListener("click", async () => {
+    try {
+      await crmDeleteSavedSegment();
+    } catch (error) {
+      crmSetAuthStatus(error.message, "error");
+    }
+  });
+
+  document.getElementById("crmFollowupScope").addEventListener("change", () => {
+    loadCrmFollowups();
+  });
+
+  document.querySelectorAll("[data-followup-scope]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.getElementById("crmFollowupScope").value =
+        button.dataset.followupScope;
+      loadCrmFollowups();
+    });
+  });
+
+  document.getElementById("crmBulkFollowup").addEventListener(
+    "click",
+    crmOpenFollowupModal
+  );
+  document.getElementById("crmBulkUpdate").addEventListener(
+    "click",
+    crmOpenBulkUpdateModal
+  );
+  document.getElementById("crmFollowupSave").addEventListener(
+    "click",
+    crmScheduleSelectedFollowup
+  );
+  document.getElementById("crmBulkUpdateSave").addEventListener(
+    "click",
+    crmApplyBulkUpdate
+  );
+
+  document.querySelectorAll("[data-close-crm-modal]").forEach((button) => {
+    button.addEventListener("click", () => {
+      crmCloseModal(button.dataset.closeCrmModal);
+    });
+  });
+
+  document.querySelectorAll(".crm-modal-backdrop").forEach((backdrop) => {
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) {
+        crmCloseModal(backdrop.id);
+      }
+    });
+  });
+
   document.getElementById("crmSelectPage").addEventListener("change", (event) => {
     crmState.rows.forEach((row) => {
       const id = Number(row.id);
@@ -3320,8 +4092,19 @@ function initCrm() {
     if (event.target.id === "crmDrawerBackdrop") closeCrmDrawer();
   });
   document.getElementById("crmDrawerSave").addEventListener("click", saveCrmDrawer);
-}
 
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    document.querySelectorAll(".crm-modal-backdrop").forEach((modal) => {
+      if (!modal.hidden) modal.hidden = true;
+    });
+
+    if (!document.getElementById("crmDrawerBackdrop").hidden) {
+      closeCrmDrawer();
+    }
+  });
+}
 
 async function loadExperiments() {
   const container = document.getElementById("experimentList");
@@ -3701,7 +4484,12 @@ function initBreakdownControls() {
       ];
 
       if (crmState.connected) {
-        tasks.push(loadCrmFacets(), loadCrmLeads());
+        tasks.push(
+          loadCrmFacets(),
+          loadCrmLeads(),
+          loadCrmSavedSegments(),
+          loadCrmFollowups()
+        );
       }
 
       return Promise.allSettled(tasks);

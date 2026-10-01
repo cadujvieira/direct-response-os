@@ -61,6 +61,8 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_experiment_variants`: destination variants and traffic weights.
 - `dr_experiment_assignments`: click-to-variant assignment with persistent visitor key.
 - `dr_lead_crm_history`: CRM state audit trail.
+- `dr_crm_followups`: persistent commercial follow-up queue linked to leads.
+- `dr_crm_saved_segments`: reusable CRM filter views saved by admin.
 
 Offer foundation routes:
 - GET `/admin` serves the experiment administration UI.
@@ -68,8 +70,11 @@ Offer foundation routes:
 - GET `/api/crm/summary`
 - GET `/api/crm/facets` (requires `x-admin-secret`; segment counts + source/campaign filter options)
 - GET `/api/crm/leads` (requires `x-admin-secret`; supports search, lifecycle, temperature, source, campaign, segment, sorting and pagination)
-- GET `/api/crm/leads/:id/timeline` (requires `x-admin-secret`; event + CRM audit history)
+- GET `/api/crm/leads/:id/timeline` (requires `x-admin-secret`; event + CRM audit + follow-up history)
 - PATCH `/api/crm/leads/:id` (requires `x-admin-secret`)
+- POST `/api/crm/bulk-update` (requires `x-admin-secret`; update lifecycle/temperature/score/note for selected leads)
+- GET/POST `/api/crm/followups` and PATCH `/api/crm/followups/:id` (requires `x-admin-secret`)
+- GET/POST `/api/crm/saved-segments` and DELETE `/api/crm/saved-segments/:id` (requires `x-admin-secret`)
 - GET `/api/experiments` (public-safe summary, no destination URLs)
 - GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)
 - PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
