@@ -144,6 +144,45 @@ Protected routes:
 
 All List Activation routes require `x-admin-secret` and share the same browser session secret as CRM.
 
+## UTMify MCP integration
+
+UTMify is the preferred paid-media integration for the MVP. The direct Meta Ads integration remains available as a frozen optional path, but UTMify is used first because it already exposes attributed media and sales metrics through MCP.
+
+Credentials:
+- `UTMIFY_MCP_TOKEN` is required and environment-only;
+- `UTMIFY_MCP_ENDPOINT` defaults to the UTMify MCP endpoint;
+- `UTMIFY_MCP_RESOURCES` controls the resource grant string;
+- `UTMIFY_DASHBOARD_ID` can pin a dashboard when an account has more than one.
+
+The token and authenticated MCP URL are never persisted in PostgreSQL or returned to the dashboard.
+
+Persistence:
+- `dr_utmify_connection` stores the selected dashboard, timezone, currency and enabled Meta accounts;
+- `dr_utmify_syncs` audits each period snapshot;
+- `dr_utmify_ad_objects` stores campaign, adset and ad objects plus normalized metrics for that snapshot.
+
+Sync behavior:
+- discovery reads dashboard/account metadata from MCP;
+- a sync is limited to 31 calendar days;
+- campaign, adset and ad levels are fetched sequentially;
+- the MCP is contacted only during explicit discovery/sync, never by the 30-second dashboard refresh;
+- Performance reads PostgreSQL snapshots through `GET /api/integrations/utmify/performance`;
+- parent campaign/adset names are reconstructed by IDs from the same snapshot.
+
+UTMify MCP money fields are denominated in cents. Spend, revenue, profit, CPA, CPL, CPC and CPM are divided by 100 before storage. Ratios/counts such as ROAS, ROI, CTR, impressions, clicks and orders are not divided.
+
+The Performance screen keeps an explicit source switch:
+- `Oferta DR` uses internal attribution/spend tables;
+- `UTMify` uses a synchronized UTMify snapshot for the selected period.
+
+Protected routes:
+- `GET /api/integrations/utmify/status`;
+- `POST /api/integrations/utmify/discover`;
+- `POST /api/integrations/utmify/sync`;
+- `GET /api/integrations/utmify/performance`.
+
+All UTMify integration routes require `x-admin-secret`.
+
 ## Revenue and LTV
 
 `GET /api/revenue/ltv` is cohort-based: the selected date range chooses the front-end buyers, then downstream revenue for those same attributed buyers is accumulated through the present.

@@ -939,6 +939,31 @@
       color: var(--text);
     }
 
+    .performance-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .performance-source-btn {
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 11px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .performance-source-btn.active {
+      background: rgba(62, 227, 137, .11);
+      color: var(--green);
+    }
+
     .offer-section {
       margin-top: 28px;
     }
@@ -1912,6 +1937,225 @@
 
 
 
+    .integration-workspace[hidden],
+    .integration-auth-panel[hidden] {
+      display: none !important;
+    }
+
+    .integration-auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+    }
+
+    .integration-auth-panel h3 {
+      font-size: 15px;
+    }
+
+    .integration-auth-panel p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .integration-card {
+      margin-bottom: 14px;
+      padding: 18px;
+    }
+
+    .integration-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .integration-brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .integration-logo-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: linear-gradient(145deg, #1d6cff, #44d2ff);
+      color: white;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .integration-brand-row h3 {
+      font-size: 15px;
+    }
+
+    .integration-brand-row p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .integration-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .integration-detail {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .integration-detail span {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .integration-detail strong {
+      display: block;
+      margin-top: 7px;
+      color: #e6e9ef;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .integration-detail small {
+      display: block;
+      margin-top: 5px;
+      color: #6e7784;
+      font-size: 9px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .integration-capabilities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .integration-capabilities span {
+      border: 1px solid rgba(101,167,255,.2);
+      border-radius: 999px;
+      padding: 5px 8px;
+      color: #a9cdff;
+      background: rgba(101,167,255,.05);
+      font-size: 9px;
+    }
+
+    .integration-sync-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .integration-sync-box h4 {
+      font-size: 12px;
+    }
+
+    .integration-sync-box p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .integration-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .integration-message {
+      min-height: 18px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .integration-message.ok {
+      color: var(--green);
+    }
+
+    .integration-message.error {
+      color: var(--red);
+    }
+
+    .integration-snapshot-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .integration-snapshot-summary > div {
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .integration-snapshot-summary span {
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .integration-snapshot-summary strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 22px;
+    }
+
+    @media (max-width: 1000px) {
+      .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .integration-auth-panel,
+      .integration-card-head,
+      .integration-sync-box {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .integration-auth-panel .crm-primary-btn,
+      .integration-actions > * {
+        width: 100%;
+      }
+
+      .integration-grid,
+      .integration-snapshot-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .integration-actions {
+        width: 100%;
+      }
+    }
+
     .list-workspace[hidden],
     .list-auth-panel[hidden] {
       display: none !important;
@@ -2734,6 +2978,7 @@
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
         <a class="stage-tab" href="#lists" data-stage-target="lists">Listas</a>
         <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
+        <a class="stage-tab" href="#integrations" data-stage-target="integrations">Integrações</a>
         <a class="stage-tab" href="#router" data-stage-target="router">Router</a>
         <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
       </div>
@@ -3428,6 +3673,94 @@
       </div>
     </section>
 
+    <section class="dashboard-view" data-view="integrations" id="integrations-view">
+      <div class="panel integration-auth-panel" id="utmifyAuthPanel">
+        <div>
+          <h3>Integrações protegidas</h3>
+          <p>Use a mesma sessão administrativa do CRM para conectar e sincronizar fontes externas.</p>
+        </div>
+        <button class="crm-primary-btn" id="utmifyGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+
+      <div class="integration-workspace" id="utmifyWorkspace" hidden>
+        <div class="panel integration-card">
+          <div class="integration-card-head">
+            <div>
+              <div class="integration-brand-row">
+                <span class="integration-logo-mark">U</span>
+                <div>
+                  <h3>UTMify MCP</h3>
+                  <p>Fonte de mídia e atribuição para Meta Ads.</p>
+                </div>
+              </div>
+            </div>
+            <span class="status-badge" id="utmifyStatusBadge">Não verificado</span>
+          </div>
+
+          <div class="integration-grid">
+            <div class="integration-detail">
+              <span>Dashboard</span>
+              <strong id="utmifyDashboardName">—</strong>
+              <small id="utmifyDashboardMeta">Aguardando discovery</small>
+            </div>
+            <div class="integration-detail">
+              <span>Contas Meta habilitadas</span>
+              <strong id="utmifyAccountsCount">0</strong>
+              <small id="utmifyAccountsNames">—</small>
+            </div>
+            <div class="integration-detail">
+              <span>Última descoberta</span>
+              <strong id="utmifyLastDiscovery">—</strong>
+              <small>MCP + estrutura da conta</small>
+            </div>
+            <div class="integration-detail">
+              <span>Última sincronização</span>
+              <strong id="utmifyLastSync">—</strong>
+              <small id="utmifyLastSyncRange">Nenhum período sincronizado</small>
+            </div>
+          </div>
+
+          <div class="integration-capabilities">
+            <span>Conta</span>
+            <span>Campanha</span>
+            <span>Conjunto</span>
+            <span>Anúncio</span>
+            <span>Gasto</span>
+            <span>Vendas</span>
+            <span>Receita</span>
+            <span>ROAS</span>
+          </div>
+
+          <div class="integration-sync-box">
+            <div>
+              <h4>Sincronizar período ativo</h4>
+              <p id="utmifySyncPeriodText">Selecione um período no topo do painel.</p>
+            </div>
+            <div class="integration-actions">
+              <button class="crm-secondary-btn" id="utmifyDiscoverBtn" type="button">Testar conexão</button>
+              <button class="crm-primary-btn" id="utmifySyncBtn" type="button">Sincronizar UTMify</button>
+            </div>
+          </div>
+
+          <div class="integration-message" id="utmifyMessage"></div>
+        </div>
+
+        <div class="panel integration-history-panel">
+          <div class="panel-head">
+            <div>
+              <h3 data-tooltip="Mostra o último snapshot salvo localmente para evitar consultar a UTMify a cada refresh do dashboard.">Snapshot local</h3>
+              <p>Performance usa os dados sincronizados do PostgreSQL.</p>
+            </div>
+          </div>
+          <div class="integration-snapshot-summary">
+            <div><span>Campanhas</span><strong id="utmifySyncCampaigns">0</strong></div>
+            <div><span>Conjuntos</span><strong id="utmifySyncAdsets">0</strong></div>
+            <div><span>Anúncios</span><strong id="utmifySyncAds">0</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="dashboard-view" data-view="router" id="router-view">
       <div class="panel">
         <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição de landing pages</h3><p>Pesos atuais das variantes cadastradas.</p></div>
@@ -3437,8 +3770,17 @@
 
     <section class="dashboard-view" data-view="performance" id="performance-view">
       <div class="section-title campaign-title performance-head">
-        <div><h2 id="performanceTitle" data-tooltip="Compara aquisição e monetização por campanha, conjunto ou anúncio.">Performance por campanha</h2><span class="updated">Origem → Conversão → Receita</span></div>
-        <div class="breakdown-tabs" aria-label="Nível de detalhamento"><button class="breakdown-btn active" type="button" data-level="campaign">Campanhas</button><button class="breakdown-btn" type="button" data-level="adset">Conjuntos</button><button class="breakdown-btn" type="button" data-level="ad">Anúncios</button></div>
+        <div>
+          <h2 id="performanceTitle" data-tooltip="Compara aquisição e monetização por campanha, conjunto ou anúncio.">Performance por campanha</h2>
+          <span class="updated" id="performanceSourceLabel">Fonte: Oferta DR</span>
+        </div>
+        <div class="performance-controls">
+          <div class="breakdown-tabs performance-source-tabs" aria-label="Fonte de dados">
+            <button class="performance-source-btn active" type="button" data-source="offer">Oferta DR</button>
+            <button class="performance-source-btn" type="button" data-source="utmify">UTMify</button>
+          </div>
+          <div class="breakdown-tabs" aria-label="Nível de detalhamento"><button class="breakdown-btn active" type="button" data-level="campaign">Campanhas</button><button class="breakdown-btn" type="button" data-level="adset">Conjuntos</button><button class="breakdown-btn" type="button" data-level="ad">Anúncios</button></div>
+        </div>
       </div>
       <div class="panel campaign-panel"><div class="table-wrap"><table class="campaign-table"><thead id="performanceTableHead"></thead><tbody id="performanceTableBody"><tr><td colspan="13" class="table-loading">Carregando performance...</td></tr></tbody></table></div></div>
     </section>
@@ -3595,6 +3937,7 @@ const dashboardViewTitles = {
   crm: "CRM",
   lists: "Listas",
   automations: "Automações",
+  integrations: "Integrações",
   router: "Router",
   performance: "Performance"
 };
@@ -3607,6 +3950,7 @@ const periodRelevantViews = new Set([
   "purchases",
   "calls",
   "mentorship",
+  "integrations",
   "performance"
 ]);
 
@@ -3648,6 +3992,10 @@ function setActiveStage(viewName) {
 
   if (viewName === "automations") {
     loadAutomations();
+  }
+
+  if (viewName === "integrations") {
+    loadUtmifyStatus();
   }
 }
 
@@ -3751,6 +4099,10 @@ function updatePeriodUi() {
       button.dataset.period === reportRange.preset
     );
   });
+
+  if (typeof updateUtmifyPeriodText === "function") {
+    updateUtmifyPeriodText();
+  }
 }
 
 function setReportRange(from, to, label, preset = null) {
@@ -5140,6 +5492,278 @@ function initCrm() {
     }
   });
 }
+
+const utmifyIntegrationState = {
+  status: null,
+  loading: false
+};
+
+function utmifyAdminSecret() {
+  return crmState.secret ||
+    sessionStorage.getItem("dr_admin_secret") ||
+    "";
+}
+
+async function utmifyFetch(path, options = {}) {
+  const secret = utmifyAdminSecret();
+
+  if (!secret) {
+    const error = new Error("Conecte a sessão administrativa pelo CRM.");
+    error.status = 401;
+    throw error;
+  }
+
+  const headers = new Headers(options.headers || {});
+  headers.set("x-admin-secret", secret);
+
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(path, {
+    ...options,
+    headers,
+    cache: "no-store"
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error(data.error || "Erro na integração UTMify");
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+function utmifySetProtectedState(connected) {
+  document.getElementById("utmifyAuthPanel").hidden = connected;
+  document.getElementById("utmifyWorkspace").hidden = !connected;
+}
+
+function utmifySetMessage(message = "", tone = "") {
+  const node = document.getElementById("utmifyMessage");
+  node.textContent = message;
+  node.className = "integration-message" + (tone ? " " + tone : "");
+}
+
+function utmifyDateOnly(value) {
+  if (!value) return "";
+  return String(value).slice(0, 10);
+}
+
+function utmifyResolvedRange() {
+  if (reportRange.from && reportRange.to) {
+    return {
+      from: reportRange.from,
+      to: reportRange.to,
+      label: reportRange.label
+    };
+  }
+
+  const today = new Date();
+  return {
+    from: localDateString(shiftLocalDays(today, -29)),
+    to: localDateString(today),
+    label: "Últimos 30 dias"
+  };
+}
+
+function updateUtmifyPeriodText() {
+  const node = document.getElementById("utmifySyncPeriodText");
+  if (!node) return;
+
+  const range = utmifyResolvedRange();
+  node.textContent =
+    range.label + " · " +
+    displayIsoDate(range.from) + " → " + displayIsoDate(range.to);
+}
+
+function renderUtmifyStatus(data) {
+  utmifyIntegrationState.status = data;
+  const connection = data.connection || {};
+  const accounts = Array.isArray(connection.meta_accounts)
+    ? connection.meta_accounts
+    : [];
+  const lastSync = data.last_sync || {};
+  const configured = Boolean(data.configured);
+
+  const badge = document.getElementById("utmifyStatusBadge");
+  badge.textContent = configured && connection.dashboard_id
+    ? "Conectado"
+    : configured
+      ? "Token configurado"
+      : "Não configurado";
+  badge.className =
+    "status-badge " +
+    (configured && connection.dashboard_id ? "active" : "");
+
+  document.getElementById("utmifyDashboardName").textContent =
+    connection.dashboard_name || "—";
+  document.getElementById("utmifyDashboardMeta").textContent =
+    connection.dashboard_id
+      ? "Fuso " + (Number(connection.time_zone || 0) >= 0 ? "+" : "") +
+        Number(connection.time_zone || 0) + " · " +
+        (connection.currency || "BRL")
+      : "Aguardando discovery";
+
+  document.getElementById("utmifyAccountsCount").textContent =
+    accounts.length;
+  document.getElementById("utmifyAccountsNames").textContent =
+    accounts.length
+      ? accounts.map((item) => item.name || item.id).join(" · ")
+      : "Nenhuma conta habilitada";
+
+  document.getElementById("utmifyLastDiscovery").textContent =
+    connection.last_discovery_at
+      ? crmFormatDateTime(connection.last_discovery_at)
+      : "—";
+
+  document.getElementById("utmifyLastSync").textContent =
+    lastSync.finished_at
+      ? crmFormatDateTime(lastSync.finished_at)
+      : "—";
+
+  document.getElementById("utmifyLastSyncRange").textContent =
+    lastSync.date_from && lastSync.date_to
+      ? displayIsoDate(utmifyDateOnly(lastSync.date_from)) +
+        " → " +
+        displayIsoDate(utmifyDateOnly(lastSync.date_to))
+      : "Nenhum período sincronizado";
+
+  const counts = lastSync.counts || {};
+  document.getElementById("utmifySyncCampaigns").textContent =
+    Number(counts.campaign || 0);
+  document.getElementById("utmifySyncAdsets").textContent =
+    Number(counts.adset || 0);
+  document.getElementById("utmifySyncAds").textContent =
+    Number(counts.ad || 0);
+
+  updateUtmifyPeriodText();
+}
+
+async function loadUtmifyStatus() {
+  const secret = utmifyAdminSecret();
+
+  if (!secret) {
+    utmifySetProtectedState(false);
+    return;
+  }
+
+  if (!crmState.secret) crmState.secret = secret;
+
+  try {
+    const data = await utmifyFetch("/api/integrations/utmify/status");
+    utmifySetProtectedState(true);
+    renderUtmifyStatus(data);
+  } catch (error) {
+    if (error.status === 401) {
+      sessionStorage.removeItem("dr_admin_secret");
+      crmState.secret = "";
+      utmifySetProtectedState(false);
+    } else {
+      utmifySetProtectedState(true);
+      utmifySetMessage(error.message, "error");
+    }
+  }
+}
+
+async function discoverUtmifyConnection() {
+  const button = document.getElementById("utmifyDiscoverBtn");
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Testando...";
+  utmifySetMessage("Consultando o MCP da UTMify...");
+
+  try {
+    const data = await utmifyFetch("/api/integrations/utmify/discover", {
+      method: "POST"
+    });
+
+    await loadUtmifyStatus();
+    utmifySetMessage(
+      "Conexão confirmada com o dashboard " +
+      (data.selected?.name || "UTMify") + ".",
+      "ok"
+    );
+  } catch (error) {
+    utmifySetMessage(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
+async function syncUtmifyPeriod() {
+  const button = document.getElementById("utmifySyncBtn");
+  const original = button.textContent;
+  const range = utmifyResolvedRange();
+
+  button.disabled = true;
+  button.textContent = "Sincronizando...";
+  utmifySetMessage(
+    "Buscando campanha, conjunto e anúncio. Isso pode levar alguns segundos..."
+  );
+
+  try {
+    const data = await utmifyFetch("/api/integrations/utmify/sync", {
+      method: "POST",
+      body: JSON.stringify({
+        from: range.from,
+        to: range.to,
+        levels: ["campaign", "adset", "ad"]
+      })
+    });
+
+    await loadUtmifyStatus();
+
+    const counts = data.counts || {};
+    utmifySetMessage(
+      "Snapshot #" + data.sync_id + " salvo: " +
+      Number(counts.campaign || 0) + " campanhas, " +
+      Number(counts.adset || 0) + " conjuntos e " +
+      Number(counts.ad || 0) + " anúncios.",
+      "ok"
+    );
+
+    if (performanceState.source === "utmify") {
+      await loadPerformance();
+    }
+  } catch (error) {
+    utmifySetMessage(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
+function initUtmifyIntegration() {
+  document.getElementById("utmifyGoCrm").addEventListener("click", () => {
+    setActiveStage("crm");
+    if (history.replaceState) {
+      history.replaceState(null, "", "#crm");
+    }
+  });
+
+  document.getElementById("utmifyDiscoverBtn").addEventListener(
+    "click",
+    discoverUtmifyConnection
+  );
+
+  document.getElementById("utmifySyncBtn").addEventListener(
+    "click",
+    syncUtmifyPeriod
+  );
+
+  updateUtmifyPeriodText();
+}
+
 
 const listState = {
   rows: [],
@@ -6576,7 +7200,8 @@ async function loadExperiments() {
 }
 
 const performanceState = {
-  level: "campaign"
+  level: "campaign",
+  source: "offer"
 };
 
 const performanceConfigs = {
@@ -6614,7 +7239,7 @@ const performanceConfigs = {
 
 function performanceMetricHeaders() {
   return [
-    "Cliques rastreados",
+    performanceState.source === "utmify" ? "LP views" : "Cliques rastreados",
     "Cliques mídia",
     "Impressões",
     "Leads",
@@ -6634,6 +7259,7 @@ const performanceHeaderTooltips = {
   "Conjunto": "Conjunto de anúncios atribuído ao tráfego e à conversão.",
   "Anúncio": "Anúncio atribuído ao clique e aos eventos posteriores.",
   "Cliques rastreados": "Entradas registradas pelo sistema Oferta DR com click_id.",
+  "LP views": "Landing page views reportadas pela UTMify/Meta para o objeto de mídia.",
   "Cliques mídia": "Cliques reportados/importados pela plataforma de mídia. Podem diferir dos cliques rastreados no site.",
   "Impressões": "Quantidade de exibições do anúncio reportadas pela plataforma de mídia.",
   "Leads": "Leads atribuídos à campanha, conjunto ou anúncio.",
@@ -6677,6 +7303,89 @@ function renderPerformanceHead(config) {
   decorateTooltips(title.parentElement);
 }
 
+function utmifyPerformanceRange() {
+  if (reportRange.from && reportRange.to) {
+    return {
+      from: reportRange.from,
+      to: reportRange.to
+    };
+  }
+
+  const lastSync = utmifyIntegrationState.status?.last_sync;
+  const from = utmifyDateOnly(lastSync?.date_from);
+  const to = utmifyDateOnly(lastSync?.date_to);
+
+  if (from && to) return { from, to };
+
+  const fallback = utmifyResolvedRange();
+  return {
+    from: fallback.from,
+    to: fallback.to
+  };
+}
+
+async function fetchPerformanceData(config) {
+  if (performanceState.source !== "utmify") {
+    const response = await fetch(buildReportUrl(config.endpoint), {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro ao carregar performance");
+    }
+
+    const data = await response.json();
+    return Array.isArray(data[config.listKey])
+      ? data[config.listKey]
+      : [];
+  }
+
+  const secret = utmifyAdminSecret();
+  if (!secret) {
+    const error = new Error(
+      "Conecte a sessão administrativa pelo CRM para usar a UTMify."
+    );
+    error.userMessage = error.message;
+    throw error;
+  }
+
+  const range = utmifyPerformanceRange();
+  const params = new URLSearchParams({
+    from: range.from,
+    to: range.to,
+    level: performanceState.level
+  });
+
+  const response = await fetch(
+    "/api/integrations/utmify/performance?" + params.toString(),
+    {
+      cache: "no-store",
+      headers: {
+        "x-admin-secret": secret
+      }
+    }
+  );
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error(data.error || "Erro ao carregar UTMify");
+    error.userMessage =
+      response.status === 404
+        ? "Este período ainda não foi sincronizado. Abra Integrações → UTMify e sincronize."
+        : (data.error || "Erro ao carregar UTMify.");
+    throw error;
+  }
+
+  return Array.isArray(data.rows) ? data.rows : [];
+}
+
+
 async function loadPerformance() {
   const tbody = document.getElementById("performanceTableBody");
   const config = performanceConfigs[performanceState.level];
@@ -6693,18 +7402,12 @@ async function loadPerformance() {
   `;
 
   try {
-    const response = await fetch(buildReportUrl(config.endpoint), {
-      cache: "no-store"
-    });
+    const rows = await fetchPerformanceData(config);
 
-    if (!response.ok) {
-      throw new Error("Erro ao carregar performance");
-    }
-
-    const data = await response.json();
-    const rows = Array.isArray(data[config.listKey])
-      ? data[config.listKey]
-      : [];
+    document.getElementById("performanceSourceLabel").textContent =
+      performanceState.source === "utmify"
+        ? "Fonte: UTMify MCP · snapshot local"
+        : "Fonte: Oferta DR";
 
     if (rows.length === 0) {
       tbody.innerHTML = `
@@ -6756,10 +7459,15 @@ async function loadPerformance() {
   } catch (error) {
     console.error(error);
 
+    document.getElementById("performanceSourceLabel").textContent =
+      performanceState.source === "utmify"
+        ? "Fonte: UTMify MCP"
+        : "Fonte: Oferta DR";
+
     tbody.innerHTML = `
       <tr>
         <td colspan="${colspan}" class="table-loading">
-          Erro ao carregar performance.
+          ${escapeHtml(error.userMessage || "Erro ao carregar performance.")}
         </td>
       </tr>
     `;
@@ -6772,6 +7480,18 @@ function initBreakdownControls() {
       performanceState.level = button.dataset.level;
 
       document.querySelectorAll(".breakdown-btn").forEach((item) => {
+        item.classList.toggle("active", item === button);
+      });
+
+      loadPerformance();
+    });
+  });
+
+  document.querySelectorAll(".performance-source-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      performanceState.source = button.dataset.source;
+
+      document.querySelectorAll(".performance-source-btn").forEach((item) => {
         item.classList.toggle("active", item === button);
       });
 
@@ -6889,6 +7609,10 @@ function initBreakdownControls() {
         tasks.push(loadAutomations());
       }
 
+      if (activeView === "integrations") {
+        tasks.push(loadUtmifyStatus());
+      }
+
       return Promise.allSettled(tasks);
     }
 
@@ -6899,6 +7623,7 @@ function initBreakdownControls() {
     initCrm();
     initLists();
     initAutomations();
+    initUtmifyIntegration();
     refreshAll();
 
     setInterval(refreshAll, 30000);

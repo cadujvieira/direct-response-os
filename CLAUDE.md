@@ -67,6 +67,9 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_automation_runs`: durable queue and audit history for every scheduled automation execution.
 - `dr_activation_exports`: immutable list-export batches with format, filters, repeat window and counts.
 - `dr_activation_export_leads`: lead membership for each exported batch, used to prevent accidental repeat activation.
+- `dr_utmify_connection`: selected UTMify dashboard metadata and enabled Meta accounts; never stores the MCP token.
+- `dr_utmify_syncs`: audited UTMify snapshot runs by reporting period.
+- `dr_utmify_ad_objects`: cached campaign/adset/ad objects and normalized metrics for each snapshot.
 
 Offer foundation routes:
 - GET `/admin` serves the experiment administration UI.
@@ -87,6 +90,10 @@ Offer foundation routes:
 - POST `/api/activation/exports` (requires `x-admin-secret`; creates an immutable export batch and records its lead membership)
 - GET `/api/activation/exports` (requires `x-admin-secret`; recent export history)
 - GET `/api/activation/exports/:id/lead-ids` (requires `x-admin-secret`; batch membership)
+- GET `/api/integrations/utmify/status` (requires `x-admin-secret`; never returns credentials)
+- POST `/api/integrations/utmify/discover` (requires `x-admin-secret`; discovers dashboards/accounts through MCP)
+- POST `/api/integrations/utmify/sync` (requires `x-admin-secret`; snapshots campaign/adset/ad metrics for a maximum 31-day range)
+- GET `/api/integrations/utmify/performance` (requires `x-admin-secret`; reads local PostgreSQL snapshot only, never MCP live)
 - GET `/api/experiments` (public-safe summary, no destination URLs)
 - GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)
 - PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
@@ -95,7 +102,18 @@ Offer foundation routes:
 - GET `/api/revenue/ltv`
 - GET `/api/overview/timeseries` (daily spend, purchases, revenue and ROAS for the overview chart; defaults to the latest 30 days when no date range is supplied)
 
-Lead-level CRM, Automation Hub and List Activation reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+Lead-level CRM, Automation Hub, List Activation and UTMify integration reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+
+UTMify MCP rules:
+- credentials are environment-only: `UTMIFY_MCP_TOKEN`, optional `UTMIFY_MCP_ENDPOINT`, optional `UTMIFY_MCP_RESOURCES`, optional `UTMIFY_DASHBOARD_ID`;
+- never store or return the MCP token, full authenticated URL or provider error body;
+- current allowed tools are read-only: dashboard discovery and Meta ad-object metrics;
+- sync a bounded range of at most 31 days and fetch campaign/adset/ad sequentially to avoid abusive MCP traffic;
+- PostgreSQL snapshots are the dashboard source after sync; 30-second dashboard refreshes must not hit MCP;
+- UTMify monetary fields from MCP are integer/decimal cents and must be divided by 100 before storage/display; ratios such as ROAS/ROI/CTR are not currency and must not be divided;
+- campaign/adset/ad parent names are reconstructed from the same local snapshot by IDs;
+- Performance supports explicit source switching between Oferta DR and UTMify;
+- the existing direct Meta integration remains frozen/optional and must not be silently mixed into UTMify snapshots.
 
 List Activation rules:
 - the dashboard `Listas` tab reuses CRM filters and saved segments; do not create a separate segmentation model;
@@ -156,6 +174,7 @@ At minimum run:
 node --check index.js
 node --check automationHub.js
 node --check activationHub.js
+node --check utmifyMcp.js
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js
 node --check /tmp/dashboard.js
 git diff --check

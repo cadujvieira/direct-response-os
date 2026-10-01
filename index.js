@@ -26,6 +26,10 @@ const {
   initActivationDb,
   registerActivationRoutes
 } = require("./activationHub");
+const {
+  initUtmifyDb,
+  registerUtmifyRoutes
+} = require("./utmifyMcp");
 
 const app = express();
 
@@ -252,6 +256,7 @@ await pool.query(`
 registerOfferRoutes({ app, pool, hashIp, parseReportRange });
 registerAutomationRoutes(app, pool);
 registerActivationRoutes(app, pool);
+registerUtmifyRoutes(app, pool);
 
 app.get("/", async (req, res) => {
 
@@ -1245,6 +1250,7 @@ async function start() {
     await initOfferDb(pool);
     await initAutomationDb(pool);
     await initActivationDb(pool);
+    await initUtmifyDb(pool);
     startAutomationWorker(pool);
 
     app.listen(PORT, () => {
