@@ -172,6 +172,17 @@ Do not rename or destructively recreate existing tables.
 Migrations must preserve production data.
 
 ## Reporting rules
+Funnel integration rules:
+- `/api/integrations/funnel/status` and POST `/api/integrations/funnel/events` are protected server-to-server canonical APIs. Provider adapters are not configured yet; never claim a real checkout connection from synthetic validation;
+- monetary events require approved payments/confirmed refunds, explicit BRL, finite positive amounts with <=2 decimals, stable business identifiers and an actual occurrence timestamp with timezone;
+- `dr_funnel_orders`/`dr_funnel_receipts` are additive and preserve immutable original click/buyer/order references. Post-purchase attribution uses the front order, never a guess from contact or media name;
+- purchase events are deduplicated by paid order even if delivery IDs change; calls/refunds use stable occurrence IDs. Conflicting replays return 409; missing clicks return 422;
+- all financial/event writes, CRM changes/audit and automation enqueues share one transaction. Never swallow failed side effects and acknowledge a partially applied sale;
+- a linked internal lead ID is trusted only from the order ledger, not accepted from public payloads;
+- refunds are bounded cumulatively by the original order value, serialized per order and deducted once; CRM retains the existing any-refund lifecycle rule;
+- no staging/production economic settings are invented or auto-confirmed. Provider selection and real platform tests remain necessary;
+- see `FUNNEL_INTEGRATION.md` and the loopback-only `validation/funnel.integration.js`.
+
 Decision Center rules:
 - protected read-only GET `/api/decisions` reuses `getCpaReport` and its exact-period/Meta/BRL rules; no new monetary aggregation, provider calls or media mutations;
 - diagnose each campaign/adset/ad by exact ID. Each card carries evidence, criteria, priority and a manual next step;

@@ -267,6 +267,10 @@ The view shows actual CPA, calculated maximum, prudent limit, headroom, mature c
 
 Default guards: costs unconfirmed until reviewed; at least 30 mature buyers; at least 80% of the cohort mature; healthy Tracking Health; matching local UTMify snapshot and exact object IDs; <=5% per-scope front purchase/revenue divergence; positive media spend and purchases. Mentorship revenue depending on fewer than three mentorship buyers or >50% from one buyer remains provisional. Open-period snapshots older than 24 hours are provisional. These are operational guardrails, not statistical guarantees or an automated media control system.
 
+## Checkout and post-purchase integration
+
+Checkout integration is documented in `FUNNEL_INTEGRATION.md`: a protected canonical server API, not a configured payment-provider connector. An additive order/receipt ledger preserves original acquisition and buyer references for calls, mentorship and refunds. The existing tracking routes now commit events/orders, CRM history and automation queue entries atomically. Real provider selection, webhook authentication/mapping and economic calibration are still required before operational release.
+
 ## Decision Center
 
 The protected `Decisões` view at `/dashboard#decisions` reads `GET /api/decisions?from=YYYY-MM-DD&to=YYYY-MM-DD&level=campaign|adset|ad` (1–31 days). It derives cards from the existing CPA Maximum report, including its maturity horizon, first-purchase Meta cohort, modeled costs, BRL requirement and exact local UTMify snapshot. It creates no tables, alerts or media actions.

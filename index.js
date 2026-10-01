@@ -35,6 +35,8 @@ const {
 } = require("./trackingHealth");
 const { initCpaDb, registerCpaRoutes } = require("./cpaEngine");
 const { registerDecisionRoutes } = require("./decisionEngine");
+const { normalizeTracking, ingestTracking } = require("./trackingIngestion");
+const { initFunnelDb, registerFunnelRoutes } = require("./funnelIntegration");
 
 const app = express();
 
@@ -53,6 +55,7 @@ const pool = new Pool({
 });
 
 const breakdowns = createBreakdownService(pool);
+const ingestionHooks = { syncLeadCrmFromEvent, enqueueAutomationEvent };
 
 function hashIp(ip) {
   return crypto
@@ -265,6 +268,7 @@ registerUtmifyRoutes(app, pool);
 registerTrackingHealthRoutes(app, pool);
 registerCpaRoutes(app, pool);
 registerDecisionRoutes(app, pool);
+registerFunnelRoutes(app, pool, ingestionHooks);
 
 app.get("/", async (req, res) => {
 
@@ -670,208 +674,22 @@ app.post("/track/lead", async (req, res) => {
 
 });
 
-app.post("/track/event", async (req, res) => {
-  try {
-    const {
-      event_id,
-      click_id,
-      email,
-      telefone,
-      event_name,
-      value,
-      currency
-    } = req.body;
-
-    if (!event_name) {
-      return res.status(400).json({
-        ok: false,
-        error: "event_name obrigatorio"
-      });
+function trackingHandler(purchase) {
+  return async (req, res) => {
+    try {
+      const input = normalizeTracking(req.body, purchase);
+      const result = await ingestTracking(pool, input, ingestionHooks);
+      res.json({ ok: true, duplicate: result.duplicate, event_id: input.event_id,
+        ...(purchase ? { order_id: input.order_id, order: result.order } : {}),
+        event: result.duplicate ? null : result.event });
+    } catch (error) {
+      res.status(error.statusCode || 500).json({ ok: false,
+        error: error.statusCode ? error.message : "erro interno" });
     }
-
-    const finalEventId = event_id || crypto.randomUUID();
-
-    const result = await pool.query(`
-      INSERT INTO dr_events (
-        event_id,
-        click_id,
-        email,
-        telefone,
-        event_name,
-        value,
-        currency,
-        raw_payload
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      ON CONFLICT (event_id) DO NOTHING
-      RETURNING id, event_id, click_id, event_name, value, currency, created_at
-    `, [
-      finalEventId,
-      click_id || null,
-      email ? email.trim().toLowerCase() : null,
-      telefone || null,
-      event_name,
-      Number(value || 0),
-      currency || "BRL",
-      req.body
-    ]);
-
-    if (result.rows.length > 0) {
-      try {
-        await syncLeadCrmFromEvent(pool, { click_id, email, telefone, event_name });
-      } catch (crmError) {
-        console.error("CRM event sync failed");
-      }
-
-      try {
-        await enqueueAutomationEvent(pool, {
-          event_id: finalEventId,
-          event_name,
-          click_id,
-          email,
-          telefone,
-          created_at: result.rows[0].created_at
-        });
-      } catch (automationError) {
-        console.error("Automation enqueue failed");
-      }
-    }
-
-    res.json({
-      ok: true,
-      duplicate: result.rows.length === 0,
-      event_id: finalEventId,
-      event: result.rows[0] || null
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
-  }
-});
-
-app.post("/track/purchase", async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    const {
-      order_id,
-      click_id,
-      email,
-      telefone,
-      produto,
-      valor,
-      currency
-    } = req.body;
-
-    if (!order_id) {
-      return res.status(400).json({
-        ok: false,
-        error: "order_id obrigatorio"
-      });
-    }
-
-    const finalValue = Number(valor || 0);
-    const eventId = `purchase_${order_id}`;
-
-    await client.query("BEGIN");
-
-    const orderResult = await client.query(`
-      INSERT INTO dr_orders (
-        order_id,
-        click_id,
-        email,
-        telefone,
-        produto,
-        valor,
-        status
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,'paid')
-      ON CONFLICT (order_id) DO NOTHING
-      RETURNING id, order_id, click_id, produto, valor, status
-    `, [
-      order_id,
-      click_id || null,
-      email ? email.trim().toLowerCase() : null,
-      telefone || null,
-      produto || null,
-      finalValue
-    ]);
-
-    const eventResult = await client.query(`
-      INSERT INTO dr_events (
-        event_id,
-        click_id,
-        email,
-        telefone,
-        event_name,
-        value,
-        currency,
-        raw_payload
-      )
-      VALUES ($1,$2,$3,$4,'purchase',$5,$6,$7)
-      ON CONFLICT (event_id) DO NOTHING
-      RETURNING id, event_id, event_name, value, currency, created_at
-    `, [
-      eventId,
-      click_id || null,
-      email ? email.trim().toLowerCase() : null,
-      telefone || null,
-      finalValue,
-      currency || "BRL",
-      req.body
-    ]);
-
-    await client.query("COMMIT");
-
-    if (eventResult.rows.length > 0) {
-      try {
-        await syncLeadCrmFromEvent(pool, {
-          click_id,
-          email,
-          telefone,
-          event_name: "purchase"
-        });
-      } catch (crmError) {
-        console.error("CRM purchase sync failed");
-      }
-
-      try {
-        await enqueueAutomationEvent(pool, {
-          event_id: eventId,
-          event_name: "purchase",
-          click_id,
-          email,
-          telefone,
-          created_at: eventResult.rows[0].created_at
-        });
-      } catch (automationError) {
-        console.error("Automation enqueue failed");
-      }
-    }
-
-    res.json({
-      ok: true,
-      duplicate: eventResult.rows.length === 0,
-      order_id,
-      order: orderResult.rows[0] || null,
-      event: eventResult.rows[0] || null
-    });
-
-  } catch (error) {
-    await client.query("ROLLBACK");
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
-
-  } finally {
-    client.release();
-  }
-});
+  };
+}
+app.post("/track/event", trackingHandler(false));
+app.post("/track/purchase", trackingHandler(true));
 
 app.get("/api/campaigns", async (req, res) => {
   try {
@@ -1260,6 +1078,7 @@ async function start() {
     await initActivationDb(pool);
     await initUtmifyDb(pool);
     await initCpaDb(pool);
+    await initFunnelDb(pool);
     startAutomationWorker(pool);
 
     app.listen(PORT, () => {

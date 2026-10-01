@@ -354,6 +354,13 @@ async function initOfferDb(pool) {
 }
 
 async function findLeadForEvent(client, payload = {}) {
+  if (payload.lead_id != null) {
+    if (!Number.isInteger(payload.lead_id) || payload.lead_id < 1) {
+      const error = new Error("lead_id interno invalido"); error.statusCode = 409; throw error;
+    }
+    return (await client.query(`SELECT id, lifecycle_stage, temperature, lead_score
+      FROM dr_leads WHERE id = $1 FOR UPDATE`, [payload.lead_id])).rows[0] || null;
+  }
   const email = normalizeEmail(payload.email);
   const phone = normalizePhone(payload.telefone);
   const clickId = String(payload.click_id || "").trim() || null;
@@ -369,21 +376,23 @@ async function findLeadForEvent(client, payload = {}) {
       updated_at DESC,
       id DESC
     LIMIT 1
+    FOR UPDATE
   `, [clickId, email, phone]);
 
   return result.rows[0] || null;
 }
 
-async function syncLeadCrmFromEvent(pool, payload = {}) {
+async function syncLeadCrmFromEvent(pool, payload = {}, options = {}) {
   const mapping = EVENT_CRM_MAP[payload.event_name];
   if (!mapping) return null;
 
-  const client = await pool.connect();
+  const ownsTransaction = !options.client;
+  const client = options.client || await pool.connect();
   try {
-    await client.query("BEGIN");
+    if (ownsTransaction) await client.query("BEGIN");
     const lead = await findLeadForEvent(client, payload);
     if (!lead) {
-      await client.query("COMMIT");
+      if (ownsTransaction) await client.query("COMMIT");
       return null;
     }
 
@@ -394,7 +403,7 @@ async function syncLeadCrmFromEvent(pool, payload = {}) {
     const nextTemp = nextState.temperature;
 
     if (nextStage === currentStage && nextTemp === currentTemp) {
-      await client.query("COMMIT");
+      if (ownsTransaction) await client.query("COMMIT");
       return lead;
     }
 
@@ -433,13 +442,13 @@ async function syncLeadCrmFromEvent(pool, payload = {}) {
       "system:event"
     ]);
 
-    await client.query("COMMIT");
+    if (ownsTransaction) await client.query("COMMIT");
     return updated.rows[0] || null;
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (ownsTransaction) await client.query("ROLLBACK");
     throw error;
   } finally {
-    client.release();
+    if (ownsTransaction) client.release();
   }
 }
 function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {

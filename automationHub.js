@@ -394,6 +394,12 @@ async function initAutomationDb(pool) {
 }
 
 async function resolveLeadForAutomation(pool, payload = {}) {
+  if (payload.lead_id != null) {
+    if (!Number.isInteger(payload.lead_id) || payload.lead_id < 1) {
+      const error = new Error("lead_id interno invalido"); error.statusCode = 409; throw error;
+    }
+    return (await pool.query("SELECT * FROM dr_leads WHERE id = $1", [payload.lead_id])).rows[0] || null;
+  }
   const clickId = normalizeText(payload.click_id, 200) || null;
   const email = normalizeEmail(payload.email);
   const phone = normalizePhone(payload.telefone);
