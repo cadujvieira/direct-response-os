@@ -172,6 +172,18 @@ Do not rename or destructively recreate existing tables.
 Migrations must preserve production data.
 
 ## Reporting rules
+Decision Center rules:
+- protected read-only GET `/api/decisions` reuses `getCpaReport` and its exact-period/Meta/BRL rules; no new monetary aggregation, provider calls or media mutations;
+- diagnose each campaign/adset/ad by exact ID. Each card carries evidence, criteria, priority and a manual next step;
+- own-scope economic eligibility is mandatory for scale, above-limit, negative-contribution and mentorship comparisons. Global cost/currency/snapshot/tracking blockers suppress all media recommendations;
+- scale requires current CPA <=80% of the scope's prudent limit. Above the calculated maximum means failure to preserve the configured objective, not necessarily accounting loss;
+- high LTV requires >=2x the eligible general mature-buyer weighted mean. Low monetization requires CPA <=80%, LTV <=75%, and mentorship attach <=50% of their eligible general references;
+- no-purchase spend review requires zero front buyers in both sources, an exact matched object, an eligible positive general CPA maximum, spend >=1.4x that general maximum, and a closed period of at least three days. Explicitly label the borrowed general reference; it is not an automatic pause instruction;
+- mature net ROAS is mature tracked net revenue / total cohort spend. Do not extrapolate immature revenue or sum UTMify front revenue into DR revenue;
+- provisional general comparisons never replace a valid own-scope decision; unknown costs, small/immature samples, currency problems, unmatched IDs and concentration remain visible as data limitations;
+- return at most 100 priority cards with full counts and a visible truncation notice; filters apply to those returned cards;
+- settings revision, snapshot ID, calculation time and rule thresholds remain visible. Stale requests and authentication changes must not restore old decisions.
+
 CPA Maximum rules:
 - protected routes: GET `/api/cpa-max`, GET/PUT `/api/cpa-max/settings`; use the existing `x-admin-secret` guard;
 - `dr_cpa_settings` is an additive singleton table with versioned economic assumptions. Reject stale settings revisions with 409;

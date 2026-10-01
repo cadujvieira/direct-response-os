@@ -34,6 +34,7 @@ const {
   registerTrackingHealthRoutes
 } = require("./trackingHealth");
 const { initCpaDb, registerCpaRoutes } = require("./cpaEngine");
+const { registerDecisionRoutes } = require("./decisionEngine");
 
 const app = express();
 
@@ -263,6 +264,7 @@ registerActivationRoutes(app, pool);
 registerUtmifyRoutes(app, pool);
 registerTrackingHealthRoutes(app, pool);
 registerCpaRoutes(app, pool);
+registerDecisionRoutes(app, pool);
 
 app.get("/", async (req, res) => {
 

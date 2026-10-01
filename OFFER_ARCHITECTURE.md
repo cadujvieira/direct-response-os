@@ -267,6 +267,25 @@ The view shows actual CPA, calculated maximum, prudent limit, headroom, mature c
 
 Default guards: costs unconfirmed until reviewed; at least 30 mature buyers; at least 80% of the cohort mature; healthy Tracking Health; matching local UTMify snapshot and exact object IDs; <=5% per-scope front purchase/revenue divergence; positive media spend and purchases. Mentorship revenue depending on fewer than three mentorship buyers or >50% from one buyer remains provisional. Open-period snapshots older than 24 hours are provisional. These are operational guardrails, not statistical guarantees or an automated media control system.
 
+## Decision Center
+
+The protected `Decisões` view at `/dashboard#decisions` reads `GET /api/decisions?from=YYYY-MM-DD&to=YYYY-MM-DD&level=campaign|adset|ad` (1–31 days). It derives cards from the existing CPA Maximum report, including its maturity horizon, first-purchase Meta cohort, modeled costs, BRL requirement and exact local UTMify snapshot. It creates no tables, alerts or media actions.
+
+Cards include scope ID/name, priority, evidence, criteria and a manual next step. Types:
+- scale opportunity: eligible own-scope CPA at least 20% below its prudent limit;
+- above-limit CPA or negative unit contribution: critical economic review;
+- CPA between prudent and maximum: attention to the safety reserve;
+- high LTV: at least 2x the eligible general mature-buyer weighted mean;
+- cheap front with low monetization: CPA <=80% of the general current CPA, LTV <=75% of the general LTV and mentorship attach <=50% of the general attach rate. This diagnoses comparative monetization, not guaranteed loss;
+- spend without purchase: matched scope with zero DR and UTMify front purchases, spend >=1.4x an eligible general positive CPA maximum, closed reporting period of at least three days. It labels the general reference, since the scope has no mature LTV, and asks the operator to check conversion delay before any pause/reduction;
+- unresolved data/cost/maturity/concentration/attribution requirements.
+
+Global cost, currency, snapshot and tracking blockers suppress all economic recommendations. Own-scope eligibility can still permit a scale diagnosis when the general baseline is provisional only because of its sample/concentration, but no comparison borrows that provisional reference. Manual scenarios never qualify decisions.
+
+LTV is observed net revenue per mature front buyer. `ROAS líquido maduro` uses that sample's net revenue divided by all media spend in the selected cohort, including spend associated with immature buyers; it does not extrapolate future revenue. Costs remain reflected in contribution/CPA rather than ROAS. A CPA above the calculated maximum misses the configured reserve/ROI objective and does not alone imply accounting loss.
+
+The center recalculates from local data on refresh. It shows calculation time, snapshot ID, saved CPA-parameter revision and criteria. Category, priority and ID/name filters search at most the 100 highest-priority returned cards; full counts and the truncation notice remain explicit. Old period/level responses cannot overwrite newer selections. `Tudo` uses the same 30-day fallback as CPA/Tracking.
+
 ## Revenue and LTV
 
 `GET /api/revenue/ltv` is cohort-based: the selected date range chooses the front-end buyers, then downstream revenue for those same attributed buyers is accumulated through the present.

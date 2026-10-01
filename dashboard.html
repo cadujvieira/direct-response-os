@@ -3631,6 +3631,38 @@
     #cpaWorkspace[hidden] { display:none; }
     @media(max-width:800px) { .cpa-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } .cpa-detail-grid { grid-template-columns:1fr; } .cpa-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media(max-width:480px) { .cpa-form-grid { grid-template-columns:1fr; } }
+    .decision-workspace { display:grid; gap:18px; min-width:0; }
+    #decisionWorkspace[hidden] { display:none; }
+    .decision-workspace>.panel { padding:20px; }
+    .decision-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+    .decision-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+    .decision-controls .crm-control { min-width:0; max-width:100%; }
+    .decision-controls input { flex:1; min-width:200px; }
+    .decision-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:start; }
+    .decision-card { min-width:0; border:1px solid var(--border); border-top:3px solid #626d7a; border-radius:14px; background:var(--panel); padding:22px; }
+    .decision-card.critical { border-top-color:var(--red); }
+    .decision-card.attention { border-top-color:var(--yellow); }
+    .decision-card h3 { font-size:18px; margin:16px 0 10px; line-height:1.4; }
+    .decision-card p, .decision-card details { color:var(--muted); font-size:13px; line-height:1.7; }
+    .decision-card-head { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .decision-category { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+    .decision-badge { font-size:11px; padding:5px 9px; border:1px solid var(--border); border-radius:20px; color:var(--muted); }
+    .decision-badge.critical { color:var(--red); }
+    .decision-badge.attention { color:var(--yellow); }
+    .decision-scope { display:grid; gap:4px; font-size:13px; overflow-wrap:anywhere; }
+    .decision-scope span { color:var(--muted); font-size:11px; }
+    .decision-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:18px 0; }
+    .decision-metrics>div { padding:12px; background:rgba(255,255,255,.025); border-radius:9px; min-width:0; }
+    .decision-metrics span { color:var(--muted); display:block; font-size:11px; line-height:1.5; }
+    .decision-metrics strong { display:block; margin-top:6px; font-size:18px; overflow-wrap:anywhere; }
+    .decision-action { border-top:1px solid var(--border); padding-top:16px; font-size:12px; }
+    .decision-action p { margin:8px 0 14px; }
+    .decision-card summary { cursor:pointer; font-size:12px; }
+    .decision-card ul { padding-left:18px; }
+    .decision-link { display:inline-block; margin-top:18px; color:var(--green); font-size:12px; line-height:1.5; }
+    .decision-empty { grid-column:1/-1; padding:24px; color:var(--muted); font-size:13px; line-height:1.7; }
+    @media(max-width:900px) { .decision-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } .decision-cards { grid-template-columns:1fr; } }
+    @media(max-width:480px) { .decision-card { padding:18px; } .decision-controls>* { width:100%; } }
   </style>
 </head>
 
@@ -3668,6 +3700,7 @@
         <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
         <a class="stage-tab" href="#economics" data-stage-target="economics">Economia</a>
         <a class="stage-tab" href="#cpa" data-stage-target="cpa">CPA Máximo</a>
+        <a class="stage-tab" href="#decisions" data-stage-target="decisions">Decisões</a>
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
         <a class="stage-tab" href="#lists" data-stage-target="lists">Listas</a>
         <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
@@ -4013,6 +4046,39 @@
           <div class="cpa-actions" style="margin-top:22px"><button class="crm-primary-btn" id="cpaSaveSettings" type="submit">Salvar parâmetros</button><button class="crm-secondary-btn" id="cpaReloadSettings" type="button">Recarregar parâmetros salvos</button><span class="cpa-muted" id="cpaSettingsRevision">Aguardando configuração...</span></div>
         </form>
         <p class="cpa-muted" id="cpaMethodology"></p>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="decisions" id="decisions-view">
+      <div class="panel economics-auth-panel" id="decisionAuthPanel">
+        <div><h3>Central de Decisões protegida</h3><p>Conecte a sessão administrativa para analisar mídia e monetização.</p></div>
+        <button class="crm-primary-btn" id="decisionGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+      <div class="decision-workspace" id="decisionWorkspace" hidden>
+        <div class="panel">
+          <div class="cpa-header"><div><h3>Onde agir primeiro?</h3><p class="cpa-muted" id="decisionPeriod"></p></div>
+            <div class="cpa-actions"><span class="tracking-health-status" id="decisionStatus">Verificando</span><button class="crm-secondary-btn" id="decisionRefresh" type="button">Atualizar</button></div>
+          </div>
+          <p class="economics-note" id="decisionMessage" role="status">Cada diagnóstico usa histórico maduro e critérios de confiabilidade.</p>
+          <p class="cpa-muted" id="decisionUpdated"></p>
+        </div>
+        <div class="decision-kpis">
+          <div class="economics-kpi-card success"><span>Oportunidades</span><strong id="decisionOpportunities">—</strong><small>Escala e alto LTV</small></div>
+          <div class="economics-kpi-card"><span>Riscos econômicos</span><strong id="decisionRisks">—</strong><small>CPA, contribuição e monetização</small></div>
+          <div class="economics-kpi-card"><span>Pendências de dados</span><strong id="decisionDataIssues">—</strong><small>Custos, amostra e tracking</small></div>
+          <div class="economics-kpi-card"><span>Escopos elegíveis</span><strong id="decisionEligible">—</strong><small id="decisionEligibleDetail">Aguardando análise</small></div>
+        </div>
+        <div class="panel">
+          <div class="decision-controls">
+            <select class="crm-control" id="decisionLevel" aria-label="Nível de decisão"><option value="campaign">Campanhas</option><option value="adset">Conjuntos</option><option value="ad">Anúncios</option></select>
+            <select class="crm-control" id="decisionCategory" aria-label="Tipo de diagnóstico"><option value="">Todos os tipos</option><option value="opportunity">Oportunidades</option><option value="risk">Riscos econômicos</option><option value="data">Pendências de dados</option></select>
+            <select class="crm-control" id="decisionSeverity" aria-label="Prioridade"><option value="">Todas as prioridades</option><option value="critical">Crítico</option><option value="attention">Atenção</option><option value="information">Informação</option></select>
+            <input class="crm-control" id="decisionSearch" type="search" placeholder="Buscar nome ou ID" aria-label="Buscar diagnóstico por nome ou ID">
+          </div>
+          <p class="cpa-muted" id="decisionResultCount" aria-live="polite"></p>
+        </div>
+        <div class="decision-cards" id="decisionCards"></div>
+        <p class="cpa-muted" id="decisionMethodology"></p>
       </div>
     </section>
 
@@ -4780,6 +4846,7 @@
   </div>
 
   <script src="/assets/cpa-dashboard.js"></script>
+  <script src="/assets/decision-dashboard.js"></script>
   <script>
     function percentage(value, total) {
       if (!total) return 0;
@@ -4929,6 +4996,7 @@ const dashboardViewTitles = {
   mentorship: "Mentoria",
   economics: "Economia",
   cpa: "CPA Máximo",
+  decisions: "Central de Decisões",
   crm: "CRM",
   lists: "Listas",
   automations: "Automações",
@@ -4948,6 +5016,7 @@ const periodRelevantViews = new Set([
   "mentorship",
   "economics",
   "cpa",
+  "decisions",
   "integrations",
   "tracking",
   "performance"
@@ -4989,6 +5058,7 @@ function setActiveStage(viewName) {
     loadEconomics();
   }
   if (viewName === "cpa") loadCpa();
+  if (viewName === "decisions") loadDecisions();
 
   if (viewName === "lists") {
     loadLists();
@@ -9215,6 +9285,7 @@ function initBreakdownControls() {
         tasks.push(loadEconomics());
       }
       if (activeView === "cpa") tasks.push(loadCpa());
+      if (activeView === "decisions") tasks.push(loadDecisions());
 
       if (activeView === "automations") {
         tasks.push(loadAutomations());
@@ -9238,6 +9309,7 @@ function initBreakdownControls() {
     initCrm();
     initEconomics();
     initCpa();
+    initDecisions();
     initLists();
     initAutomations();
     initUtmifyIntegration();
