@@ -1,6 +1,6 @@
 # Integração Meta Ads
 
-Esta integração prepara o Direct Response OS para importar automaticamente investimento, impressões e cliques da Meta Ads para a tabela `dr_ad_spend`.
+Esta integração prepara o sistema Oferta DR para importar automaticamente investimento, impressões e cliques da Meta Ads para a tabela `dr_ad_spend`.
 
 ## Estado atual
 

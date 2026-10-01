@@ -1,7 +1,7 @@
-# Direct Response OS - Engineering Guide
+# Oferta DR - Engineering Guide
 
 ## Project
-Direct Response OS is a Node.js/Express/PostgreSQL tracking and performance system for direct-response funnels.
+Oferta DR is a Node.js/Express/PostgreSQL tracking and performance system for direct-response funnels.
 
 Production service:
 - API: https://direct-response-api.onrender.com

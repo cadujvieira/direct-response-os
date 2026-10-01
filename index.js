@@ -251,7 +251,7 @@ app.get("/", async (req, res) => {
 
     res.json({
       status: "online",
-      service: "direct-response-os",
+      service: "oferta-dr",
       database: "connected",
       time: database.rows[0].agora
     });
@@ -272,7 +272,7 @@ app.get("/health", (req, res) => {
 
   res.json({
     status: "ok",
-    service: "direct-response-os"
+    service: "oferta-dr"
   });
 
 });
@@ -1207,12 +1207,12 @@ async function start() {
     await initOfferDb(pool);
 
     app.listen(PORT, () => {
-      console.log("Direct Response OS online na porta " + PORT);
+      console.log("Oferta DR online na porta " + PORT);
     });
 
   } catch (error) {
 
-    console.error("Erro ao iniciar Direct Response OS:");
+    console.error("Erro ao iniciar Oferta DR:");
     console.error(error);
 
     process.exit(1);

@@ -1,4 +1,4 @@
-# Direct Response OS — Offer Foundation
+# Oferta DR — Offer Foundation
 
 ## Business model
 
