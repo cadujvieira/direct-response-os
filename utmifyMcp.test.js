@@ -4,6 +4,8 @@ const assert = require("node:assert/strict");
 const {
   buildEconomicsSummary,
   buildMcpUrl,
+  internalPerformanceFields,
+  mergePerformanceAttribution,
   normalizeDashboard,
   normalizeMetaObject,
   performanceRow,
@@ -191,4 +193,151 @@ test("economia retorna null para ratios sem denominador", () => {
   assert.equal(summary.tracked_total_roas, null);
   assert.equal(summary.purchase_tracking_coverage_pct, null);
   assert.equal(summary.revenue_tracking_coverage_pct, null);
+});
+
+
+test("atribui receita de mentoria e LTV ao mesmo anuncio por ID", () => {
+  const mediaRows = [{
+    campaign: "Campanha A",
+    campaign_id: "c1",
+    adset: "Conjunto A",
+    adset_id: "s1",
+    ad: "Anuncio A",
+    ad_id: "a1",
+    clicks: 100,
+    media_clicks: 120,
+    impressions: 2000,
+    leads: 20,
+    checkouts: 10,
+    purchases: 2,
+    revenue: 594,
+    spend: 300,
+    cpl: 15,
+    cpa: 150,
+    roas: 1.98,
+    source: "utmify"
+  }];
+
+  const internalRows = [{
+    object_id: "a1",
+    campaign_id: "c1",
+    adset_id: "s1",
+    ad_id: "a1",
+    campaign_name: "Campanha A",
+    tracked_front_buyers: 2,
+    tracked_front_revenue: 594,
+    calls_booked: 2,
+    calls_attended: 2,
+    mentorship_purchases: 1,
+    mentorship_revenue: 5000,
+    bump_revenue: 0,
+    refunds: 0
+  }];
+
+  const result = mergePerformanceAttribution(
+    mediaRows,
+    internalRows,
+    "ad",
+    {
+      total_front_buyers: 2,
+      total_front_revenue: 594,
+      id_attributed_front_buyers: 2,
+      id_attributed_front_revenue: 594
+    }
+  );
+
+  assert.equal(result.rows.length, 1);
+  assert.equal(result.rows[0].mentorship_purchases, 1);
+  assert.equal(result.rows[0].mentorship_revenue, 5000);
+  assert.equal(result.rows[0].tracked_net_revenue, 5594);
+  assert.equal(result.rows[0].ltv_per_front_buyer, 2797);
+  assert.equal(result.rows[0].tracked_total_roas, 5594 / 300);
+  assert.equal(result.rows[0].purchase_tracking_coverage_pct, 100);
+  assert.equal(result.rows[0].attribution_status, "matched");
+  assert.equal(result.attribution.id_coverage_pct, 100);
+  assert.equal(result.attribution.utmify_match_coverage_pct, 100);
+});
+
+test("nao força buyer interno para objeto UTMify com ID diferente", () => {
+  const mediaRows = [{
+    campaign: "Campanha UTMify",
+    campaign_id: "c-real",
+    adset: "Conjunto UTMify",
+    adset_id: "s-real",
+    ad: "Anuncio UTMify",
+    ad_id: "a-real",
+    clicks: 10,
+    media_clicks: 12,
+    impressions: 200,
+    leads: 1,
+    checkouts: 1,
+    purchases: 1,
+    revenue: 297,
+    spend: 200,
+    cpl: 200,
+    cpa: 200,
+    roas: 1.485,
+    source: "utmify"
+  }];
+
+  const internalRows = [{
+    object_id: "a-outro",
+    campaign_id: "c-outro",
+    adset_id: "s-outro",
+    ad_id: "a-outro",
+    campaign_name: "Campanha interna",
+    tracked_front_buyers: 1,
+    tracked_front_revenue: 297,
+    calls_booked: 1,
+    calls_attended: 1,
+    mentorship_purchases: 1,
+    mentorship_revenue: 10000,
+    bump_revenue: 0,
+    refunds: 0
+  }];
+
+  const result = mergePerformanceAttribution(
+    mediaRows,
+    internalRows,
+    "ad",
+    {
+      total_front_buyers: 1,
+      total_front_revenue: 297,
+      id_attributed_front_buyers: 1,
+      id_attributed_front_revenue: 297
+    }
+  );
+
+  assert.equal(result.rows.length, 2);
+
+  const media = result.rows.find((row) => row.ad_id === "a-real");
+  const internal = result.rows.find((row) => row.ad_id === "a-outro");
+
+  assert.equal(media.mentorship_revenue, 0);
+  assert.equal(media.attribution_status, "media_only");
+  assert.equal(internal.mentorship_revenue, 10000);
+  assert.equal(internal.attribution_status, "internal_only");
+  assert.equal(result.attribution.id_coverage_pct, 100);
+  assert.equal(result.attribution.utmify_match_coverage_pct, 0);
+});
+
+test("calcula campos internos de valor real sem mídia", () => {
+  const fields = internalPerformanceFields({
+    tracked_front_buyers: 2,
+    tracked_front_revenue: 594,
+    mentorship_purchases: 1,
+    mentorship_revenue: 5000,
+    bump_revenue: 100,
+    refunds: 200
+  }, {
+    spend: 0,
+    purchases: 0,
+    revenue: 0
+  });
+
+  assert.equal(fields.tracked_net_revenue, 5494);
+  assert.equal(fields.downstream_revenue, 4900);
+  assert.equal(fields.ltv_per_front_buyer, 2747);
+  assert.equal(fields.mentorship_attach_rate_pct, 50);
+  assert.equal(fields.tracked_total_roas, null);
 });

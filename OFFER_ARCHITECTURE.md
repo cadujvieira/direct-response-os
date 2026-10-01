@@ -175,6 +175,16 @@ The Performance screen keeps an explicit source switch:
 - `Oferta DR` uses internal attribution/spend tables;
 - `UTMify` uses a synchronized UTMify snapshot for the selected period.
 
+UTMify Performance also carries downstream cohort value from Oferta DR:
+- the selected period defines the front-end purchase cohort;
+- each cohort buyer is joined back to the acquisition click by `click_id`;
+- campaign, adset and ad attribution use exact persisted Meta IDs only;
+- calls, mentorship purchases, bump revenue and refunds for those same buyers are accumulated after acquisition, including events that happen after the selected period;
+- each media row can therefore show tracked buyers, mentorship buyers/revenue, LTV, tracked net revenue and total tracked ROAS;
+- ID coverage measures how much of the internal front-buyer cohort has the required ID for the selected breakdown level;
+- UTMify match coverage measures how much of that cohort matches an actual object in the synchronized UTMify snapshot;
+- internal IDs without a UTMify match are surfaced explicitly as `internal_only` / "Só DR" rows. They are never forced into a similarly named object.
+
 The protected `Economia` view intentionally keeps acquisition and monetization sources separate:
 - UTMify supplies spend, front-end purchases, front-end revenue, front CPA and front ROAS;
 - Oferta DR supplies the front-buyer cohort, mentorship revenue, bump revenue, refunds, tracked net revenue and LTV;

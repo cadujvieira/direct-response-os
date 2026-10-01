@@ -114,6 +114,11 @@ UTMify MCP rules:
 - UTMify monetary fields from MCP are integer/decimal cents and must be divided by 100 before storage/display; ratios such as ROAS/ROI/CTR are not currency and must not be divided;
 - campaign/adset/ad parent names are reconstructed from the same local snapshot by IDs;
 - Performance supports explicit source switching between Oferta DR and UTMify;
+- UTMify Performance is enriched with downstream Oferta DR value by exact `campaign_id`, `adset_id` or `ad_id`; never guess adset/ad attribution by name;
+- the selected reporting period defines the front-end buyer cohort. Mentorship, bump, calls and refunds for those same `click_id` values are accumulated downstream even when they occur after the acquisition period;
+- rows expose tracked front buyers, mentorship buyers/revenue, LTV, tracked net revenue, total tracked ROAS and per-row purchase coverage;
+- Performance source text must expose both ID coverage and UTMify object-match coverage. Internal IDs missing from the UTMify snapshot remain visible as `internal_only` / "Só DR" rows instead of being reassigned;
+- stale Performance requests must never overwrite a newer source/level selection;
 - the protected `Economia` view combines UTMify spend/front metrics with the Oferta DR front-buyer cohort, downstream mentorship revenue, refunds and LTV;
 - `tracked_total_roas` is deliberately defined as Oferta DR tracked net cohort revenue divided by UTMify spend for the exact synced period;
 - purchase and front-revenue tracking coverage compare Oferta DR against UTMify and must be shown alongside total ROAS; do not present total ROAS as validated attribution when those sources materially diverge;

@@ -585,6 +585,279 @@ async function latestSyncForRange(pool, from, to) {
   return result.rows[0] || null;
 }
 
+
+function attributionLevelConfig(level) {
+  if (level === "ad") {
+    return {
+      dimensionSql: "NULLIF(TRIM(c.ad_id), '')"
+    };
+  }
+
+  if (level === "adset") {
+    return {
+      dimensionSql: "NULLIF(TRIM(c.adset_id), '')"
+    };
+  }
+
+  return {
+    dimensionSql: "NULLIF(TRIM(c.campaign_id), '')"
+  };
+}
+
+async function getInternalAttribution(pool, from, to, level) {
+  const { dimensionSql } = attributionLevelConfig(level);
+
+  const commonCte = `
+    WITH front_by_click AS (
+      SELECT
+        click_id,
+        COALESCE(SUM(value), 0)::numeric AS front_revenue
+      FROM dr_events
+      WHERE event_name = 'purchase'
+        AND click_id IS NOT NULL
+        AND (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date)
+        AND (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date)
+      GROUP BY click_id
+    ),
+    downstream_by_click AS (
+      SELECT
+        e.click_id,
+        MAX(CASE WHEN e.event_name = 'call_booked' THEN 1 ELSE 0 END)::int AS has_call_booked,
+        MAX(CASE WHEN e.event_name = 'call_attended' THEN 1 ELSE 0 END)::int AS has_call_attended,
+        MAX(CASE WHEN e.event_name = 'mentorship_purchase' THEN 1 ELSE 0 END)::int AS has_mentorship_purchase,
+        COALESCE(SUM(e.value) FILTER (
+          WHERE e.event_name = 'mentorship_purchase'
+        ), 0)::numeric AS mentorship_revenue,
+        COALESCE(SUM(e.value) FILTER (
+          WHERE e.event_name = 'order_bump_purchase'
+        ), 0)::numeric AS bump_revenue,
+        COALESCE(SUM(ABS(e.value)) FILTER (
+          WHERE e.event_name = 'refund'
+        ), 0)::numeric AS refunds
+      FROM dr_events e
+      JOIN front_by_click f ON f.click_id = e.click_id
+      GROUP BY e.click_id
+    )
+  `;
+
+  const rowsResult = await pool.query(commonCte + `
+    SELECT
+      ${dimensionSql} AS object_id,
+      MAX(NULLIF(TRIM(c.campaign_id), '')) AS campaign_id,
+      MAX(NULLIF(TRIM(c.adset_id), '')) AS adset_id,
+      MAX(NULLIF(TRIM(c.ad_id), '')) AS ad_id,
+      MAX(NULLIF(TRIM(c.utm_campaign), '')) AS campaign_name,
+      COUNT(*)::int AS tracked_front_buyers,
+      COALESCE(SUM(f.front_revenue), 0)::numeric AS tracked_front_revenue,
+      COALESCE(SUM(d.has_call_booked), 0)::int AS calls_booked,
+      COALESCE(SUM(d.has_call_attended), 0)::int AS calls_attended,
+      COALESCE(SUM(d.has_mentorship_purchase), 0)::int AS mentorship_purchases,
+      COALESCE(SUM(d.mentorship_revenue), 0)::numeric AS mentorship_revenue,
+      COALESCE(SUM(d.bump_revenue), 0)::numeric AS bump_revenue,
+      COALESCE(SUM(d.refunds), 0)::numeric AS refunds
+    FROM front_by_click f
+    JOIN dr_clicks c ON c.click_id = f.click_id
+    LEFT JOIN downstream_by_click d ON d.click_id = f.click_id
+    WHERE ${dimensionSql} IS NOT NULL
+    GROUP BY ${dimensionSql}
+  `, [from, to]);
+
+  const coverageResult = await pool.query(commonCte + `
+    SELECT
+      COUNT(*)::int AS total_front_buyers,
+      COALESCE(SUM(f.front_revenue), 0)::numeric AS total_front_revenue,
+      COUNT(*) FILTER (WHERE ${dimensionSql} IS NOT NULL)::int AS id_attributed_front_buyers,
+      COALESCE(SUM(f.front_revenue) FILTER (
+        WHERE ${dimensionSql} IS NOT NULL
+      ), 0)::numeric AS id_attributed_front_revenue
+    FROM front_by_click f
+    LEFT JOIN dr_clicks c ON c.click_id = f.click_id
+  `, [from, to]);
+
+  return {
+    rows: rowsResult.rows,
+    coverage: coverageResult.rows[0] || {}
+  };
+}
+
+function internalPerformanceFields(internal = {}, media = {}) {
+  const trackedFrontBuyers = numberOrZero(internal.tracked_front_buyers);
+  const trackedFrontRevenue = numberOrZero(internal.tracked_front_revenue);
+  const mentorshipPurchases = numberOrZero(internal.mentorship_purchases);
+  const mentorshipRevenue = numberOrZero(internal.mentorship_revenue);
+  const bumpRevenue = numberOrZero(internal.bump_revenue);
+  const refunds = numberOrZero(internal.refunds);
+  const trackedNetRevenue =
+    trackedFrontRevenue + mentorshipRevenue + bumpRevenue - refunds;
+  const spend = numberOrZero(media.spend);
+  const mediaPurchases = numberOrZero(media.purchases);
+  const mediaRevenue = numberOrZero(media.revenue);
+
+  return {
+    tracked_front_buyers: trackedFrontBuyers,
+    tracked_front_revenue: trackedFrontRevenue,
+    calls_booked: numberOrZero(internal.calls_booked),
+    calls_attended: numberOrZero(internal.calls_attended),
+    mentorship_purchases: mentorshipPurchases,
+    mentorship_revenue: mentorshipRevenue,
+    bump_revenue: bumpRevenue,
+    refunds,
+    downstream_revenue: mentorshipRevenue + bumpRevenue - refunds,
+    tracked_net_revenue: trackedNetRevenue,
+    ltv_per_front_buyer: safeRatio(
+      trackedNetRevenue,
+      trackedFrontBuyers
+    ),
+    mentorship_attach_rate_pct:
+      trackedFrontBuyers > 0
+        ? (mentorshipPurchases / trackedFrontBuyers) * 100
+        : null,
+    tracked_total_roas: safeRatio(trackedNetRevenue, spend),
+    purchase_tracking_coverage_pct:
+      mediaPurchases > 0
+        ? (trackedFrontBuyers / mediaPurchases) * 100
+        : null,
+    revenue_tracking_coverage_pct:
+      mediaRevenue > 0
+        ? (trackedFrontRevenue / mediaRevenue) * 100
+        : null
+  };
+}
+
+function internalOnlyPerformanceRow(internal, level) {
+  const campaignId = normalizeText(internal.campaign_id, 120) || null;
+  const adsetId = normalizeText(internal.adset_id, 120) || null;
+  const adId = normalizeText(internal.ad_id, 120) || null;
+
+  return {
+    campaign:
+      normalizeText(internal.campaign_name, 500) ||
+      campaignId ||
+      "Sem campanha",
+    campaign_id: campaignId,
+    adset:
+      level === "campaign"
+        ? "Sem conjunto"
+        : adsetId || "Sem conjunto",
+    adset_id: adsetId,
+    ad:
+      level === "ad"
+        ? adId || "Sem anúncio"
+        : "Sem anúncio",
+    ad_id: adId,
+    clicks: 0,
+    media_clicks: 0,
+    impressions: 0,
+    leads: 0,
+    checkouts: 0,
+    purchases: 0,
+    revenue: 0,
+    spend: 0,
+    cpl: null,
+    cpa: null,
+    roas: null,
+    profit: 0,
+    source: "oferta_dr_only",
+    attribution_status: "internal_only"
+  };
+}
+
+function performanceObjectId(row, level) {
+  if (level === "ad") return normalizeText(row.ad_id, 120);
+  if (level === "adset") return normalizeText(row.adset_id, 120);
+  return normalizeText(row.campaign_id, 120);
+}
+
+function mergePerformanceAttribution(mediaRows, internalRows, level, coverage = {}) {
+  const mediaMap = new Map(
+    mediaRows
+      .map((row) => [performanceObjectId(row, level), row])
+      .filter(([id]) => Boolean(id))
+  );
+
+  const internalMap = new Map(
+    (Array.isArray(internalRows) ? internalRows : [])
+      .map((row) => [normalizeText(row.object_id, 120), row])
+      .filter(([id]) => Boolean(id))
+  );
+
+  const merged = mediaRows.map((row) => {
+    const objectId = performanceObjectId(row, level);
+    const internal = internalMap.get(objectId) || {};
+    return {
+      ...row,
+      ...internalPerformanceFields(internal, row),
+      attribution_status: internalMap.has(objectId)
+        ? "matched"
+        : "media_only"
+    };
+  });
+
+  for (const [objectId, internal] of internalMap.entries()) {
+    if (mediaMap.has(objectId)) continue;
+
+    const base = internalOnlyPerformanceRow(internal, level);
+    merged.push({
+      ...base,
+      ...internalPerformanceFields(internal, base)
+    });
+  }
+
+  const totalFrontBuyers = numberOrZero(coverage.total_front_buyers);
+  const totalFrontRevenue = numberOrZero(coverage.total_front_revenue);
+  const idAttributedFrontBuyers = numberOrZero(
+    coverage.id_attributed_front_buyers
+  );
+  const idAttributedFrontRevenue = numberOrZero(
+    coverage.id_attributed_front_revenue
+  );
+
+  const matchedFrontBuyers = Array.from(internalMap.entries())
+    .filter(([id]) => mediaMap.has(id))
+    .reduce(
+      (sum, [, row]) => sum + numberOrZero(row.tracked_front_buyers),
+      0
+    );
+
+  const matchedFrontRevenue = Array.from(internalMap.entries())
+    .filter(([id]) => mediaMap.has(id))
+    .reduce(
+      (sum, [, row]) => sum + numberOrZero(row.tracked_front_revenue),
+      0
+    );
+
+  const attribution = {
+    total_front_buyers: totalFrontBuyers,
+    total_front_revenue: totalFrontRevenue,
+    id_attributed_front_buyers: idAttributedFrontBuyers,
+    id_attributed_front_revenue: idAttributedFrontRevenue,
+    matched_front_buyers: matchedFrontBuyers,
+    matched_front_revenue: matchedFrontRevenue,
+    id_coverage_pct:
+      totalFrontBuyers > 0
+        ? (idAttributedFrontBuyers / totalFrontBuyers) * 100
+        : null,
+    utmify_match_coverage_pct:
+      totalFrontBuyers > 0
+        ? (matchedFrontBuyers / totalFrontBuyers) * 100
+        : null
+  };
+
+  merged.sort((a, b) => {
+    const totalDelta =
+      numberOrZero(b.tracked_net_revenue) -
+      numberOrZero(a.tracked_net_revenue);
+    if (totalDelta !== 0) return totalDelta;
+
+    return numberOrZero(b.spend) - numberOrZero(a.spend);
+  });
+
+  return {
+    rows: merged,
+    attribution
+  };
+}
+
 async function getPerformance(pool, input = {}) {
   const range = validateSyncRange(input.from, input.to);
   const level = ALLOWED_LEVELS.includes(input.level)
@@ -625,10 +898,23 @@ async function getPerformance(pool, input = {}) {
     adset: adsetMap
   };
 
-  const rows = all
+  const mediaRows = all
     .filter((row) => row.level === level)
-    .map((row) => performanceRow(row, nameMaps))
-    .sort((a, b) => b.spend - a.spend);
+    .map((row) => performanceRow(row, nameMaps));
+
+  const internal = await getInternalAttribution(
+    pool,
+    range.from,
+    range.to,
+    level
+  );
+
+  const merged = mergePerformanceAttribution(
+    mediaRows,
+    internal.rows,
+    level,
+    internal.coverage
+  );
 
   return {
     sync: {
@@ -637,7 +923,8 @@ async function getPerformance(pool, input = {}) {
       date_to: sync.date_to,
       finished_at: sync.finished_at
     },
-    rows
+    rows: merged.rows,
+    attribution: merged.attribution
   };
 }
 
@@ -905,6 +1192,8 @@ module.exports = {
   discoverUtmify,
   getEconomics,
   getPerformance,
+  internalPerformanceFields,
+  mergePerformanceAttribution,
   initUtmifyDb,
   normalizeDashboard,
   normalizeMetaObject,

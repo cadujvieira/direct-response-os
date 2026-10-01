@@ -848,6 +848,10 @@
       min-width: 1450px;
     }
 
+    .campaign-table.utmify-expanded {
+      min-width: 2250px;
+    }
+
     .campaign-table th,
     .campaign-table td {
       padding: 17px 20px;
@@ -897,6 +901,33 @@
 
     .campaign-conversion {
       font-weight: 700;
+    }
+
+    .performance-origin-badge,
+    .performance-coverage-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 7px;
+      padding: 3px 6px;
+      border: 1px solid rgba(62, 227, 137, .18);
+      border-radius: 999px;
+      background: rgba(62, 227, 137, .06);
+      color: #95eebd;
+      font-size: 8px;
+      font-weight: 750;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .performance-origin-badge,
+    .performance-coverage-badge.warn {
+      border-color: rgba(245, 196, 81, .2);
+      background: rgba(245, 196, 81, .06);
+      color: #e8cc78;
+    }
+
+    .performance-row-internal-only {
+      background: rgba(245, 196, 81, .018);
     }
 
     .table-loading {
@@ -7701,7 +7732,8 @@ async function loadExperiments() {
 
 const performanceState = {
   level: "campaign",
-  source: "offer"
+  source: "offer",
+  requestSeq: 0
 };
 
 const performanceConfigs = {
@@ -7738,7 +7770,7 @@ const performanceConfigs = {
 };
 
 function performanceMetricHeaders() {
-  return [
+  const base = [
     performanceState.source === "utmify" ? "LP views" : "Cliques rastreados",
     "Cliques mídia",
     "Impressões",
@@ -7751,6 +7783,21 @@ function performanceMetricHeaders() {
     "CPL",
     "CPA",
     "ROAS"
+  ];
+
+  if (performanceState.source !== "utmify") {
+    return base;
+  }
+
+  return [
+    ...base,
+    "Compradores DR",
+    "Mentorias",
+    "Receita mentoria",
+    "LTV",
+    "Receita total",
+    "ROAS total",
+    "Cobertura"
   ];
 }
 
@@ -7770,7 +7817,14 @@ const performanceHeaderTooltips = {
   "Investimento": "Gasto de mídia importado para a campanha, conjunto ou anúncio.",
   "CPL": "Investimento dividido pelos leads atribuídos.",
   "CPA": "Investimento dividido pelas compras front-end atribuídas.",
-  "ROAS": "Receita front-end dividida pelo investimento de mídia."
+  "ROAS": "Receita front-end dividida pelo investimento de mídia.",
+  "Compradores DR": "Compradores front-end únicos capturados pelo Oferta DR e atribuídos por ID ao mesmo nível de mídia.",
+  "Mentorias": "Compradores desta origem que posteriormente compraram mentoria.",
+  "Receita mentoria": "Receita de mentoria acumulada para a coorte de compradores originada neste objeto de mídia.",
+  "LTV": "Receita líquida rastreada da coorte dividida pelos compradores front-end capturados pelo Oferta DR.",
+  "Receita total": "Receita front-end rastreada + mentoria + bump - reembolsos para a coorte originada neste objeto.",
+  "ROAS total": "Receita total rastreada da coorte dividida pelo investimento UTMify do objeto.",
+  "Cobertura": "Compradores front-end capturados pelo Oferta DR divididos pelas vendas front-end atribuídas pela UTMify neste objeto."
 };
 
 function renderPerformanceHead(config) {
@@ -7780,6 +7834,10 @@ function renderPerformanceHead(config) {
   ];
 
   const head = document.getElementById("performanceTableHead");
+  document.querySelector(".campaign-table")?.classList.toggle(
+    "utmify-expanded",
+    performanceState.source === "utmify"
+  );
 
   head.innerHTML =
     "<tr>" +
@@ -7835,9 +7893,12 @@ async function fetchPerformanceData(config) {
     }
 
     const data = await response.json();
-    return Array.isArray(data[config.listKey])
-      ? data[config.listKey]
-      : [];
+    return {
+      rows: Array.isArray(data[config.listKey])
+        ? data[config.listKey]
+        : [],
+      attribution: null
+    };
   }
 
   const secret = utmifyAdminSecret();
@@ -7882,11 +7943,15 @@ async function fetchPerformanceData(config) {
     throw error;
   }
 
-  return Array.isArray(data.rows) ? data.rows : [];
+  return {
+    rows: Array.isArray(data.rows) ? data.rows : [],
+    attribution: data.attribution || null
+  };
 }
 
 
 async function loadPerformance() {
+  const requestId = ++performanceState.requestSeq;
   const tbody = document.getElementById("performanceTableBody");
   const config = performanceConfigs[performanceState.level];
   const colspan = config.identityHeaders.length + performanceMetricHeaders().length;
@@ -7902,12 +7967,28 @@ async function loadPerformance() {
   `;
 
   try {
-    const rows = await fetchPerformanceData(config);
+    const result = await fetchPerformanceData(config);
+    if (requestId !== performanceState.requestSeq) return;
 
-    document.getElementById("performanceSourceLabel").textContent =
-      performanceState.source === "utmify"
-        ? "Fonte: UTMify MCP · snapshot local"
-        : "Fonte: Oferta DR";
+    const rows = result.rows || [];
+    const attribution = result.attribution || null;
+
+    if (performanceState.source === "utmify") {
+      const totalBuyers = Number(attribution?.total_front_buyers || 0);
+      const idCoverage = attribution?.id_coverage_pct;
+      const matchCoverage = attribution?.utmify_match_coverage_pct;
+
+      document.getElementById("performanceSourceLabel").textContent =
+        totalBuyers > 0
+          ? "Fonte: UTMify + Oferta DR · IDs " +
+            (idCoverage == null ? "—" : formatPercent(Number(idCoverage))) +
+            " · match UTMify " +
+            (matchCoverage == null ? "—" : formatPercent(Number(matchCoverage)))
+          : "Fonte: UTMify + Oferta DR · sem coorte DR no período";
+    } else {
+      document.getElementById("performanceSourceLabel").textContent =
+        "Fonte: Oferta DR";
+    }
 
     if (rows.length === 0) {
       tbody.innerHTML = `
@@ -7930,15 +8011,41 @@ async function loadPerformance() {
       const revenue = Number(row.revenue || 0);
       const spend = Number(row.spend || 0);
       const conversion = percentage(purchases, clicks);
+      const internalOnly =
+        performanceState.source === "utmify" &&
+        row.attribution_status === "internal_only";
 
       const identityHtml = config.identityCells(row)
-        .map((value, index) =>
-          `<td class="identity-cell ${index === 0 ? "campaign-name" : ""}">${escapeHtml(value)}</td>`
-        )
+        .map((value, index) => {
+          const badge = index === 0 && internalOnly
+            ? '<span class="performance-origin-badge">Só DR</span>'
+            : "";
+          return `<td class="identity-cell ${index === 0 ? "campaign-name" : ""}">${escapeHtml(value)}${badge}</td>`;
+        })
         .join("");
 
+      const ltvCells = performanceState.source === "utmify"
+        ? `
+          <td>${Number(row.tracked_front_buyers || 0).toLocaleString("pt-BR")}</td>
+          <td>${Number(row.mentorship_purchases || 0).toLocaleString("pt-BR")}</td>
+          <td class="campaign-revenue">${formatMoney(row.mentorship_revenue)}</td>
+          <td>${row.ltv_per_front_buyer == null ? "—" : formatMoney(row.ltv_per_front_buyer)}</td>
+          <td class="campaign-revenue">${formatMoney(row.tracked_net_revenue)}</td>
+          <td>${formatRoas(row.tracked_total_roas)}</td>
+          <td>${
+            internalOnly
+              ? '<span class="performance-coverage-badge warn">Só DR</span>'
+              : row.purchase_tracking_coverage_pct == null
+                ? "—"
+                : '<span class="performance-coverage-badge">' +
+                  escapeHtml(formatPercent(Number(row.purchase_tracking_coverage_pct))) +
+                  "</span>"
+          }</td>
+        `
+        : "";
+
       return `
-        <tr>
+        <tr class="${internalOnly ? "performance-row-internal-only" : ""}">
           ${identityHtml}
           <td>${clicks.toLocaleString("pt-BR")}</td>
           <td>${mediaClicks.toLocaleString("pt-BR")}</td>
@@ -7952,11 +8059,13 @@ async function loadPerformance() {
           <td>${formatCurrency(row.cpl)}</td>
           <td>${formatCurrency(row.cpa)}</td>
           <td>${formatRoas(row.roas)}</td>
+          ${ltvCells}
         </tr>
       `;
     }).join("");
 
   } catch (error) {
+    if (requestId !== performanceState.requestSeq) return;
     console.error(error);
 
     document.getElementById("performanceSourceLabel").textContent =
