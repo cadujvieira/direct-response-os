@@ -33,6 +33,7 @@ const {
 const {
   registerTrackingHealthRoutes
 } = require("./trackingHealth");
+const { initCpaDb, registerCpaRoutes } = require("./cpaEngine");
 
 const app = express();
 
@@ -261,6 +262,7 @@ registerAutomationRoutes(app, pool);
 registerActivationRoutes(app, pool);
 registerUtmifyRoutes(app, pool);
 registerTrackingHealthRoutes(app, pool);
+registerCpaRoutes(app, pool);
 
 app.get("/", async (req, res) => {
 
@@ -1255,6 +1257,7 @@ async function start() {
     await initAutomationDb(pool);
     await initActivationDb(pool);
     await initUtmifyDb(pool);
+    await initCpaDb(pool);
     startAutomationWorker(pool);
 
     app.listen(PORT, () => {

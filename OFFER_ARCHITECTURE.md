@@ -243,6 +243,30 @@ Protected route:
 
 The Tracking dashboard must keep internal coverage and UTMify match visually distinct and must never hide unmatched IDs.
 
+## CPA Maximum
+
+The protected `CPA Maximo` view at `/dashboard#cpa` combines exact-period UTMify acquisition with mature Oferta DR buyer unit economics. It reads local snapshots only.
+
+- `GET /api/cpa-max?from=YYYY-MM-DD&to=YYYY-MM-DD&level=campaign|adset|ad` (1–31 days).
+- `GET /api/cpa-max/settings`.
+- `PUT /api/cpa-max/settings` with `{settings, expected_revision}`.
+
+All API routes require the existing administrative secret. Configuration lives in the additive `dr_cpa_settings` table with an atomic revision guard. No provider secrets are stored in it.
+
+The acquisition period selects the first front purchase for each click ID. Meta-eligible buyers only are used. Mature buyers have completed the configured monetization horizon (default 30 days). Positive mentorship/bump revenue is counted within that horizon; refunds after the horizon remain deducted through the present. This avoids treating unmonetized recent buyers as fully mature or inflating short horizons with late positive revenue. A recent acquisition cohort may have no mature sample; select an older period for mature calibration.
+
+Unit contribution deducts refunds, modeled fees, taxes, split and variable fulfillment costs from tracked revenue. Fees are charged on gross sale values and assumed non-refundable; taxes/split use positive revenue after refunds. Fixed overhead is excluded. All monetary inputs and source values must be BRL; mixed currencies are not converted implicitly.
+
+Two objectives are explicit:
+- reserve a percentage of contribution before media: `CPA max = max(contribution * (1 - target), 0)`;
+- minimum return over media: `CPA max = max(contribution / (1 + target), 0)`.
+
+A separate safety discount produces a prudent CPA limit. The reserve objective is not an accounting margin on revenue.
+
+The view shows actual CPA, calculated maximum, prudent limit, headroom, mature contribution breakdown and campaign/adset/ad rows. Manual scenarios use gross front ticket, mentorship conversion × ticket, expected bump and refunds, and the same modeled costs. They remain explicit hypotheses and never qualify a scope for scale.
+
+Default guards: costs unconfirmed until reviewed; at least 30 mature buyers; at least 80% of the cohort mature; healthy Tracking Health; matching local UTMify snapshot and exact object IDs; <=5% per-scope front purchase/revenue divergence; positive media spend and purchases. Mentorship revenue depending on fewer than three mentorship buyers or >50% from one buyer remains provisional. Open-period snapshots older than 24 hours are provisional. These are operational guardrails, not statistical guarantees or an automated media control system.
+
 ## Revenue and LTV
 
 `GET /api/revenue/ltv` is cohort-based: the selected date range chooses the front-end buyers, then downstream revenue for those same attributed buyers is accumulated through the present.

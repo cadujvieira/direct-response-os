@@ -3612,6 +3612,25 @@
       }
     }
 
+    .cpa-workspace { display:grid; gap:18px; }
+    .cpa-workspace>.panel, .cpa-detail-grid>.panel { padding:20px; }
+    .cpa-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .cpa-header p, .cpa-muted { color:var(--muted); font-size:13px; line-height:1.65; }
+    .cpa-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .cpa-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .cpa-breakdown { display:grid; gap:12px; margin-top:16px; }
+    .cpa-breakdown>div { display:flex; justify-content:space-between; gap:18px; font-size:13px; }
+    .cpa-breakdown>div:last-child { border-top:1px solid var(--border); padding-top:14px; }
+    .cpa-form-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:18px 0; }
+    .cpa-form-grid label { display:grid; gap:8px; color:var(--muted); font-size:12px; }
+    .cpa-form-grid .crm-control { width:100%; min-width:0; }
+    .cpa-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+    .cpa-row-detail { display:block; max-width:350px; white-space:normal; margin-top:7px; color:var(--muted); font-size:11px; line-height:1.5; }
+    #cpaReasons ul { padding-left:18px; color:var(--muted); font-size:13px; line-height:1.8; margin-top:16px; }
+    #cpaConfigForm summary { cursor:pointer; font-weight:700; }
+    #cpaWorkspace[hidden] { display:none; }
+    @media(max-width:800px) { .cpa-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } .cpa-detail-grid { grid-template-columns:1fr; } .cpa-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:480px) { .cpa-form-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 
@@ -3648,6 +3667,7 @@
         <a class="stage-tab" href="#calls" data-stage-target="calls">Calls</a>
         <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
         <a class="stage-tab" href="#economics" data-stage-target="economics">Economia</a>
+        <a class="stage-tab" href="#cpa" data-stage-target="cpa">CPA Máximo</a>
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
         <a class="stage-tab" href="#lists" data-stage-target="lists">Listas</a>
         <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
@@ -3947,6 +3967,52 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="cpa" id="cpa-view">
+      <div class="panel economics-auth-panel" id="cpaAuthPanel">
+        <div><h3>CPA Máximo protegido</h3><p>Conecte a sessão administrativa para calcular quanto pode investir na aquisição.</p></div>
+        <button class="crm-primary-btn" id="cpaGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+      <div class="cpa-workspace" id="cpaWorkspace" hidden>
+        <div class="panel">
+          <div class="cpa-header"><div><h3>Quanto posso pagar por uma nova venda?</h3><p id="cpaPeriod">Aguardando período...</p></div>
+            <div class="cpa-actions"><span class="tracking-health-status" id="cpaStatus">Verificando</span><button class="crm-secondary-btn" id="cpaRefresh" type="button">Atualizar</button></div>
+          </div>
+          <p class="economics-note" id="cpaMessage" role="status">O limite depende de custos, histórico maduro e qualidade da atribuição.</p>
+        </div>
+        <div class="cpa-kpis">
+          <div class="economics-kpi-card"><span>CPA atual UTMify</span><strong id="cpaCurrent">—</strong><small>Gasto / compras front</small></div>
+          <div class="economics-kpi-card revenue"><span>CPA máximo calculado</span><strong id="cpaMaximum">—</strong><small>Objetivo aplicado à contribuição</small></div>
+          <div class="economics-kpi-card success"><span>Limite prudente</span><strong id="cpaPrudent">—</strong><small>Após desconto de segurança</small></div>
+          <div class="economics-kpi-card"><span>Folga até o CPA máximo</span><strong id="cpaHeadroom">—</strong><small>Limite calculado menos CPA atual</small></div>
+          <div class="economics-kpi-card"><span>Contribuição por comprador</span><strong id="cpaContribution">—</strong><small>Após refunds, taxas, custos e split</small></div>
+          <div class="economics-kpi-card"><span>Compradores maduros</span><strong id="cpaSample">—</strong><small id="cpaSampleDetail">Amostra da coorte Meta</small></div>
+        </div>
+        <div class="cpa-detail-grid">
+          <div class="panel"><h3>Valor observado por comprador</h3><p class="cpa-muted">Mentoria distribuída por todos os compradores front da amostra madura.</p><div class="cpa-breakdown" id="cpaBreakdown"></div></div>
+          <div class="panel"><h3>Confiabilidade do limite</h3><div id="cpaReasons"></div><p class="cpa-muted">A elegibilidade segue regras de amostra e tracking; não representa garantia de desempenho futuro.</p></div>
+        </div>
+        <div class="panel">
+          <div class="cpa-header"><div><h3>CPA máximo por escopo</h3><p>Limites calculados com o histórico próprio de cada ID.</p></div>
+            <select class="crm-control" id="cpaLevel" aria-label="Nível de atribuição"><option value="campaign">Campanhas</option><option value="adset">Conjuntos</option><option value="ad">Anúncios</option></select>
+          </div>
+          <div class="table-wrap"><table class="campaign-table"><thead><tr><th>Escopo</th><th>CPA atual</th><th>LTV na janela</th><th>CPA máximo</th><th>Prudente</th><th>Folga</th><th>Maduros / total</th><th>Status e limitações</th></tr></thead><tbody id="cpaRows"><tr><td colspan="8" class="table-loading">Aguardando dados...</td></tr></tbody></table></div>
+        </div>
+        <form class="panel" id="cpaConfigForm">
+          <details open><summary>Parâmetros econômicos</summary>
+            <p class="cpa-muted">Reserva: contribuição antes da mídia × (1 − objetivo). ROI de mídia: contribuição ÷ (1 + objetivo). A reserva não é margem contábil sobre faturamento. Taxas incidem sobre venda bruta e são consideradas não reembolsáveis; impostos e split incidem sobre receita após refunds. Custos fixos da operação não entram neste limite unitário.</p>
+            <label class="cpa-muted">Objetivo<select class="crm-control" id="cpa_target_mode"><option value="contribution_reserve">Preservar parte da contribuição</option><option value="media_roi">Retorno mínimo sobre mídia</option></select></label>
+            <div class="cpa-form-grid" id="cpaSettingsFields"></div>
+            <label class="cpa-muted"><input id="cpa_costs_confirmed" type="checkbox"> Revisei taxas, impostos, custos variáveis e split. Os zeros informados são intencionais.</label>
+          </details>
+          <details style="margin-top:24px"><summary>Cenário manual</summary><p class="cpa-muted">Hipótese para planejamento. O cenário usa os mesmos custos e objetivo, sem substituir o histórico observado.</p>
+            <div class="cpa-form-grid" id="cpaScenarioFields"></div><p class="economics-note" id="cpaScenarioResult">Aguardando parâmetros...</p>
+          </details>
+          <div class="cpa-actions" style="margin-top:22px"><button class="crm-primary-btn" id="cpaSaveSettings" type="submit">Salvar parâmetros</button><button class="crm-secondary-btn" id="cpaReloadSettings" type="button">Recarregar parâmetros salvos</button><span class="cpa-muted" id="cpaSettingsRevision">Aguardando configuração...</span></div>
+        </form>
+        <p class="cpa-muted" id="cpaMethodology"></p>
       </div>
     </section>
 
@@ -4713,6 +4779,7 @@
 
   </div>
 
+  <script src="/assets/cpa-dashboard.js"></script>
   <script>
     function percentage(value, total) {
       if (!total) return 0;
@@ -4861,6 +4928,7 @@ const dashboardViewTitles = {
   calls: "Calls",
   mentorship: "Mentoria",
   economics: "Economia",
+  cpa: "CPA Máximo",
   crm: "CRM",
   lists: "Listas",
   automations: "Automações",
@@ -4879,6 +4947,7 @@ const periodRelevantViews = new Set([
   "calls",
   "mentorship",
   "economics",
+  "cpa",
   "integrations",
   "tracking",
   "performance"
@@ -4919,6 +4988,7 @@ function setActiveStage(viewName) {
   if (viewName === "economics") {
     loadEconomics();
   }
+  if (viewName === "cpa") loadCpa();
 
   if (viewName === "lists") {
     loadLists();
@@ -9144,6 +9214,7 @@ function initBreakdownControls() {
       if (activeView === "economics") {
         tasks.push(loadEconomics());
       }
+      if (activeView === "cpa") tasks.push(loadCpa());
 
       if (activeView === "automations") {
         tasks.push(loadAutomations());
@@ -9166,6 +9237,7 @@ function initBreakdownControls() {
     initBreakdownControls();
     initCrm();
     initEconomics();
+    initCpa();
     initLists();
     initAutomations();
     initUtmifyIntegration();

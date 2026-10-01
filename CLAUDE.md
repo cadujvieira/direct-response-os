@@ -172,6 +172,21 @@ Do not rename or destructively recreate existing tables.
 Migrations must preserve production data.
 
 ## Reporting rules
+CPA Maximum rules:
+- protected routes: GET `/api/cpa-max`, GET/PUT `/api/cpa-max/settings`; use the existing `x-admin-secret` guard;
+- `dr_cpa_settings` is an additive singleton table with versioned economic assumptions. Reject stale settings revisions with 409;
+- calibrate only from the first front purchase per `click_id` in the selected Meta cohort; count downstream transactions once, aggregate per buyer before grouping by exact media IDs;
+- only buyers that completed the configured monetization window contribute to the observed unit economics. Positive downstream revenue is bounded by that window; subsequent refunds remain deducted through now;
+- BRL is required for both event values and UTMify configuration. Never sum mixed currencies or invent exchange rates;
+- fees are modeled on gross sales and considered non-refundable; taxes/split use positive revenue after refunds. Variable costs include front servicing and mentorship delivery per transaction;
+- preserve contribution mode uses contribution before media × (1 − target); media ROI uses contribution ÷ (1 + target). Contribution reserve is not a revenue/profit accounting margin;
+- scenario assumptions never replace observed data or qualify a scope for scale;
+- scale eligibility requires confirmed costs, healthy Tracking Health, an exact-period matched UTMify object, per-scope front purchase/revenue divergence <=5%, sufficient mature sample and >=80% cohort maturity;
+- mentorship revenue with fewer than three mentorship buyers or >50% concentrated in one buyer is provisional; a snapshot >24 hours old blocks recommendations for an open reporting period;
+- CPA diagnostics do not mutate ad budgets or automatically pause/scale campaigns;
+- display initial zero costs as unconfirmed rather than treating unknown fees/split as zero validated cost;
+- dashboard refresh must not overwrite unsaved settings; stale requests cannot replace newer period/level selections.
+
 - Never multiply metrics through fanout joins.
 - Aggregate tracking/event/spend data before joining.
 - Prefer campaign/adset/ad IDs when available.

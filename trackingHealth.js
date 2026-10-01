@@ -625,6 +625,7 @@ module.exports = {
   differencePercent,
   divergenceState,
   getTrackingHealth,
+  requireAdmin,
   registerTrackingHealthRoutes,
   safePercent,
   validateHealthRange
