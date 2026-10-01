@@ -1154,7 +1154,7 @@
         <a class="stage-tab" href="#calls" data-stage-target="calls">Calls</a>
         <a class="stage-tab" href="#mentorship" data-stage-target="mentorship">Mentoria</a>
         <a class="stage-tab" href="#crm" data-stage-target="crm">CRM</a>
-        <a class="stage-tab" href="#experiments" data-stage-target="experiments">Experimentos</a>
+        <a class="stage-tab" href="#router" data-stage-target="router">Router</a>
         <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
       </div>
     </nav>
@@ -1358,10 +1358,10 @@
       </div>
     </section>
 
-    <section class="dashboard-view" data-view="experiments" id="experiments-view">
+    <section class="dashboard-view" data-view="router" id="router-view">
       <div class="panel">
         <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição de landing pages</h3><p>Pesos atuais das variantes cadastradas.</p></div>
-        <div class="experiment-list" id="experimentList"><div class="section-empty">Carregando experimentos...</div></div>
+        <div class="experiment-list" id="experimentList"><div class="section-empty">Carregando rotas...</div></div>
       </div>
     </section>
 
@@ -1523,7 +1523,7 @@ const dashboardViewTitles = {
   calls: "Calls",
   mentorship: "Mentoria",
   crm: "CRM",
-  experiments: "Experimentos",
+  router: "Router",
   performance: "Performance"
 };
 
@@ -2001,7 +2001,7 @@ async function loadExperiments() {
       cache: "no-store"
     });
 
-    if (!response.ok) throw new Error("Erro ao carregar experimentos");
+    if (!response.ok) throw new Error("Erro ao carregar rotas");
 
     const data = await response.json();
     const experiments = Array.isArray(data.experiments)
@@ -2010,7 +2010,7 @@ async function loadExperiments() {
 
     if (experiments.length === 0) {
       container.innerHTML =
-        '<div class="section-empty">Nenhum experimento configurado ainda.</div>';
+        '<div class="section-empty">Nenhuma rota configurada ainda.</div>';
       return;
     }
 
@@ -2066,7 +2066,7 @@ async function loadExperiments() {
   } catch (error) {
     console.error(error);
     container.innerHTML =
-      '<div class="section-empty">Erro ao carregar experimentos.</div>';
+      '<div class="section-empty">Erro ao carregar rotas.</div>';
   }
 }
 

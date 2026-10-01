@@ -403,7 +403,7 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
 
       const experiment = experimentResult.rows[0];
       if (!experiment) {
-        return res.status(404).json({ ok: false, error: "experimento nao encontrado" });
+        return res.status(404).json({ ok: false, error: "router nao encontrado" });
       }
       const variantsResult = await pool.query(`
         SELECT id, name, destination_url, weight, active
@@ -417,7 +417,7 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
       if (variantsResult.rows.length === 0) {
         return res.status(503).json({
           ok: false,
-          error: "experimento sem variantes ativas"
+          error: "router sem variantes ativas"
         });
       }
 
@@ -902,7 +902,7 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
 
       if (!experiment) {
         await client.query("ROLLBACK");
-        return res.status(404).json({ ok: false, error: "experimento nao encontrado" });
+        return res.status(404).json({ ok: false, error: "router nao encontrado" });
       }
 
       for (const update of updates) {
@@ -941,7 +941,7 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
         await client.query("ROLLBACK");
         return res.status(400).json({
           ok: false,
-          error: "o experimento precisa manter pelo menos uma variante com peso maior que zero"
+          error: "o router precisa manter pelo menos uma variante com peso maior que zero"
         });
       }
 

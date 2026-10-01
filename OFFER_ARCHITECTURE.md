@@ -14,7 +14,7 @@ Additional supported lifecycle events:
 
 All of these event names can use the existing generic `POST /track/event`. The normal front-end purchase continues to use `POST /track/purchase`.
 
-## Experiments and one-link routing
+## Router and one-link routing
 
 The router endpoint is `GET /go/:slug`.
 
@@ -31,7 +31,7 @@ It:
 
 Traffic allocation is fully dynamic and uses relative weights, not a hard-coded 20/20/20/20/20 split. Examples: 50/20/15/10/5, 80/20/0/0/0, or equal weights. Weights can be changed without changing the public /go link. A weight of zero removes that variant from routing immediately, including previously sticky visitors.
 
-Experiment configuration is not hard-coded. `PUT /api/experiments/:slug` with `x-admin-secret` creates or updates the experiment and its landing-page variants, including destination URLs, active flags and weights. Variants omitted from that configuration are disabled.
+Router configuration is not hard-coded. `PUT /api/experiments/:slug` with `x-admin-secret` creates or updates the router configuration and its landing-page variants, including destination URLs, active flags and weights. Variants omitted from that configuration are disabled.
 
 The administration UI is served at `/admin`. It keeps `DR_ADMIN_SECRET` only in browser session storage, loads full experiment configuration through the protected admin API, and allows editing URLs, active flags and relative weights without changing the public routing link.
 
@@ -74,7 +74,7 @@ It reports:
 
 ## Routing/compliance boundary
 
-Routing is for legitimate traffic management: experiments, attribution continuity, traffic quality, geographic/device/source rules when added, and fraud/bot handling.
+Routing is for legitimate traffic management: landing-page distribution, attribution continuity, traffic quality, geographic/device/source rules when added, and fraud/bot handling.
 
 It must not be used to present different content to advertising-platform reviewers in order to evade platform policies. The same commercial offer must remain compliant for real users and platform review.
 

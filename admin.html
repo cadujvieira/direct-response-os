@@ -223,12 +223,12 @@
         <div class="logo">DR</div>
         <div>
           <h1>Oferta DR — Admin</h1>
-          <p>Experiments & Traffic Control</p>
+          <p>Router & Traffic Control</p>
         </div>
       </div>
       <div class="top-actions">
         <a class="link-btn" href="/dashboard">Dashboard</a>
-        <button class="ghost-btn" id="newExperimentBtn" type="button">Novo experimento</button>
+        <button class="ghost-btn" id="newExperimentBtn" type="button">Novo router</button>
       </div>
     </header>
 
@@ -254,7 +254,7 @@
       <aside class="panel">
         <div class="panel-head">
           <div>
-            <h3>Experimentos</h3>
+            <h3>Router</h3>
             <p>Selecione para editar.</p>
           </div>
         </div>
@@ -271,7 +271,7 @@
           </div>
         </div>
         <div id="editorLocked" class="disabled-overlay">
-          Conecte o acesso administrativo para editar os experimentos.
+          Conecte o acesso administrativo para editar o Router.
         </div>
         <div class="editor-body" id="editorBody" hidden>
           <div class="editor-grid">
@@ -287,7 +287,7 @@
               <label>Status</label>
               <label class="toggle-wrap">
                 <input id="experimentActive" type="checkbox" checked />
-                Experimento ativo
+                Router ativo
               </label>
             </div>
           </div>
@@ -475,7 +475,7 @@
 
       if (state.experiments.length === 0) {
         container.innerHTML =
-          '<div class="empty">Nenhum experimento cadastrado.</div>';
+          '<div class="empty">Nenhuma rota cadastrada.</div>';
         return;
       }
 
@@ -538,7 +538,7 @@
       renderExperimentList();
       renderEditor();
       setEditorUnlocked(true);
-      setSaveStatus("Novo experimento ainda não salvo.");
+      setSaveStatus("Novo router ainda não salvo.");
     }
 
     function renderEditor() {
@@ -548,8 +548,8 @@
       $("experimentSlug").disabled = !state.isNew;
       $("experimentActive").checked = draft.active;
       $("editorTitle").textContent = state.isNew
-        ? "Novo experimento"
-        : "Editar experimento";
+        ? "Novo router"
+        : "Editar router";
       $("editorSubtitle").textContent = state.isNew
         ? "Defina o link e as landing pages."
         : "Ajuste URLs, pesos e status sem alterar o link público.";
@@ -787,7 +787,7 @@
       const name = String(state.draft.name || "").trim();
 
       if (!name) {
-        setSaveStatus("Informe o nome do experimento.", "error");
+        setSaveStatus("Informe o nome do router.", "error");
         $("experimentName").focus();
         return;
       }

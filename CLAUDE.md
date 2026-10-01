@@ -57,7 +57,7 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_events`: generic funnel/lifecycle events.
 - `dr_orders`: paid orders.
 - `dr_ad_spend`: daily paid-media spend, impressions, media clicks and campaign/adset/ad metadata.
-- `dr_experiments`: routing experiments.
+- `dr_experiments`: router configurations (technical table name kept for compatibility).
 - `dr_experiment_variants`: destination variants and traffic weights.
 - `dr_experiment_assignments`: click-to-variant assignment with persistent visitor key.
 - `dr_lead_crm_history`: CRM state audit trail.
