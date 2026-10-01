@@ -2174,6 +2174,441 @@
       }
     }
 
+    .tracking-health-workspace[hidden],
+    .tracking-health-auth[hidden] {
+      display: none !important;
+    }
+
+    .tracking-health-auth {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+    }
+
+    .tracking-health-auth h3 {
+      font-size: 15px;
+    }
+
+    .tracking-health-auth p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tracking-health-hero {
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .tracking-health-hero-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .tracking-health-title-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .tracking-health-title-row h3 {
+      font-size: 15px;
+    }
+
+    .tracking-health-hero p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .tracking-health-status {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #171a20;
+      color: #adb5bf;
+      font-size: 9px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .tracking-health-status.good {
+      color: #91eab9;
+      border-color: rgba(62,227,137,.24);
+      background: rgba(62,227,137,.07);
+    }
+
+    .tracking-health-status.warn {
+      color: #e9cf80;
+      border-color: rgba(245,196,81,.24);
+      background: rgba(245,196,81,.07);
+    }
+
+    .tracking-health-status.critical {
+      color: #ff9e9e;
+      border-color: rgba(255,107,107,.25);
+      background: rgba(255,107,107,.08);
+    }
+
+    .tracking-health-summary {
+      margin-top: 14px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: rgba(255,255,255,.012);
+      color: #8b94a1;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .tracking-health-kpis {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .tracking-health-kpi {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.017), transparent), var(--panel);
+    }
+
+    .tracking-health-kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+    }
+
+    .tracking-health-kpi strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 23px;
+      line-height: 1.05;
+    }
+
+    .tracking-health-kpi strong.good {
+      color: var(--green);
+    }
+
+    .tracking-health-kpi strong.warn {
+      color: var(--yellow);
+    }
+
+    .tracking-health-kpi strong.critical {
+      color: var(--red);
+    }
+
+    .tracking-health-kpi small {
+      display: block;
+      margin-top: 6px;
+      color: #68717e;
+      font-size: 9px;
+      line-height: 1.35;
+    }
+
+    .tracking-health-main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(320px, .8fr);
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+
+    .tracking-health-metrics {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+    }
+
+    .tracking-health-metric {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(150px, .7fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .tracking-health-metric-name {
+      color: #e0e5eb;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .tracking-health-metric-detail {
+      margin-top: 4px;
+      color: #707986;
+      font-size: 9px;
+      line-height: 1.35;
+    }
+
+    .tracking-health-bar {
+      position: relative;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #1b1f26;
+    }
+
+    .tracking-health-bar > span {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      background: #7f8995;
+    }
+
+    .tracking-health-bar.good > span {
+      background: var(--green);
+    }
+
+    .tracking-health-bar.warn > span {
+      background: var(--yellow);
+    }
+
+    .tracking-health-bar.critical > span {
+      background: var(--red);
+    }
+
+    .tracking-health-metric-value {
+      min-width: 62px;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .tracking-health-metric-value.good {
+      color: var(--green);
+    }
+
+    .tracking-health-metric-value.warn {
+      color: var(--yellow);
+    }
+
+    .tracking-health-metric-value.critical {
+      color: var(--red);
+    }
+
+    .tracking-health-compare {
+      display: grid;
+      gap: 9px;
+      padding: 14px;
+    }
+
+    .tracking-health-compare-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1fr) auto minmax(90px, .7fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .tracking-health-compare-row span,
+    .tracking-health-compare-row small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .tracking-health-compare-row strong {
+      font-size: 12px;
+    }
+
+    .tracking-health-diff {
+      display: inline-flex;
+      min-width: 58px;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 6px;
+      font-size: 8px !important;
+      font-weight: 750;
+    }
+
+    .tracking-health-diff.good {
+      color: var(--green);
+      border-color: rgba(62,227,137,.22);
+      background: rgba(62,227,137,.06);
+    }
+
+    .tracking-health-diff.warn {
+      color: var(--yellow);
+      border-color: rgba(245,196,81,.22);
+      background: rgba(245,196,81,.06);
+    }
+
+    .tracking-health-diff.critical {
+      color: var(--red);
+      border-color: rgba(255,107,107,.24);
+      background: rgba(255,107,107,.07);
+    }
+
+    .tracking-health-integrity {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      padding: 0 14px 14px;
+    }
+
+    .tracking-health-integrity > div {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: rgba(255,255,255,.01);
+    }
+
+    .tracking-health-integrity span {
+      display: block;
+      color: var(--muted);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .tracking-health-integrity strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 17px;
+    }
+
+    .tracking-health-issues {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+    }
+
+    .tracking-health-issue {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: start;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.012);
+    }
+
+    .tracking-health-issue.critical {
+      border-color: rgba(255,107,107,.2);
+      background: rgba(255,107,107,.035);
+    }
+
+    .tracking-health-issue.warn {
+      border-color: rgba(245,196,81,.18);
+      background: rgba(245,196,81,.03);
+    }
+
+    .tracking-health-issue-badge {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 6px;
+      color: #aeb6c0;
+      font-size: 8px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .tracking-health-issue.critical .tracking-health-issue-badge {
+      color: #ff9d9d;
+      border-color: rgba(255,107,107,.22);
+    }
+
+    .tracking-health-issue.warn .tracking-health-issue-badge {
+      color: #e7cb76;
+      border-color: rgba(245,196,81,.22);
+    }
+
+    .tracking-health-issue-title {
+      color: #e2e6eb;
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .tracking-health-issue-detail {
+      margin-top: 4px;
+      color: #737c88;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .tracking-health-issue-count {
+      color: #d8dde4;
+      font-size: 16px;
+      font-weight: 750;
+    }
+
+    @media (max-width: 1180px) {
+      .tracking-health-kpis {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .tracking-health-main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .tracking-health-auth,
+      .tracking-health-hero-main {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .tracking-health-auth .crm-primary-btn,
+      .tracking-health-hero-main .crm-secondary-btn {
+        width: 100%;
+      }
+
+      .tracking-health-kpis {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .tracking-health-metric {
+        grid-template-columns: 1fr;
+      }
+
+      .tracking-health-metric-value {
+        text-align: left;
+      }
+
+      .tracking-health-compare-row {
+        grid-template-columns: 1fr auto;
+      }
+
+      .tracking-health-compare-row .tracking-health-diff {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
+
+      .tracking-health-integrity {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .tracking-health-kpis {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .integration-workspace[hidden],
     .integration-auth-panel[hidden] {
       display: none !important;
@@ -3217,6 +3652,7 @@
         <a class="stage-tab" href="#lists" data-stage-target="lists">Listas</a>
         <a class="stage-tab" href="#automations" data-stage-target="automations">Automações</a>
         <a class="stage-tab" href="#integrations" data-stage-target="integrations">Integrações</a>
+        <a class="stage-tab" href="#tracking" data-stage-target="tracking">Tracking</a>
         <a class="stage-tab" href="#router" data-stage-target="router">Router</a>
         <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
       </div>
@@ -4116,6 +4552,141 @@
       </div>
     </section>
 
+    <section class="dashboard-view" data-view="tracking" id="tracking-view">
+      <div class="panel tracking-health-auth" id="trackingHealthAuthPanel">
+        <div>
+          <h3>Tracking Health protegido</h3>
+          <p>Use a mesma sessão administrativa do CRM para visualizar cobertura, divergências e problemas de atribuição.</p>
+        </div>
+        <button class="crm-primary-btn" id="trackingHealthGoCrm" type="button">Conectar pelo CRM</button>
+      </div>
+
+      <div class="tracking-health-workspace" id="trackingHealthWorkspace" hidden>
+        <div class="panel tracking-health-hero">
+          <div class="tracking-health-hero-main">
+            <div>
+              <div class="tracking-health-title-row">
+                <h3 data-tooltip="Diagnóstico da qualidade dos IDs de aquisição, ligação do comprador ao clique e reconciliação com o snapshot UTMify do mesmo período.">Saúde do tracking</h3>
+                <span class="tracking-health-status" id="trackingHealthStatusBadge">Verificando</span>
+              </div>
+              <p id="trackingHealthPeriodLabel">Aguardando período...</p>
+            </div>
+            <button class="crm-secondary-btn" id="trackingHealthRefresh" type="button">Atualizar diagnóstico</button>
+          </div>
+          <div class="tracking-health-summary" id="trackingHealthSummaryText">
+            O diagnóstico compara captura interna e match UTMify sem forçar atribuição.
+          </div>
+        </div>
+
+        <div class="tracking-health-kpis">
+          <div class="tracking-health-kpi">
+            <span data-tooltip="Percentual dos cliques Meta elegíveis do período que possuem ad_id. Google e tráfego direto não entram neste denominador.">Cliques Meta com ad_id</span>
+            <strong id="trackingHealthClickAd">—</strong>
+            <small id="trackingHealthClickAdDetail">—</small>
+          </div>
+          <div class="tracking-health-kpi">
+            <span data-tooltip="Percentual dos compradores front-end que possuem click_id.">Compradores com click_id</span>
+            <strong id="trackingHealthBuyerClick">—</strong>
+            <small id="trackingHealthBuyerClickDetail">—</small>
+          </div>
+          <div class="tracking-health-kpi">
+            <span data-tooltip="Percentual dos compradores Meta elegíveis cujo clique possui ad_id.">Compradores Meta com ad_id</span>
+            <strong id="trackingHealthBuyerAd">—</strong>
+            <small id="trackingHealthBuyerAdDetail">—</small>
+          </div>
+          <div class="tracking-health-kpi">
+            <span data-tooltip="Percentual dos compradores cujo ad_id interno existe no snapshot UTMify do mesmo período.">Match UTMify anúncio</span>
+            <strong id="trackingHealthUtmifyAd">—</strong>
+            <small id="trackingHealthUtmifyAdDetail">—</small>
+          </div>
+          <div class="tracking-health-kpi">
+            <span data-tooltip="Percentual dos leads com origem conhecida via utm_source do lead ou do clique associado.">Leads com origem</span>
+            <strong id="trackingHealthLeadSource">—</strong>
+            <small id="trackingHealthLeadSourceDetail">—</small>
+          </div>
+          <div class="tracking-health-kpi">
+            <span data-tooltip="Eventos que possuem click_id, mas não encontram um clique correspondente em dr_clicks.">Eventos órfãos</span>
+            <strong id="trackingHealthOrphanEvents">0</strong>
+            <small id="trackingHealthOrphanEventsDetail">Sem vínculo de clique</small>
+          </div>
+        </div>
+
+        <div class="tracking-health-main-grid">
+          <div class="panel tracking-health-coverage-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Cobertura interna mede se o Oferta DR recebeu o ID. Match UTMify mede se esse mesmo ID foi encontrado no snapshot externo.">Cobertura detalhada</h3>
+                <p>Captura interna e reconciliação externa são medidas separadamente.</p>
+              </div>
+            </div>
+            <div class="tracking-health-metrics" id="trackingHealthMetrics">
+              <div class="section-empty">Carregando métricas...</div>
+            </div>
+          </div>
+
+          <div class="panel tracking-health-divergence-panel">
+            <div class="panel-head">
+              <div>
+                <h3 data-tooltip="Compara somente a camada front-end no mesmo período. Não inclui mentoria ou LTV posterior.">Oferta DR × UTMify</h3>
+                <p id="trackingHealthUtmifyStatus">Aguardando snapshot...</p>
+              </div>
+            </div>
+
+            <div class="tracking-health-compare">
+              <div class="tracking-health-compare-row">
+                <div>
+                  <span>Compras front</span>
+                  <small>Oferta DR · Meta elegível</small>
+                </div>
+                <strong id="trackingHealthInternalPurchases">0</strong>
+                <div>
+                  <span>UTMify</span>
+                  <strong id="trackingHealthUtmifyPurchases">—</strong>
+                </div>
+                <span class="tracking-health-diff" id="trackingHealthPurchaseDiff">—</span>
+              </div>
+
+              <div class="tracking-health-compare-row">
+                <div>
+                  <span>Receita front</span>
+                  <small>Oferta DR · Meta elegível</small>
+                </div>
+                <strong id="trackingHealthInternalRevenue">R$ 0</strong>
+                <div>
+                  <span>UTMify</span>
+                  <strong id="trackingHealthUtmifyRevenue">—</strong>
+                </div>
+                <span class="tracking-health-diff" id="trackingHealthRevenueDiff">—</span>
+              </div>
+            </div>
+
+            <div class="tracking-health-integrity">
+              <div>
+                <span>Leads com click_id órfão</span>
+                <strong id="trackingHealthOrphanLeads">0</strong>
+              </div>
+              <div>
+                <span>Purchase repetido no mesmo click_id</span>
+                <strong id="trackingHealthRepeatedPurchases">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel tracking-health-issues-panel">
+          <div class="panel-head">
+            <div>
+              <h3 data-tooltip="Problemas são ordenados por severidade. Crítico afeta atribuição; atenção merece investigação; informação depende de configuração externa.">Problemas prioritários</h3>
+              <p>O sistema não corrige ou inventa IDs automaticamente.</p>
+            </div>
+          </div>
+          <div class="tracking-health-issues" id="trackingHealthIssues">
+            <div class="section-empty">Carregando diagnóstico...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="dashboard-view" data-view="router" id="router-view">
       <div class="panel">
         <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição de landing pages</h3><p>Pesos atuais das variantes cadastradas.</p></div>
@@ -4294,6 +4865,7 @@ const dashboardViewTitles = {
   lists: "Listas",
   automations: "Automações",
   integrations: "Integrações",
+  tracking: "Tracking Health",
   router: "Router",
   performance: "Performance"
 };
@@ -4308,6 +4880,7 @@ const periodRelevantViews = new Set([
   "mentorship",
   "economics",
   "integrations",
+  "tracking",
   "performance"
 ]);
 
@@ -4357,6 +4930,10 @@ function setActiveStage(viewName) {
 
   if (viewName === "integrations") {
     loadUtmifyStatus();
+  }
+
+  if (viewName === "tracking") {
+    loadTrackingHealth();
   }
 }
 
@@ -6296,6 +6873,356 @@ function initEconomics() {
 }
 
 
+const trackingHealthState = {
+  loading: false,
+  data: null
+};
+
+function trackingHealthResolvedRange() {
+  if (reportRange.from && reportRange.to) {
+    return {
+      from: reportRange.from,
+      to: reportRange.to,
+      label: reportRange.label
+    };
+  }
+
+  const today = new Date();
+  return {
+    from: localDateString(shiftLocalDays(today, -29)),
+    to: localDateString(today),
+    label: "Últimos 30 dias"
+  };
+}
+
+function trackingHealthSetProtectedState(connected) {
+  document.getElementById("trackingHealthAuthPanel").hidden = connected;
+  document.getElementById("trackingHealthWorkspace").hidden = !connected;
+}
+
+function trackingHealthPercent(value) {
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  return Number(value).toLocaleString("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1
+  }) + "%";
+}
+
+function trackingHealthStatusLabel(status) {
+  if (status === "good") return "Saudável";
+  if (status === "warn") return "Atenção";
+  if (status === "critical") return "Crítico";
+  return "Sem base";
+}
+
+function trackingHealthMetricById(report, id) {
+  return (report.metrics || []).find((item) => item.id === id) || null;
+}
+
+function renderTrackingHealthKpi(valueId, detailId, metricItem, emptyText = "Sem base") {
+  const valueNode = document.getElementById(valueId);
+  const detailNode = document.getElementById(detailId);
+
+  if (!metricItem) {
+    valueNode.textContent = "—";
+    valueNode.className = "";
+    detailNode.textContent = emptyText;
+    return;
+  }
+
+  valueNode.textContent = trackingHealthPercent(metricItem.pct);
+  valueNode.className = metricItem.state || "";
+  detailNode.textContent =
+    Number(metricItem.numerator || 0).toLocaleString("pt-BR") +
+    " de " +
+    Number(metricItem.denominator || 0).toLocaleString("pt-BR");
+}
+
+function trackingHealthDiffText(value) {
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  const numeric = Number(value);
+  const prefix = numeric > 0 ? "+" : "";
+  return prefix + trackingHealthPercent(numeric);
+}
+
+function renderTrackingHealthMetrics(report) {
+  const container = document.getElementById("trackingHealthMetrics");
+  const metrics = Array.isArray(report.metrics) ? report.metrics : [];
+
+  if (!metrics.length) {
+    container.innerHTML =
+      '<div class="section-empty">Sem métricas para este período.</div>';
+    return;
+  }
+
+  container.innerHTML = metrics.map((item) => {
+    const pct = item.pct == null ? null : Number(item.pct);
+    const width = pct == null ? 0 : Math.max(0, Math.min(100, pct));
+
+    return `
+      <div class="tracking-health-metric">
+        <div>
+          <div class="tracking-health-metric-name">${escapeHtml(item.label || "Métrica")}</div>
+          <div class="tracking-health-metric-detail">${escapeHtml(item.detail || "")}</div>
+        </div>
+        <div class="tracking-health-bar ${escapeHtml(item.state || "neutral")}">
+          <span style="width:${width.toFixed(2)}%"></span>
+        </div>
+        <div class="tracking-health-metric-value ${escapeHtml(item.state || "neutral")}">
+          ${escapeHtml(trackingHealthPercent(item.pct))}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderTrackingHealthIssues(report) {
+  const container = document.getElementById("trackingHealthIssues");
+  const issues = Array.isArray(report.issues) ? report.issues : [];
+
+  if (!issues.length) {
+    container.innerHTML =
+      '<div class="section-empty">Nenhum problema prioritário detectado neste período.</div>';
+    return;
+  }
+
+  const labels = {
+    critical: "Crítico",
+    warn: "Atenção",
+    info: "Informação"
+  };
+
+  container.innerHTML = issues.map((issue) => `
+    <div class="tracking-health-issue ${escapeHtml(issue.severity || "info")}">
+      <span class="tracking-health-issue-badge">${escapeHtml(labels[issue.severity] || "Info")}</span>
+      <div>
+        <div class="tracking-health-issue-title">${escapeHtml(issue.title || "Diagnóstico")}</div>
+        <div class="tracking-health-issue-detail">${escapeHtml(issue.detail || "")}</div>
+      </div>
+      <div class="tracking-health-issue-count">
+        ${issue.count == null ? "" : Number(issue.count).toLocaleString("pt-BR")}
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderTrackingHealth(data) {
+  trackingHealthState.data = data;
+
+  const report = data.report || {};
+  const buyers = report.buyers || {};
+  const events = report.events || {};
+  const leads = report.leads || {};
+  const internal = report.internal || {};
+  const utmify = report.utmify || {};
+  const discrepancies = report.discrepancies || {};
+  const range = data.range || {};
+
+  const badge = document.getElementById("trackingHealthStatusBadge");
+  badge.textContent = trackingHealthStatusLabel(report.status);
+  badge.className =
+    "tracking-health-status " + (report.status || "neutral");
+
+  document.getElementById("trackingHealthPeriodLabel").textContent =
+    range.from && range.to
+      ? displayIsoDate(range.from) + " → " + displayIsoDate(range.to)
+      : "Período analisado";
+
+  const criticalIssues = (report.issues || []).filter(
+    (item) => item.severity === "critical"
+  ).length;
+  const warnIssues = (report.issues || []).filter(
+    (item) => item.severity === "warn"
+  ).length;
+
+  document.getElementById("trackingHealthSummaryText").textContent =
+    report.status === "good"
+      ? "Captura e atribuição estão saudáveis para as métricas com base suficiente."
+      : report.status === "critical"
+        ? criticalIssues + " problema(s) crítico(s) e " + warnIssues +
+          " ponto(s) de atenção. Priorize os problemas críticos antes de confiar no LTV por anúncio."
+        : warnIssues + " ponto(s) de atenção. A atribuição funciona, mas ainda merece revisão.";
+
+  renderTrackingHealthKpi(
+    "trackingHealthClickAd",
+    "trackingHealthClickAdDetail",
+    trackingHealthMetricById(report, "click_ad_id")
+  );
+  renderTrackingHealthKpi(
+    "trackingHealthBuyerClick",
+    "trackingHealthBuyerClickDetail",
+    trackingHealthMetricById(report, "buyer_click_id")
+  );
+  renderTrackingHealthKpi(
+    "trackingHealthBuyerAd",
+    "trackingHealthBuyerAdDetail",
+    trackingHealthMetricById(report, "buyer_ad_id")
+  );
+  renderTrackingHealthKpi(
+    "trackingHealthUtmifyAd",
+    "trackingHealthUtmifyAdDetail",
+    trackingHealthMetricById(report, "utmify_ad_match"),
+    utmify.available ? "Sem compradores" : "Sem snapshot UTMify"
+  );
+  renderTrackingHealthKpi(
+    "trackingHealthLeadSource",
+    "trackingHealthLeadSourceDetail",
+    trackingHealthMetricById(report, "lead_source")
+  );
+
+  const orphanEventsNode = document.getElementById("trackingHealthOrphanEvents");
+  orphanEventsNode.textContent = Number(events.orphan_click_id || 0).toLocaleString("pt-BR");
+  orphanEventsNode.className =
+    Number(events.orphan_click_id || 0) > 0 ? "critical" : "good";
+  document.getElementById("trackingHealthOrphanEventsDetail").textContent =
+    Number(events.total || 0).toLocaleString("pt-BR") + " evento(s) analisado(s)";
+
+  document.getElementById("trackingHealthInternalPurchases").textContent =
+    Number(internal.purchases || 0).toLocaleString("pt-BR");
+  document.getElementById("trackingHealthInternalRevenue").textContent =
+    formatMoney(internal.revenue || 0);
+
+  document.getElementById("trackingHealthUtmifyPurchases").textContent =
+    utmify.available
+      ? Number(utmify.purchases || 0).toLocaleString("pt-BR")
+      : "—";
+  document.getElementById("trackingHealthUtmifyRevenue").textContent =
+    utmify.available ? formatMoney(utmify.revenue || 0) : "—";
+
+  const purchaseDiffNode = document.getElementById("trackingHealthPurchaseDiff");
+  const revenueDiffNode = document.getElementById("trackingHealthRevenueDiff");
+
+  purchaseDiffNode.textContent = trackingHealthDiffText(
+    discrepancies.purchase_difference_pct
+  );
+  purchaseDiffNode.className =
+    "tracking-health-diff " + (discrepancies.purchase_state || "neutral");
+
+  revenueDiffNode.textContent = trackingHealthDiffText(
+    discrepancies.revenue_difference_pct
+  );
+  revenueDiffNode.className =
+    "tracking-health-diff " + (discrepancies.revenue_state || "neutral");
+
+  if (
+    utmify.available &&
+    Number(internal.purchases || 0) > 0 &&
+    Number(utmify.purchases || 0) === 0
+  ) {
+    purchaseDiffNode.textContent = "UTMify 0";
+    purchaseDiffNode.className = "tracking-health-diff critical";
+  }
+
+  if (
+    utmify.available &&
+    Number(internal.revenue || 0) > 0 &&
+    Number(utmify.revenue || 0) === 0
+  ) {
+    revenueDiffNode.textContent = "UTMify 0";
+    revenueDiffNode.className = "tracking-health-diff critical";
+  }
+
+  document.getElementById("trackingHealthUtmifyStatus").textContent =
+    utmify.available
+      ? "Snapshot #" + Number(utmify.sync_id || 0) +
+        (utmify.finished_at
+          ? " · " + crmFormatDateTime(utmify.finished_at)
+          : "")
+      : "Sem snapshot UTMify para este período";
+
+  document.getElementById("trackingHealthOrphanLeads").textContent =
+    Number(leads.orphan_click_id || 0).toLocaleString("pt-BR");
+  document.getElementById("trackingHealthRepeatedPurchases").textContent =
+    Number(events.repeated_purchase_clicks || 0).toLocaleString("pt-BR");
+
+  renderTrackingHealthMetrics(report);
+  renderTrackingHealthIssues(report);
+  decorateTooltips(document.getElementById("tracking-view"));
+}
+
+async function loadTrackingHealth() {
+  if (trackingHealthState.loading) return;
+
+  const secret = utmifyAdminSecret();
+
+  if (!secret) {
+    trackingHealthSetProtectedState(false);
+    return;
+  }
+
+  if (!crmState.secret) crmState.secret = secret;
+  trackingHealthSetProtectedState(true);
+
+  const range = trackingHealthResolvedRange();
+  const params = new URLSearchParams({
+    from: range.from,
+    to: range.to
+  });
+
+  trackingHealthState.loading = true;
+
+  try {
+    const response = await fetch(
+      "/api/tracking-health?" + params.toString(),
+      {
+        cache: "no-store",
+        headers: {
+          "x-admin-secret": secret
+        }
+      }
+    );
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+
+    if (!response.ok) {
+      const error = new Error(data.error || "Erro no Tracking Health");
+      error.status = response.status;
+      throw error;
+    }
+
+    renderTrackingHealth(data);
+  } catch (error) {
+    if (error.status === 401) {
+      sessionStorage.removeItem("dr_admin_secret");
+      crmState.secret = "";
+      trackingHealthSetProtectedState(false);
+      return;
+    }
+
+    document.getElementById("trackingHealthStatusBadge").textContent = "Erro";
+    document.getElementById("trackingHealthStatusBadge").className =
+      "tracking-health-status critical";
+    document.getElementById("trackingHealthSummaryText").textContent =
+      error.message;
+    document.getElementById("trackingHealthMetrics").innerHTML =
+      '<div class="section-empty">Não foi possível carregar o diagnóstico.</div>';
+    document.getElementById("trackingHealthIssues").innerHTML =
+      '<div class="section-empty">Tente atualizar novamente.</div>';
+  } finally {
+    trackingHealthState.loading = false;
+  }
+}
+
+function initTrackingHealth() {
+  document.getElementById("trackingHealthGoCrm").addEventListener("click", () => {
+    setActiveStage("crm");
+    if (history.replaceState) {
+      history.replaceState(null, "", "#crm");
+    }
+  });
+
+  document.getElementById("trackingHealthRefresh").addEventListener(
+    "click",
+    loadTrackingHealth
+  );
+}
+
+
 const listState = {
   rows: [],
   validRows: [],
@@ -8226,6 +9153,10 @@ function initBreakdownControls() {
         tasks.push(loadUtmifyStatus());
       }
 
+      if (activeView === "tracking") {
+        tasks.push(loadTrackingHealth());
+      }
+
       return Promise.allSettled(tasks);
     }
 
@@ -8238,6 +9169,7 @@ function initBreakdownControls() {
     initLists();
     initAutomations();
     initUtmifyIntegration();
+    initTrackingHealth();
     refreshAll();
 
     setInterval(refreshAll, 30000);

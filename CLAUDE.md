@@ -95,6 +95,7 @@ Offer foundation routes:
 - POST `/api/integrations/utmify/sync` (requires `x-admin-secret`; snapshots campaign/adset/ad metrics for a maximum 31-day range)
 - GET `/api/integrations/utmify/performance` (requires `x-admin-secret`; reads local PostgreSQL snapshot only, never MCP live)
 - GET `/api/integrations/utmify/economics` (requires `x-admin-secret`; combines UTMify acquisition snapshot with Oferta DR cohort monetization/LTV)
+- GET `/api/tracking-health` (requires `x-admin-secret`; audits click/lead/buyer ID coverage, orphan relationships, UTMify object match and front-end source divergence for up to 90 days)
 - GET `/api/experiments` (public-safe summary, no destination URLs)
 - GET `/api/admin/experiments` (requires `x-admin-secret`; includes destination URLs)
 - PUT `/api/experiments/:slug` (requires `x-admin-secret`; creates/updates experiment and variants)
@@ -103,7 +104,21 @@ Offer foundation routes:
 - GET `/api/revenue/ltv`
 - GET `/api/overview/timeseries` (daily spend, purchases, revenue and ROAS for the overview chart; defaults to the latest 30 days when no date range is supplied)
 
-Lead-level CRM, Automation Hub, List Activation and UTMify integration reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+Lead-level CRM, Automation Hub, List Activation, UTMify integration and Tracking Health reads/writes require `DR_ADMIN_SECRET`. Never expose this secret in dashboard source or API responses.
+
+Tracking Health rules:
+- the protected `Tracking` view diagnoses data quality; it never fixes, synthesizes or reassigns acquisition IDs;
+- internal coverage and external match are separate concepts. Internal coverage asks whether the Oferta DR captured `click_id/campaign_id/adset_id/ad_id`; UTMify match asks whether that captured ID exists in the exact same-period local UTMify snapshot;
+- campaign/adset/ad coverage uses the Meta-eligible cohort, not all traffic. Meta-family sources (Meta/Facebook/Instagram aliases) and source-less clicks that already carry Meta IDs are eligible; Google/direct traffic must not reduce Meta coverage;
+- UTMify object-match percentages use only internally captured IDs as the denominator. Missing IDs are an internal-capture problem and must not be counted a second time as an external-match failure;
+- a purchase with `click_id` but no matching `dr_clicks` row is an orphan and must remain visible as a critical issue;
+- leads/events with orphan click IDs remain visible and are never silently dropped;
+- repeated `purchase` events on the same `click_id` are diagnostic warnings, not automatically deleted, because they may be legitimate repurchases;
+- exact-period UTMify snapshot absence is informational. Tracking Health must not call MCP live;
+- front purchase/revenue divergence against UTMify uses the Meta-eligible Oferta DR cohort. If that cohort has purchases/revenue while the synchronized UTMify period reports zero, flag a critical divergence instead of treating the comparison as neutral;
+- default health thresholds: coverage >=95% good, >=80% warning, below 80% critical; source divergence <=5% good, <=15% warning, above 15% critical;
+- the health endpoint accepts a maximum 90-day range. Dashboard `Tudo` falls back to the latest 30 days for diagnostics;
+- low-level health status must consider both explicit issues and metric states.
 
 UTMify MCP rules:
 - credentials are environment-only: `UTMIFY_MCP_TOKEN`, optional `UTMIFY_MCP_ENDPOINT`, optional `UTMIFY_MCP_RESOURCES`, optional `UTMIFY_DASHBOARD_ID`;
@@ -185,6 +200,7 @@ node --check index.js
 node --check automationHub.js
 node --check activationHub.js
 node --check utmifyMcp.js
+node --check trackingHealth.js
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js
 node --check /tmp/dashboard.js
 git diff --check

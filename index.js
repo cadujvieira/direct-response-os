@@ -30,6 +30,9 @@ const {
   initUtmifyDb,
   registerUtmifyRoutes
 } = require("./utmifyMcp");
+const {
+  registerTrackingHealthRoutes
+} = require("./trackingHealth");
 
 const app = express();
 
@@ -257,6 +260,7 @@ registerOfferRoutes({ app, pool, hashIp, parseReportRange });
 registerAutomationRoutes(app, pool);
 registerActivationRoutes(app, pool);
 registerUtmifyRoutes(app, pool);
+registerTrackingHealthRoutes(app, pool);
 
 app.get("/", async (req, res) => {
 

@@ -204,6 +204,45 @@ Protected routes:
 
 All UTMify integration routes require `x-admin-secret`.
 
+## Tracking Health
+
+Tracking Health is a protected diagnostic layer for acquisition-data quality. It never writes, repairs, synthesizes or reassigns tracking IDs.
+
+The selected dashboard period defines the diagnostic window, up to 90 days. When the dashboard is on `Tudo`, the Tracking view uses the latest 30 days so diagnostics remain bounded.
+
+It measures two separate layers:
+
+1. Internal capture
+- campaign/adset/ad coverage is measured on the Meta-eligible cohort rather than all traffic, so Google/direct traffic does not create false Meta failures;
+- Meta-family sources are eligible; source-less records that already carry Meta IDs are also eligible;
+- click coverage for `campaign_id`, `adset_id` and `ad_id`;
+- lead coverage for `click_id` and source;
+- front-buyer coverage for `click_id`, resolved click row and each paid-media ID;
+- orphan lead/event/purchase relationships;
+- repeated front `purchase` events sharing one `click_id` as warnings for investigation.
+
+2. UTMify reconciliation
+- Tracking Health reads only the exact same-period completed UTMify snapshot already stored in PostgreSQL;
+- match percentages use only captured IDs as their denominator, so a missing `ad_id` is reported as internal capture failure rather than being double-counted as UTMify mismatch;
+- it measures whether captured campaign/adset/ad IDs actually exist in that snapshot;
+- it compares the Meta-eligible Oferta DR front purchases/revenue with UTMify front purchases/revenue;
+- it never calls the MCP during dashboard refresh.
+
+Default diagnostic thresholds:
+- coverage >=95%: healthy;
+- coverage >=80% and <95%: warning;
+- coverage <80%: critical;
+- absolute source divergence <=5%: healthy;
+- >5% and <=15%: warning;
+- >15%: critical.
+
+A synchronized UTMify period with zero purchases/revenue while Oferta DR has front purchases/revenue is explicitly critical rather than neutral.
+
+Protected route:
+- `GET /api/tracking-health?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+
+The Tracking dashboard must keep internal coverage and UTMify match visually distinct and must never hide unmatched IDs.
+
 ## Revenue and LTV
 
 `GET /api/revenue/ltv` is cohort-based: the selected date range chooses the front-end buyers, then downstream revenue for those same attributed buyers is accumulated through the present.
