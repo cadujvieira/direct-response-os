@@ -10,7 +10,7 @@ const { requireAdmin } = require("./clickCapture");
 const { withTimeout } = require("./resilientRouter");
 
 const CHECK_MS = 60000, RESULT_TTL_MS = 20000, SITE_TTL_MS = 60000, PAGES_TTL_MS = 300000;
-const MAX_PAGES = 12, DIAGNOSIS_GAP_MS = 20000, COLLECT_TIMEOUT_MS = 30000, PRUNE_MS = 3600000;
+const MAX_PAGES = 40, DIAGNOSIS_GAP_MS = 20000, COLLECT_TIMEOUT_MS = 30000, PRUNE_MS = 3600000;
 // Teto de gravacoes por minuto, por fonte: uma rajada (erros, token errado no webhook) nao vira rajada no banco
 // nem tira a vez das outras fontes.
 const WRITES_PER_MINUTE = { hubla_auth: 5, default: 100 };

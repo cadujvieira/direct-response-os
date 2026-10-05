@@ -140,3 +140,14 @@ Testado: 179 testes automáticos; roteiro local `validation/health.integration.j
 Limite conhecido: o monitor roda dentro do próprio serviço. Se o Render inteiro cair, o painel também cai e não há quem avise. Para isso é preciso um vigia de fora (item em aberto).
 
 Variáveis novas (todas opcionais): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `DR_PUBLIC_URL` (o Render já informa o endereço sozinho), `DR_ROUTER_FALLBACK_URL`.
+
+## 05/10/2026 — Produção no ar
+
+- Versão homologada publicada em produção com aprovação do titular (`main` = `0388315`), serviço em plano pago.
+- Subdomínio do router: `go.felipelona-vsl.com` (DNS na Hostinger, domínio verificado no Render).
+- Variáveis de produção cadastradas pelo titular: senha administrativa, produtos e token da Hubla, UTMify, chave da IA e destino de emergência do router.
+- Hubla: regra de webhook própria para a produção; regra do staging desativada.
+- Tag das páginas versão 2 publicada pela Black Track no GTM, apontando para a produção; conferida nos dois domínios (cria o clique, avisa a produção, leva o código ao checkout e preserva o `sck`).
+- Compra real controlada pelo titular saindo de uma página: entrou com origem (R$ 297); reembolso total descontado uma única vez.
+- Purchase da Black Track para a Meta: problema era do lado deles e foi resolvido por eles.
+- Decisão do titular: rota `mmd` com as 22 páginas em partes iguais e leitura inicial no painel a partir de 5 compradores por página (confirmação a partir de 30). O monitor passa a conferir até 40 páginas.

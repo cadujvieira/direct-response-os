@@ -1,6 +1,9 @@
 // Desempenho por landing page na aba Router. Compara as LPs de cada rota no periodo selecionado no topo
-// do painel. A leitura "na frente" so aparece com amostra minima e diferenca fora da margem de acaso.
-const ROUTER_MIN_BUYERS = 30;
+// do painel. Duas leituras, sempre com diferenca fora da margem de acaso:
+// - indicacao inicial: a partir de 5 compradores por LP (decisao do titular, para rotas com muitas paginas);
+// - na frente (confirmada): a partir de 30 compradores por LP.
+const ROUTER_MIN_BUYERS = 5;
+const ROUTER_CONFIRM_BUYERS = 30;
 const routerPerfState = { request: 0 };
 const routerNumber = value => Number(value || 0).toLocaleString("pt-BR");
 function routerRate(part, total) { return total > 0 ? (part / total) * 100 : null; }
@@ -24,6 +27,11 @@ function routerVerdict(rows) {
   const first = ready[0], second = ready[1];
   if (Math.abs(routerZ(first, second)) < 1.96) return { tone: "", text: "As duas melhores LPs em conversão (" + first.variant + " e " + second.variant +
     ") estão tecnicamente empatadas: a diferença ainda cabe na margem de acaso." + pending };
+  // Com menos de 30 compradores em alguma das duas, a lideranca e uma indicacao, nao um resultado fechado.
+  if (Number(first.buyers) < ROUTER_CONFIRM_BUYERS || Number(second.buyers) < ROUTER_CONFIRM_BUYERS) {
+    return { tone: "early", leader: first.variant_id, text: "Indicação inicial: " + first.variant + " está na frente em conversão. Com menos de " +
+      ROUTER_CONFIRM_BUYERS + " compradores por página, isso ainda pode mudar; aumente o peso aos poucos, sem zerar as outras." + pending };
+  }
   return { tone: "ok", leader: first.variant_id, text: "Na frente em conversão: " + first.variant + ". Confira também o líquido por clique antes de mover o tráfego." + pending };
 }
 function renderRouterPerformance(node, rows) {
@@ -34,7 +42,8 @@ function renderRouterPerformance(node, rows) {
     const net = Number(row.net_revenue || 0), perClick = clicks > 0 ? net / clicks : null;
     const few = clicks > 0 && buyers < ROUTER_MIN_BUYERS;
     return "<tr" + (verdict.leader === row.variant_id ? ' class="router-leader"' : "") + "><td>" + escapeHtml(row.variant || "LP") +
-      (row.active === false || !(Number(row.weight) > 0) ? "<small>fora da rotação</small>" : few ? "<small>amostra pequena</small>" : "") + "</td><td>" +
+      (row.active === false || !(Number(row.weight) > 0) ? "<small>fora da rotação</small>" : few ? "<small>amostra pequena</small>" :
+        clicks > 0 && buyers < ROUTER_CONFIRM_BUYERS ? "<small>leitura inicial</small>" : "") + "</td><td>" +
       routerNumber(clicks) + "</td><td>" + routerNumber(buyers) + "</td><td>" + (conversion == null ? "—" : formatPercent(conversion)) + "</td><td>" +
       escapeHtml(formatMoney(row.front_revenue)) + "</td><td>" + escapeHtml(formatMoney(row.mentorship_revenue)) + "</td><td>" +
       escapeHtml(formatMoney(row.refunds)) + "</td><td>" + escapeHtml(formatMoney(net)) + "</td><td>" +

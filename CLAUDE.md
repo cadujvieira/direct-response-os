@@ -205,7 +205,7 @@ Router rules (`resilientRouter.js`, GET `/go/:slug`):
 - `DR_ROUTER_FALLBACK_URL` (optional) is the emergency destination when the service starts with the database unavailable and has no cached route;
 - GET `/api/router/health` (admin) exposes queue size, late writes, drops and degraded redirects;
 - GET `/api/experiments/:slug/performance` accepts `from`/`to` (São Paulo day of the click assignment) and returns clicks, buyers and revenue per LP; downstream revenue of those clicks counts even after the period;
-- the dashboard Router tab (`routerDashboard.js`) only names an LP as ahead when at least two LPs have 30 buyers each and the conversion difference passes a two-proportion test; never present a small-sample lead as a winner.
+- the dashboard Router tab (`routerDashboard.js`) compares only LPs with at least 5 buyers and only when the conversion difference passes a two-proportion test. With fewer than 30 buyers on either of the two best LPs the reading is labelled "indicação inicial" (owner's decision for routes with many pages); "na frente" is reserved for 30+ buyers each. Never present the initial reading as a closed result.
 
 Operation health rules (`operationHealth.js`, dashboard block in `healthDashboard.js`):
 - the health block at the top of the dashboard mirrors the Garagem em Escala monitor: one traffic light, alerts in plain Portuguese with "o que fazer", chips per integration, and an optional AI diagnosis;
