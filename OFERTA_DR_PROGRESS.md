@@ -123,3 +123,20 @@ Dependem das informações abaixo.
 4. Ajustar o receptor ao formato real (modo recomendado, bump, parcelamento, reembolso parcial).
 5. Tela de pendências da Hubla no dashboard.
 6. Hubla → UTMify e Black Track (Etapa C), depois D, E, F.
+
+## 05/10/2026 — Saúde da operação no painel (mesmo modelo da Garagem em Escala)
+
+Pedido do titular: um sistema de saúde dentro do painel, acompanhando a operação o tempo todo, com um agente monitorando, igual ao da loja Garagem em Escala.
+
+Entregue (branch de trabalho; produção ainda não):
+- bloco "Saúde da operação" no topo do painel, em todas as abas: semáforo (verde, amarelo, vermelho), alertas em português com "o que fazer", indicadores por parte da operação e histórico das últimas 24 horas;
+- o servidor confere tudo a cada minuto, mesmo com o painel fechado, e guarda cada mudança de situação;
+- o que é conferido: banco; o próprio serviço visto de fora; cada landing page que recebe tráfego do router (a cada 5 minutos, com segunda tentativa antes de acusar queda); router (fila, descartes, tempo de resposta, rota sem página); cliques e vendas (tráfego parou, tráfego sem venda); Hubla (token, fila parada, falhas, vendas sem origem, pendências, token recusado, silêncio de 24 h); tag das páginas; UTMify; automações; erros internos; memória e reinícios;
+- botão "Diagnóstico com IA": envia só o resumo (alertas, contagens e tempos) e devolve uma leitura em linguagem simples. Precisa da variável `ANTHROPIC_API_KEY` no Render, cadastrada pelo titular;
+- o checkout da Hubla nunca é consultado pelo monitor, para não distorcer os números de conversão de lá.
+
+Testado: 179 testes automáticos; roteiro local `validation/health.integration.js` (banco real em loopback) e os roteiros da Hubla e do funil sem regressão; tela conferida em computador e celular. Revisão independente feita antes da entrega; os pontos levantados (índices por data, teto de gravação por fonte, prazo total da verificação, proteção das consultas externas, segunda tentativa nas páginas, estado neutro quando não há leitura) foram corrigidos.
+
+Limite conhecido: o monitor roda dentro do próprio serviço. Se o Render inteiro cair, o painel também cai e não há quem avise. Para isso é preciso um vigia de fora (item em aberto).
+
+Variáveis novas (todas opcionais): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `DR_PUBLIC_URL` (o Render já informa o endereço sozinho), `DR_ROUTER_FALLBACK_URL`.

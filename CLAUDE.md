@@ -70,6 +70,7 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_utmify_connection`: selected UTMify dashboard metadata and enabled Meta accounts; never stores the MCP token.
 - `dr_utmify_syncs`: audited UTMify snapshot runs by reporting period.
 - `dr_utmify_ad_objects`: cached campaign/adset/ad objects and normalized metrics for each snapshot.
+- `dr_monitor_log`: operation-health signals (source, ok, ms, short detail); no personal data.
 - `dr_hubla_events`: durable inbox of Hubla webhook notices (sanitized payload, processing state, retries, sandbox flag).
 
 Offer foundation routes:
@@ -206,6 +207,15 @@ Router rules (`resilientRouter.js`, GET `/go/:slug`):
 - GET `/api/experiments/:slug/performance` accepts `from`/`to` (São Paulo day of the click assignment) and returns clicks, buyers and revenue per LP; downstream revenue of those clicks counts even after the period;
 - the dashboard Router tab (`routerDashboard.js`) only names an LP as ahead when at least two LPs have 30 buyers each and the conversion difference passes a two-proportion test; never present a small-sample lead as a winner.
 
+Operation health rules (`operationHealth.js`, dashboard block in `healthDashboard.js`):
+- the health block at the top of the dashboard mirrors the Garagem em Escala monitor: one traffic light, alerts in plain Portuguese with "o que fazer", chips per integration, and an optional AI diagnosis;
+- `dr_monitor_log` stores signals (`erro` for 5xx responses, `hubla_auth` for refused webhook tokens, `site`/`lp` for outside probes, `saude` for level changes). `record` never throws and is capped per minute per source; rows older than 30 days are pruned;
+- the server re-evaluates health every minute even with the dashboard closed and records each change of situation; GET `/api/operation-health` (admin) returns level, alerts, metrics and the last 24 h of changes;
+- `evaluate()` is a pure function with the alert rules; change thresholds there and cover them in `operationHealth.test.js`. Traffic/sales rules are `attention` at most, never `critical`, and never recommend pausing or scaling ads;
+- outside probes use `DR_PUBLIC_URL` or `RENDER_EXTERNAL_URL` for the service itself and the active router destinations for landing pages (every 5 min, public hosts only). Checkout hosts are never probed, so the monitor does not distort Hubla conversion numbers; a 401/403/406/429 from a page is "could not verify", not an outage; a failed probe is retried once before it becomes an alert; redirects are followed manually and every hop must be a public host;
+- POST `/api/operation-health/diagnosis` (admin) calls the Anthropic API with `ANTHROPIC_API_KEY` (environment only; optional `ANTHROPIC_MODEL`). It sends only the alert list and count/timing metrics: never payloads, contacts, tokens or destination query strings. It always answers 200 with a Portuguese message;
+- the health metrics must stay free of personal data; add counts and timings only.
+
 Click capture rules (`clickCapture.js`):
 - ads may point straight to a page (no redirect) or to the router. In both cases a server outage may lose a click record but must never lose a visit or a sale: the page tag creates the `click_id` when the visitor arrives without one;
 - POST `/track/click` is public, validated and rate limited. Attribution (UTMs + media IDs) is one block and is written to an existing click only when that click has none; `/go/:slug` follows the same rule. Never add a path that overwrites the origin of an existing click;
@@ -274,6 +284,8 @@ node --check resilientRouter.js
 node --check routerDashboard.js
 node --check hublaDashboard.js
 node --check checkoutLinks.js
+node --check operationHealth.js
+node --check healthDashboard.js
 npm test
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js
 node --check /tmp/dashboard.js

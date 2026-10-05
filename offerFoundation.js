@@ -1821,6 +1821,7 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
       });
     }
   });
+  return { router };
 }
 
 module.exports = {

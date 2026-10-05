@@ -39,6 +39,7 @@ const { normalizeTracking, ingestTracking } = require("./trackingIngestion");
 const { initFunnelDb, registerFunnelRoutes } = require("./funnelIntegration");
 const { initHublaDb, registerHublaRoutes, startHublaWorker } = require("./hublaWebhook");
 const { initClickCaptureDb, registerClickRoutes, hasAdminSecret, publicEventAllowed, requireAdmin } = require("./clickCapture");
+const { initMonitorDb, createMonitor, startHealthWatch, registerHealthRoutes } = require("./operationHealth");
 
 const app = express();
 
@@ -57,6 +58,10 @@ const pool = new Pool({
       ? { rejectUnauthorized: false }
       : false
 });
+
+// Monitor de saude: registra erros 5xx e mede o router. Fica antes das rotas para enxergar todas.
+const monitor = createMonitor(pool);
+app.use(monitor.middleware);
 
 const breakdowns = createBreakdownService(pool);
 const ingestionHooks = { syncLeadCrmFromEvent, enqueueAutomationEvent };
@@ -265,7 +270,9 @@ await pool.query(`
 
 }
 
-registerOfferRoutes({ app, pool, hashIp, parseReportRange });
+const { router } = registerOfferRoutes({ app, pool, hashIp, parseReportRange });
+const healthWatch = startHealthWatch({ pool, router, monitor });
+registerHealthRoutes(app, healthWatch);
 registerAutomationRoutes(app, pool);
 registerActivationRoutes(app, pool);
 registerUtmifyRoutes(app, pool);
@@ -973,6 +980,10 @@ app.get("/assets/router-dashboard.js", (req, res) => {
   res.sendFile(__dirname + "/routerDashboard.js");
 });
 
+app.get("/assets/health-dashboard.js", (req, res) => {
+  res.sendFile(__dirname + "/healthDashboard.js");
+});
+
 app.get("/assets/hubla-dashboard.js", (req, res) => {
   res.sendFile(__dirname + "/hublaDashboard.js");
 });
@@ -1003,6 +1014,8 @@ async function start() {
     await initFunnelDb(pool);
     await initHublaDb(pool);
     await initClickCaptureDb(pool);
+    await initMonitorDb(pool);
+    healthWatch.begin();
     startAutomationWorker(pool);
     hublaRuntime.kick = startHublaWorker(pool, ingestionHooks).kick;
 

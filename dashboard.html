@@ -2680,6 +2680,53 @@
     .crm-table.router-table { min-width: 860px; }
     .router-table small { display: block; color: #6e7784; font-size: 9px; margin-top: 3px; }
     .router-table tr.router-leader td:first-child { box-shadow: inset 3px 0 0 #19c36b; }
+    .dot.attention { background: var(--yellow); box-shadow: 0 0 12px rgba(245,196,81,.7); }
+    .dot.critical { background: var(--red); box-shadow: 0 0 12px rgba(255,107,107,.7); }
+    .health-box { margin: 18px 0 6px; padding: 16px 18px; border: 1px solid var(--border); border-left: 4px solid var(--green); border-radius: 14px; background: var(--panel); }
+    .health-box.attention { border-left-color: var(--yellow); }
+    .health-box.unknown { border-left-color: #4a5160; }
+    .health-box.unknown .health-light i { background: #6e7784; box-shadow: 0 0 0 4px rgba(110,119,132,.15); }
+    .dot.unknown { background: #6e7784; box-shadow: none; }
+    .health-box.critical { border-left-color: var(--red); }
+    .health-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .health-light { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .health-light i { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(62,227,137,.15); flex: none; }
+    .health-box.attention .health-light i { background: var(--yellow); box-shadow: 0 0 0 4px rgba(245,196,81,.15); }
+    .health-box.critical .health-light i { background: var(--red); box-shadow: 0 0 0 4px rgba(255,107,107,.18); }
+    .health-light strong { font-size: 16px; }
+    .health-light small { color: var(--muted); font-size: 12px; }
+    .health-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .health-ai { border-color: rgba(101,167,255,.5); color: var(--blue); }
+    .health-notice { color: var(--red); font-size: 12px; }
+    .health-notice:not(:empty) { margin-top: 10px; }
+    .health-alerts { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+    .health-alerts li { display: grid; gap: 4px; padding: 11px 13px; border: 1px solid var(--border); border-left: 3px solid var(--blue); border-radius: 10px; font-size: 13px; line-height: 1.45; }
+    .health-alerts li.critical { border-left-color: var(--red); background: rgba(255,107,107,.06); }
+    .health-alerts li.attention { border-left-color: var(--yellow); background: rgba(245,196,81,.05); }
+    .health-alerts li.fine { border-left-color: var(--green); color: var(--muted); }
+    .health-alerts strong i { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-right: 8px; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; color: var(--blue); }
+    .health-alerts li.critical strong i { color: var(--red); }
+    .health-alerts li.attention strong i { color: var(--yellow); }
+    .health-alerts span { color: #d8dde5; }
+    .health-alerts em { color: var(--muted); font-style: normal; }
+    .health-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 12px; }
+    .health-chip { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.02); }
+    .health-chip span { color: var(--muted); font-size: 11px; }
+    .health-chip b { font-size: 16px; }
+    .health-chip small { color: #6e7784; font-size: 10px; line-height: 1.35; }
+    .health-chip.good b { color: var(--green); }
+    .health-chip.bad { border-color: rgba(255,107,107,.45); }
+    .health-chip.bad b { color: var(--red); }
+    .health-history { margin-top: 12px; display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+    .health-history:empty { display: none; }
+    .health-history strong { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .health-history div { display: flex; gap: 10px; }
+    .health-history time { flex: none; width: 44px; color: #6e7784; }
+    .health-history .bad span { color: #e6b3b3; }
+    .health-diagnosis { margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(101,167,255,.4); border-radius: 10px; font-size: 13px; line-height: 1.55; }
+    .health-diagnosis.error { border-color: rgba(255,107,107,.45); }
+    .health-diagnosis p { margin: 6px 0; white-space: pre-wrap; }
+    .health-diagnosis small { color: var(--muted); font-size: 11px; }
     .crm-table.hubla-table { min-width: 720px; }
     .crm-table.hubla-table td:nth-child(4) { white-space: normal; min-width: 220px; line-height: 1.45; }
     .hubla-table small { display: block; color: #6e7784; font-size: 9px; margin-top: 3px; }
@@ -3696,8 +3743,8 @@
       <div class="header-actions">
         <a class="admin-link" href="/admin">Admin</a>
         <div class="status">
-          <span class="dot"></span>
-          Tracking online
+          <span class="dot" id="headerStatusDot"></span>
+          <span id="headerStatusText">Tracking online</span>
         </div>
       </div>
     </header>
@@ -3723,6 +3770,27 @@
         <a class="stage-tab" href="#performance" data-stage-target="performance">Performance</a>
       </div>
     </nav>
+
+    <section class="health-box unknown" id="healthBox" aria-live="polite">
+      <div class="health-top">
+        <button class="health-light" id="healthToggle" type="button" aria-expanded="true">
+          <i aria-hidden="true"></i>
+          <strong id="healthTitle">Saúde da operação: verificando...</strong>
+          <small id="healthWhen"></small>
+        </button>
+        <div class="health-actions">
+          <button class="crm-secondary-btn" id="healthRefresh" type="button">Atualizar</button>
+          <button class="crm-secondary-btn health-ai" id="healthDiagnose" type="button">Diagnóstico com IA</button>
+        </div>
+      </div>
+      <div class="health-notice" id="healthNotice"></div>
+      <div id="healthBody">
+        <ul class="health-alerts" id="healthAlerts"></ul>
+        <div class="health-chips" id="healthChips"></div>
+        <div class="health-history" id="healthHistory"></div>
+      </div>
+      <div class="health-diagnosis" id="healthDiagnosis" hidden></div>
+    </section>
 
     <div class="section-title">
       <h2 id="viewTitle">Visão geral</h2>
@@ -4919,6 +4987,7 @@
   <script src="/assets/decision-dashboard.js"></script>
   <script src="/assets/hubla-dashboard.js"></script>
   <script src="/assets/router-dashboard.js"></script>
+  <script src="/assets/health-dashboard.js"></script>
   <script>
     function percentage(value, total) {
       if (!total) return 0;
