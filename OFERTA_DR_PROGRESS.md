@@ -11,6 +11,23 @@ Registro vivo das pendências do handoff de 04/10/2026. Atualize a cada entrega.
 - Teste oficial da Hubla recebido: 4 avisos, todos gravados como sandbox, nenhum pedido criado. `provider_connected` segue falso (nenhum aviso real).
 - ID do produto observado no aviso: `E2BQDamsTpmOHKIqPLde` (a oferta é `HC0TaiMJfWxtvfCzBISz`).
 
+### Compra real controlada (05/10/2026, staging)
+
+- Router `teste-hubla` (staging) → checkout da Hubla com `click_id` → Pix de R$297 pago pelo titular.
+- Avisos reais: `invoice.status_updated` unpaid (ignorado) e paid (pedido front R$297, lead criado, origem e `click_id` do acesso real). **A Hubla devolve o `click_id` em `paymentSession.params`.**
+- Reembolso total pelo vendedor: `invoice.status_updated` refunded + `invoice.refunded` chegaram juntos; desconto de R$297 aplicado uma única vez; lead em `refunded`; líquido zero.
+- Histórico real veio completo (unpaid → paid → refunded). `provider_connected` passou a verdadeiro.
+- Não observado em caso real: solicitação de reembolso pelo comprador, reembolso parcial, cartão parcelado, disputa, chargeback, parcelamento inteligente.
+
+### LPs e rastreamento (05/10/2026)
+
+- `felipelona-vsl.com` (Hostinger, HTML): `/ig/` e a VSL já repassam toda a query string, inclusive `click_id`, até o link do checkout. Conferido: router `teste-vsl` → `/ig/` → VSL com o mesmo `click_id`. O último clique (VSL → checkout) foi confirmado pela leitura do código, não por clique.
+- `felipelona.com/vsl-NN` (HospedaInfo, WordPress + Elementor): o botão de compra só leva `sck`; `click_id` e UTMs não chegam ao checkout. Precisa do script.
+- Script entregue para instalação por tag de HTML personalizado no GTM `GTM-TCM58X4P` (container gerido pela Black Track) ou pelo rodapé do WordPress. Instalação pendente de terceiros.
+- Informado pelo Carlos: somente a Black Track envia Purchase para a Meta, e ela recebe a compra por webhook da Hubla. Eventos da Black Track: PageView, InitiateCheckout, Purchase. O Oferta DR não envia nada para a Meta.
+- Carregados nas páginas de `felipelona.com`: GTM, pixel Meta, pixel UTMify, Stape, Vturb.
+- Pendente de decisão: domínio próprio para o router (evitar `onrender.com` em anúncios).
+
 ## Estado em 04/10/2026
 
 - Branch de trabalho: `feature/offer-crm-experiments`, a partir de `5f51f33` (igual ao último staging confirmado).
