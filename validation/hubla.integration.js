@@ -313,6 +313,20 @@ async function main() {
     assert.equal(Number((await order(stuck.event.invoice.id)).valor), 297);
     pass("ACK somente apos persistir; falha interna reverte tudo, agenda nova tentativa e conclui depois; aviso preso e recuperado");
 
+    // Desempenho por LP: o router distribuiu 13 cliques; compradores e receita aparecem por variante e por periodo.
+    const perf = await http("/api/experiments/" + prefix + "/performance");
+    assert.equal(perf.variants.length, 1);
+    assert.equal(perf.variants[0].assigned_clicks, 13, "12 capturas + 1 passagem pelo router com click_id ja existente");
+    assert(perf.variants[0].buyers >= 8 && perf.variants[0].buyers <= 13, JSON.stringify(perf.variants[0]));
+    assert(Number(perf.variants[0].front_revenue) >= 297 * 8); assert(Number(perf.variants[0].refunds) > 0);
+    const empty = await http("/api/experiments/" + prefix + "/performance?from=2020-01-01&to=2020-01-31");
+    assert.equal(empty.variants[0].assigned_clicks, 0); assert.equal(empty.variants[0].buyers, 0); assert.equal(Number(empty.variants[0].net_revenue), 0);
+    await http("/api/experiments/" + prefix + "/performance?from=ontem", { status: 400 });
+    await http("/api/router/health", { status: 401 });
+    const routerHealth = await admin("/api/router/health");
+    assert.equal(routerHealth.queue, 0); assert.equal(routerHealth.dropped, 0);
+    pass("painel por LP: cliques, compradores e receita por variante, com filtro de periodo; saude do router protegida");
+
     // Os avisos tem ate 1h de idade: perto da meia-noite de Sao Paulo eles caem no dia anterior.
     const day = offset => new Date(Date.now() - 3 * 3600000 - offset * 86400000).toISOString().slice(0, 10);
     const ltv = (await admin("/api/revenue/ltv?from=" + day(1) + "&to=" + day(0))).ltv;

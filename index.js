@@ -50,6 +50,8 @@ app.use(express.urlencoded({ extended: true }));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // Sem este limite, uma queda do banco deixa as requisicoes penduradas indefinidamente.
+  connectionTimeoutMillis: 8000,
   ssl:
     process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: false }
@@ -965,6 +967,10 @@ app.post("/track/spend", async (req, res) => {
 
 app.get("/dashboard", (req, res) => {
   res.sendFile(__dirname + "/dashboard.html");
+});
+
+app.get("/assets/router-dashboard.js", (req, res) => {
+  res.sendFile(__dirname + "/routerDashboard.js");
 });
 
 app.get("/assets/hubla-dashboard.js", (req, res) => {

@@ -11,7 +11,15 @@ Registro vivo das pendências do handoff de 04/10/2026. Atualize a cada entrega.
 - Teste oficial da Hubla recebido: 4 avisos, todos gravados como sandbox, nenhum pedido criado. `provider_connected` segue falso (nenhum aviso real).
 - ID do produto observado no aviso: `E2BQDamsTpmOHKIqPLde` (a oferta é `HC0TaiMJfWxtvfCzBISz`).
 
-### Decisão de arquitetura (05/10/2026): sem redirecionamento
+### Decisão revista (05/10/2026): router para dividir tráfego entre LPs
+
+- O Carlos precisa que o router divida o tráfego entre LPs de ângulos diferentes e que o painel mostre qual performa melhor. A opção sem redirecionamento deixa de ser o caminho principal e vira rede de segurança (a tag cria o `click_id` se o visitante chegar sem ele).
+- Entregue: router que redireciona mesmo com o banco lento ou fora do ar (`resilientRouter.js`), desempenho por LP na aba Router com filtro de período e leitura estatística cautelosa, `GET /api/router/health`.
+- Proteções ainda pendentes: instância paga do serviço de produção (o banco já está pago), subdomínio próprio para o router, monitoramento externo com alerta, `DR_ROUTER_FALLBACK_URL` em produção.
+- Risco residual aceito e comunicado: se a Render inteira cair, os cliques dos anúncios falham até ela voltar.
+- Alternativa explicada ao Carlos: um anúncio por ângulo apontando direto para a página do ângulo, deixando a Meta distribuir. Ele preferiu o router.
+
+### Decisão de arquitetura anterior (05/10/2026): sem redirecionamento
 
 - Requisito do Carlos: nada pode tirar o caminho do anúncio do ar. Decisão: os anúncios apontam direto para as páginas; a tag cria o `click_id`; o Oferta DR sai do caminho do visitante. O router continua no sistema, sem uso em anúncios.
 - Plano de ida para produção revisado pelo Carlos em documento próprio (Claude Docs, "Oferta DR — plano de ida para produção").

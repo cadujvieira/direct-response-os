@@ -6,6 +6,7 @@ const {
   resolveRouterIdentity,
   routingTrackingParams
 } = require("./routing");
+const { createRouter } = require("./resilientRouter");
 
 const LIFECYCLE_STAGES = [
   "lead",
@@ -452,176 +453,13 @@ async function syncLeadCrmFromEvent(pool, payload = {}, options = {}) {
   }
 }
 function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
-  app.get("/go/:slug", async (req, res) => {
-    try {
-      const slug = String(req.params.slug || "").trim().toLowerCase();
-      if (!slug) {
-        return res.status(400).json({ ok: false, error: "slug obrigatorio" });
-      }
-
-      const cookies = parseCookies(req.headers.cookie || "");
-      const { clickId, visitorKey } = resolveRouterIdentity(req.query, cookies);
-      const forwardedProto = String(req.get("x-forwarded-proto") || "").split(",")[0].trim();
-      const secure = req.secure || forwardedProto === "https";
-
-      res.append("Set-Cookie", cookieHeader("dr_click_id", clickId, secure));
-      res.append("Set-Cookie", cookieHeader("dr_visitor_id", visitorKey, secure));
-
-      const experimentResult = await pool.query(`
-        SELECT id, slug, name
-        FROM dr_experiments
-        WHERE slug = $1 AND active = TRUE
-        LIMIT 1
-      `, [slug]);
-
-      const experiment = experimentResult.rows[0];
-      if (!experiment) {
-        return res.status(404).json({ ok: false, error: "router nao encontrado" });
-      }
-      const variantsResult = await pool.query(`
-        SELECT id, name, destination_url, weight, active
-        FROM dr_experiment_variants
-        WHERE experiment_id = $1
-          AND active = TRUE
-          AND weight > 0
-        ORDER BY id ASC
-      `, [experiment.id]);
-
-      if (variantsResult.rows.length === 0) {
-        return res.status(503).json({
-          ok: false,
-          error: "router sem variantes ativas"
-        });
-      }
-
-      const ip =
-        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-        req.socket.remoteAddress ||
-        "";
-      const pageUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-
-      await pool.query(`
-        INSERT INTO dr_clicks (
-          click_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
-          campaign_id, adset_id, ad_id, page_url, referrer, user_agent, ip_hash
-        )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-        ON CONFLICT (click_id) DO NOTHING
-      `, [
-        clickId,
-        req.query.utm_source || null,
-        req.query.utm_medium || null,
-        req.query.utm_campaign || null,
-        req.query.utm_content || null,
-        req.query.utm_term || null,
-        req.query.campaign_id || null,
-        req.query.adset_id || null,
-        req.query.ad_id || null,
-        pageUrl,
-        req.get("referer") || null,
-        req.get("user-agent") || null,
-        hashIp(ip)
-      ]);
-
-      // Um click_id que ja existe mantem a origem gravada; a URL do router so completa campos vazios.
-      await pool.query(`
-        UPDATE dr_clicks
-        SET utm_source = COALESCE(utm_source, $2),
-            utm_medium = COALESCE(utm_medium, $3),
-            utm_campaign = COALESCE(utm_campaign, $4),
-            utm_content = COALESCE(utm_content, $5),
-            utm_term = COALESCE(utm_term, $6),
-            campaign_id = COALESCE(campaign_id, $7),
-            adset_id = COALESCE(adset_id, $8),
-            ad_id = COALESCE(ad_id, $9),
-            page_url = COALESCE(page_url, $10),
-            referrer = COALESCE(referrer, $11),
-            user_agent = COALESCE(user_agent, $12),
-            ip_hash = COALESCE(ip_hash, $13)
-        WHERE click_id = $1
-      `, [
-        clickId,
-        req.query.utm_source || null,
-        req.query.utm_medium || null,
-        req.query.utm_campaign || null,
-        req.query.utm_content || null,
-        req.query.utm_term || null,
-        req.query.campaign_id || null,
-        req.query.adset_id || null,
-        req.query.ad_id || null,
-        pageUrl,
-        req.get("referer") || null,
-        req.get("user-agent") || null,
-        hashIp(ip)
-      ]);
-
-      await pool.query(`
-        UPDATE dr_clicks
-        SET fbclid = COALESCE($2, fbclid),
-            gclid = COALESCE($3, gclid)
-        WHERE click_id = $1
-      `, [
-        clickId,
-        req.query.fbclid || null,
-        req.query.gclid || null
-      ]);
-
-      const assignmentResult = await pool.query(`
-        SELECT a.variant_id, v.id, v.name, v.destination_url, v.weight, v.active
-        FROM dr_experiment_assignments a
-        JOIN dr_experiment_variants v ON v.id = a.variant_id
-        WHERE a.experiment_id = $1
-          AND (a.click_id = $2 OR a.session_key = $3)
-        ORDER BY
-          CASE WHEN a.click_id = $2 THEN 0 ELSE 1 END,
-          a.updated_at DESC,
-          a.id DESC
-        LIMIT 1
-      `, [experiment.id, clickId, visitorKey]);
-
-      let variant = assignmentResult.rows[0] || null;
-
-      if (
-        !variant ||
-        variant.active !== true ||
-        !(Number(variant.weight) > 0)
-      ) {
-        variant = selectWeightedVariant(variantsResult.rows, visitorKey);
-        if (!variant) {
-          return res.status(503).json({ ok: false, error: "nenhuma variante elegivel" });
-        }
-      }
-
-      await pool.query(`
-        INSERT INTO dr_experiment_assignments (
-          experiment_id, variant_id, click_id, session_key
-        )
-        VALUES ($1,$2,$3,$4)
-        ON CONFLICT (experiment_id, click_id)
-        DO UPDATE SET
-          variant_id = EXCLUDED.variant_id,
-          session_key = EXCLUDED.session_key,
-          updated_at = NOW()
-      `, [experiment.id, variant.id, clickId, visitorKey]);
-
-      const redirectUrl = buildRedirectUrl(
-        variant.destination_url,
-        routingTrackingParams(
-          req.query,
-          clickId,
-          experiment.slug,
-          variant.name
-        )
-      );
-
-      return res.redirect(302, redirectUrl);
-    } catch (error) {
-      const statusCode = error.statusCode || 500;
-      return res.status(statusCode).json({
-        ok: false,
-        error: statusCode < 500 ? error.message : "erro interno"
-      });
-    }
+  // Router que redireciona mesmo com o banco lento ou fora do ar (resilientRouter.js).
+  const router = createRouter({ pool, hashIp, cookieHeader });
+  app.get("/go/:slug", router.handler);
+  app.get("/api/router/health", (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.set("Cache-Control", "no-store");
+    res.json({ ok: true, ...router.health() });
   });
 
   app.get("/api/crm/summary", async (req, res) => {
@@ -1858,6 +1696,9 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
   app.get("/api/experiments/:slug/performance", async (req, res) => {
     try {
       const slug = String(req.params.slug || "").trim().toLowerCase();
+      // Periodo = data em que o clique foi distribuido (dia de Sao Paulo). Compras, mentoria e reembolsos desses
+      // cliques contam mesmo quando acontecem depois do periodo.
+      const { from, to } = parseReportRange(req.query);
       const result = await pool.query(`
         WITH lead_by_click AS (
           SELECT click_id, COUNT(*)::int AS leads
@@ -1879,8 +1720,9 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
           WHERE click_id IS NOT NULL
           GROUP BY click_id
         )
-        SELECT v.id AS variant_id, v.name AS variant,
+        SELECT v.id AS variant_id, v.name AS variant, v.weight, v.active,
           COUNT(a.id)::int AS assigned_clicks,
+          COUNT(a.id) FILTER (WHERE e.front_purchases > 0)::int AS buyers,
           COALESCE(SUM(l.leads),0)::int AS leads,
           COALESCE(SUM(e.front_purchases),0)::int AS front_purchases,
           COALESCE(SUM(e.calls_booked),0)::int AS calls_booked,
@@ -1894,16 +1736,19 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
         FROM dr_experiments x
         JOIN dr_experiment_variants v ON v.experiment_id = x.id
         LEFT JOIN dr_experiment_assignments a ON a.variant_id = v.id
+          AND ($2::date IS NULL OR ((a.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $2::date)
+          AND ($3::date IS NULL OR ((a.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $3::date)
         LEFT JOIN lead_by_click l ON l.click_id = a.click_id
         LEFT JOIN event_by_click e ON e.click_id = a.click_id
         WHERE x.slug = $1
-        GROUP BY v.id, v.name
+        GROUP BY v.id, v.name, v.weight, v.active
         ORDER BY v.id
-      `, [slug]);
+      `, [slug, from, to]);
 
-      res.json({ ok: true, experiment: slug, variants: result.rows });
+      res.json({ ok: true, experiment: slug, range: { from, to }, variants: result.rows });
     } catch (error) {
-      res.status(500).json({ ok: false, error: "erro interno" });
+      const statusCode = error.statusCode === 400 ? 400 : 500;
+      res.status(statusCode).json({ ok: false, error: statusCode === 400 ? error.message : "erro interno" });
     }
   });
 

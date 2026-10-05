@@ -197,8 +197,17 @@ Hubla receiver rules (`hublaWebhook.js`, details in `HUBLA_INTEGRATION.md`):
 - `provider_connected` on the Hubla status is true only after an authenticated non-sandbox notice;
 - GET `/assets/dr-checkout.js` (`checkoutLinks.js`) is the page tag for the no-redirect flow: it creates the `click_id` on the page when none came in the URL, reports it to POST `/track/click` in the background and forwards it to checkout links. It must stay ES5 (it is also pasted into Google Tag Manager: no arrow functions, `const`/`let`, template literals or double braces) and must never block the page.
 
+Router rules (`resilientRouter.js`, GET `/go/:slug`):
+- the router is in the visitor's path for split tests, so its first duty is to redirect. Never add an awaited dependency that can turn a slow or unavailable database into an error page;
+- route + variants are cached in memory (10 s); with the database down the last known configuration is used, the same visitor keeps the same LP (deterministic hash of the visitor key) and click/assignment writes go to a bounded in-memory queue that is flushed when the database returns;
+- a failed database call pauses database use for 5 s (breaker) so later visitors do not wait;
+- `DR_ROUTER_FALLBACK_URL` (optional) is the emergency destination when the service starts with the database unavailable and has no cached route;
+- GET `/api/router/health` (admin) exposes queue size, late writes, drops and degraded redirects;
+- GET `/api/experiments/:slug/performance` accepts `from`/`to` (São Paulo day of the click assignment) and returns clicks, buyers and revenue per LP; downstream revenue of those clicks counts even after the period;
+- the dashboard Router tab (`routerDashboard.js`) only names an LP as ahead when at least two LPs have 30 buyers each and the conversion difference passes a two-proportion test; never present a small-sample lead as a winner.
+
 Click capture rules (`clickCapture.js`):
-- the Oferta DR server must not sit in the visitor's path. Ads point to the pages; a server outage may lose a click record but never a visit or a sale;
+- ads may point straight to a page (no redirect) or to the router. In both cases a server outage may lose a click record but must never lose a visit or a sale: the page tag creates the `click_id` when the visitor arrives without one;
 - POST `/track/click` is public, validated and rate limited. Attribution (UTMs + media IDs) is one block and is written to an existing click only when that click has none; `/go/:slug` follows the same rule. Never add a path that overwrites the origin of an existing click;
 - media IDs come from explicit `campaign_id`/`adset_id`/`ad_id` or from the UTMify `name|id` suffix; never from names;
 - `/track/purchase` and `/track/spend` require `x-admin-secret`. `/track/event` is public only for non-monetary navigation events with value 0; revenue and post-purchase event names require the secret.
@@ -261,6 +270,8 @@ node --check utmifyMcp.js
 node --check trackingHealth.js
 node --check hublaWebhook.js
 node --check clickCapture.js
+node --check resilientRouter.js
+node --check routerDashboard.js
 node --check hublaDashboard.js
 node --check checkoutLinks.js
 npm test

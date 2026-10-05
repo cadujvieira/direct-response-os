@@ -2674,6 +2674,12 @@
       font-size: 11px;
     }
 
+    .router-performance { margin-top: 14px; }
+    .router-verdict { margin-bottom: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .router-verdict.ok { color: #e6e9ef; border-color: rgba(25,195,107,.45); }
+    .crm-table.router-table { min-width: 860px; }
+    .router-table small { display: block; color: #6e7784; font-size: 9px; margin-top: 3px; }
+    .router-table tr.router-leader td:first-child { box-shadow: inset 3px 0 0 #19c36b; }
     .crm-table.hubla-table { min-width: 720px; }
     .crm-table.hubla-table td:nth-child(4) { white-space: normal; min-width: 220px; line-height: 1.45; }
     .hubla-table small { display: block; color: #6e7784; font-size: 9px; margin-top: 3px; }
@@ -4885,7 +4891,7 @@
 
     <section class="dashboard-view" data-view="router" id="router-view">
       <div class="panel">
-        <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição de landing pages</h3><p>Pesos atuais das variantes cadastradas.</p></div>
+        <div class="panel-head"><h3 data-tooltip="Os pesos são relativos e configuráveis. Peso 0 retira a LP da rotação.">Distribuição e desempenho das landing pages</h3><p>Pesos atuais e resultado de cada LP no período selecionado. O período considera a data do clique; compras, mentoria e reembolsos desses cliques contam mesmo depois.</p></div>
         <div class="experiment-list" id="experimentList"><div class="section-empty">Carregando rotas...</div></div>
       </div>
     </section>
@@ -4912,6 +4918,7 @@
   <script src="/assets/cpa-dashboard.js"></script>
   <script src="/assets/decision-dashboard.js"></script>
   <script src="/assets/hubla-dashboard.js"></script>
+  <script src="/assets/router-dashboard.js"></script>
   <script>
     function percentage(value, total) {
       if (!total) return 0;
@@ -8851,11 +8858,13 @@ async function loadExperiments() {
             </span>
           </div>
           <div class="variant-list">${variantsHtml}</div>
+          <div class="router-performance" data-router-slug="${escapeHtml(experiment.slug)}"><div class="section-empty">Carregando desempenho por LP...</div></div>
         </div>
       `;
     }).join("");
 
     decorateTooltips(container);
+    if (typeof loadRouterPerformance === "function") loadRouterPerformance();
   } catch (error) {
     console.error(error);
     container.innerHTML =
