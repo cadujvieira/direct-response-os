@@ -2,7 +2,16 @@
 
 Registro vivo das pendências do handoff de 04/10/2026. Atualize a cada entrega.
 
-## Estado atual (04/10/2026)
+## Estado atual (05/10/2026)
+
+- Staging publicado com `ca6ac08` em 04/10 (deploy manual pelo dashboard do Render; o serviço não tem auto-deploy).
+- No Render do staging: `HUBLA_WEBHOOK_TOKEN` e `HUBLA_FRONT_PRODUCT_IDS` configurados (oferta `HC0TaiMJfWxtvfCzBISz`).
+- Regra de webhook criada na Hubla (produto "MMD | Make Money in Dollar", eventos `invoice.status_updated` e `invoice.refunded`) apontando para o staging.
+- Conferido no endereço real: 503 antes do token, 401 sem token depois dele, rotas administrativas 401 sem senha, script da LP 200.
+- Teste oficial da Hubla recebido: 4 avisos, todos gravados como sandbox, nenhum pedido criado. `provider_connected` segue falso (nenhum aviso real).
+- ID do produto observado no aviso: `E2BQDamsTpmOHKIqPLde` (a oferta é `HC0TaiMJfWxtvfCzBISz`).
+
+## Estado em 04/10/2026
 
 - Branch de trabalho: `feature/offer-crm-experiments`, a partir de `5f51f33` (igual ao último staging confirmado).
 - Checkout restaurado por clone do GitHub. Os caminhos antigos no Mac não foram inspecionados; o remoto já continha o último commit confirmado, então nada indicava trabalho local faltando.
@@ -34,8 +43,8 @@ Testes executados nesta entrega:
 
 Não feito / não comprovado:
 
-- Nenhum aviso real ou do sandbox oficial da Hubla foi recebido. `provider_connected` continua falso até isso acontecer.
-- Não publicado em staging: esta sessão não tem permissão de push no repositório nem acesso de rede ao Render.
+- Nenhum aviso de venda real foi recebido. `provider_connected` continua falso até isso acontecer.
+- O push é feito pelo Mac do Carlos (esta sessão não tem permissão de escrita no repositório); o deploy de staging é manual.
 
 ## Etapa C — click_id: parcialmente concluída
 
@@ -50,9 +59,9 @@ Dependem das informações abaixo.
 
 ## Depende do Carlos
 
-1. Publicação: autorizar o repositório nesta sessão (ou fazer o push pelo Mac) para a branch chegar ao staging.
-2. No Render (staging), configurar `HUBLA_WEBHOOK_TOKEN`, `HUBLA_FRONT_PRODUCT_IDS` e, se aplicável, `HUBLA_MENTORSHIP_PRODUCT_IDS`. O token não deve ser colado em conversas.
-3. Link do checkout e IDs reais do produto/oferta front na Hubla.
+1. Compra real controlada pelo titular (router → LP → checkout com `click_id`), seguida de reembolso, para confirmar o `click_id` no aviso e o formato real de pagamento e reembolso.
+2. Acrescentar o ID do produto `E2BQDamsTpmOHKIqPLde` em `HUBLA_FRONT_PRODUCT_IDS`.
+3. Informar o que está ativo na Hubla em Pixels/API de Conversões e na integração UTMify.
 4. A mentoria será cobrada na Hubla? Com parcelamento inteligente?
 5. Documentação/instruções da Black Track.
 6. Ferramenta de agenda e como registrar presença/no-show.
@@ -74,8 +83,8 @@ Dependem das informações abaixo.
 
 ## Próximos passos técnicos
 
-1. Publicar em staging e conferir 401/503/200 no endereço real.
-2. Disparar "Testar configuração" na Hubla e conferir a leitura dos avisos do sandbox em `/api/integrations/hubla/events?sandbox=true`.
+1. (feito) Publicar em staging e conferir 401/503/200 no endereço real.
+2. (feito) Disparar "Testar configuração" na Hubla e conferir a leitura dos avisos do sandbox.
 3. Compra real controlada (pelo titular) para confirmar `click_id` em `paymentSession.params` e o formato real do aviso.
 4. Ajustar o receptor ao formato real (modo recomendado, bump, parcelamento, reembolso parcial).
 5. Tela de pendências da Hubla no dashboard.

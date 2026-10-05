@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { ENDPOINT, hublaConfig, tokenMatches, isSandbox, sanitizePayload, idempotencyKey, envelope,
+const { ENDPOINT, hublaConfig, tokenMatches, isSandbox, looksLikeTest, sanitizePayload, idempotencyKey, envelope,
   interpretInvoice, clickFromSession, processHublaEvent, registerHublaRoutes, REFUND_GRACE_MS } = require("./hublaWebhook");
 const { normalizeFunnelEvent } = require("./funnelIntegration");
 
@@ -195,6 +195,41 @@ test("contrato canonico aceita chargeback definitivo como reversao e continua re
     occurred_at: "2026-09-30T10:00:00.000Z" }, now = new Date("2026-10-01T00:00:00Z");
   assert.equal(normalizeFunnelEvent({ ...base, payment_status: "chargeback" }, now).payment_status, "chargeback");
   for (const status of ["disputed", "requested", "pending", undefined]) assert.throws(() => normalizeFunnelEvent({ ...base, payment_status: status }, now));
+});
+// Formato observado no teste oficial da conta em 05/10/2026 ("Integracao recomendada"), com dados pessoais trocados.
+function accountTest(type, status, statusAt) {
+  return { type, version: "2.0.0", event: { product: { id: "OFFER123", name: "Produto " },
+    products: [{ id: "PRODUCT456", name: "Produto ", offers: [{ id: "OFFER123", name: "Produto ", cohorts: [{ id: "c1" }], amountCents: 29700, isOrderBump: false }] }],
+    invoice: { id: "53a0a7ba-tester", orderId: "184c3bad-tester", childInvoiceIds: [], subscriptionId: "01cc-tester", payerId: "RE4g-tester",
+      payer: { id: "RE4g-tester", firstName: "FULANO", lastName: "TESTE", email: "fulano@example.test", phone: "19999990000" },
+      sellerId: "seller", installments: 1, paymentMethod: "credit_card", currency: "BRL", type: "sell", status, statusAt,
+      paymentSession: { ip: "127.0.0.1", utm: { source: "facebook", medium: "ads" }, params: { src: "hubla-sandbox", sck: "teste-sandbox" } },
+      amount: { subtotalCents: 29700, subtotal: 297, discountCents: 0, discount: 0, prorataCents: 0, prorata: 0, installmentFeeCents: 0, installmentFee: 0, totalCents: 29700, total: 297 },
+      receivers: [{ id: "platform-identity", role: "platform", paysForFees: false, totalCents: 2347, currency: "BRL" },
+        { id: "seller", role: "seller", paysForFees: true, totalCents: 27354, currency: "BRL" }], version: 1 },
+    subscriptions: [{ id: "01cc-tester", type: "one_time", billingCycleMonths: 1, quantity: 1 }] } };
+}
+test("formato real da conta: produto e reconhecido pelo ID da oferta ou do produto e o teste nunca vira venda", async () => {
+  const when = "2026-10-05T03:02:24.391Z";
+  const refunded = accountTest("invoice.refunded", "refunded", [{ status: "unpaid", when }, { status: "refunded", when }]);
+  // O teste oficial envia "reembolsada" sem etapa "paga": fica em revisao, nunca gera venda nem desconto.
+  for (const env of [{ HUBLA_FRONT_PRODUCT_IDS: "OFFER123" }, { HUBLA_FRONT_PRODUCT_IDS: "PRODUCT456" }]) {
+    assert.equal(interpretInvoice(refunded, hublaConfig(env)).code, "missing_paid_history");
+    const paid = interpretInvoice(accountTest("invoice.status_updated", "paid", [{ status: "unpaid", when }, { status: "paid", when }]), hublaConfig(env));
+    assert.equal(paid.outcome, "ok"); assert.equal(paid.sale.kind, "front"); assert.equal(paid.sale.value, 297);
+    assert.equal(paid.sale.seller_net, 273.54); assert.equal(paid.sale.telefone, "19999990000"); assert.equal(paid.sale.click_id, null);
+  }
+  assert.deepEqual(envelope(refunded).product_ids, ["OFFER123", "PRODUCT456"]);
+  assert.equal(looksLikeTest(refunded), true);
+  assert.equal(looksLikeTest(notice()), false);
+  assert.equal(looksLikeTest({ type: "x" }), false);
+  // Mesmo que o cabecalho de sandbox falhe, o aviso "-tester" e gravado como teste.
+  let stored;
+  const pool = { query: async (sql, values) => { stored = values; return { rows: [{ id: 1 }] }; } };
+  const { storeHublaEvent } = require("./hublaWebhook");
+  assert.equal((await storeHublaEvent(pool, refunded, { idempotency: "k", sandbox: "FALSE" })).sandbox, true);
+  assert.equal(stored[1], true); assert.match(stored[0], /^sandbox:/);
+  assert.equal((await storeHublaEvent(pool, notice(), { idempotency: "k", sandbox: "FALSE" })).sandbox, false);
 });
 function routes(pool, runtime) {
   const map = new Map();

@@ -45,6 +45,12 @@ function tokenMatches(expected, received) {
   return Boolean(expected) && crypto.timingSafeEqual(a, b);
 }
 function isSandbox(value) { return /^(true|1)$/i.test(String(value ?? "").trim()); }
+// Os avisos de "Testar configuracao" usam o produto real da conta e IDs terminados em "-tester".
+// Segunda trava: mesmo sem o cabecalho de sandbox, esses avisos nunca sao tratados como venda.
+function looksLikeTest(body) {
+  const invoice = body?.event?.invoice;
+  return [invoice?.id, invoice?.orderId, invoice?.payerId].some(id => typeof id === "string" && /-tester$/i.test(id.trim()));
+}
 function clean(value, max = 200) {
   if (typeof value !== "string" && typeof value !== "number") return null;
   const result = String(value).replace(/[\u0000-\u001f]/g, " ").trim();
@@ -204,7 +210,7 @@ async function initHublaDb(pool) {
   await pool.query("CREATE INDEX IF NOT EXISTS dr_hubla_events_payer_idx ON dr_hubla_events(payer_id) WHERE kind = 'front'");
 }
 async function storeHublaEvent(pool, body, headers = {}) {
-  const sandbox = isSandbox(headers.sandbox), meta = envelope(body), hash = bodyHash(body);
+  const sandbox = isSandbox(headers.sandbox) || looksLikeTest(body), meta = envelope(body), hash = bodyHash(body);
   const key = idempotencyKey(headers.idempotency, body, sandbox);
   const insert = useKey => pool.query(`INSERT INTO dr_hubla_events
     (idempotency_key, sandbox, event_type, payload_version, invoice_id, invoice_status, invoice_version, payer_id, product_ids, payload, body_hash)
@@ -520,6 +526,6 @@ function registerHublaRoutes(app, pool, hooks, runtime = {}) {
     } catch (error) { fail(res, error); }
   });
 }
-module.exports = { ENDPOINT, REQUIRED_EVENTS, REFUND_GRACE_MS, hublaConfig, tokenMatches, isSandbox, sanitizePayload,
+module.exports = { ENDPOINT, REQUIRED_EVENTS, REFUND_GRACE_MS, hublaConfig, tokenMatches, isSandbox, looksLikeTest, sanitizePayload,
   idempotencyKey, envelope, interpretInvoice, clickFromSession, initHublaDb, storeHublaEvent, processHublaEvent,
   processHublaQueue, startHublaWorker, registerHublaRoutes };

@@ -1,6 +1,6 @@
 # Hubla → Oferta DR
 
-Receptor dedicado dos webhooks da Hubla (`hublaWebhook.js`). Ele autentica, grava o aviso em uma caixa de entrada durável, responde, e só depois traduz para o contrato canônico de `FUNNEL_INTEGRATION.md`. Baseado na documentação pública da Hubla consultada em 04/10/2026 (payload `2.0.0`). **Ainda não foi validado com avisos reais nem com o sandbox oficial da conta**; os testes do repositório usam avisos sintéticos no formato publicado.
+Receptor dedicado dos webhooks da Hubla (`hublaWebhook.js`). Ele autentica, grava o aviso em uma caixa de entrada durável, responde, e só depois traduz para o contrato canônico de `FUNNEL_INTEGRATION.md`. Baseado na documentação pública da Hubla consultada em 04/10/2026 (payload `2.0.0`). Em 05/10/2026 o teste oficial da conta ("Testar configuração") foi recebido em staging: token, gravação e separação do sandbox confirmados. **Ainda não houve aviso de venda real**; pagamento, reembolso e devolução do `click_id` reais seguem sem comprovação.
 
 ## Configuração (somente variáveis de ambiente)
 
@@ -59,6 +59,13 @@ O payload é guardado sem documento (CPF/CNPJ), endereço, IP, user agent e cont
 Não coberto: checkout embutido em iframe, botões que redirecionam por JavaScript sem link, e funis em que a LP fica em um domínio e o botão em outro (o click precisa estar na URL da página do botão).
 
 **A confirmar com compra real**: a documentação afirma que qualquer parâmetro da URL do checkout aparece em `paymentSession.params`, mas o sandbox usa valores fictícios. Só uma fatura real mostra se `click_id` volta no aviso.
+
+## Formato observado no teste oficial (05/10/2026)
+
+- A regra está em "Integração recomendada": `event.product.id` traz o ID da **oferta** e `event.products[].id` o ID do **produto**; cada oferta traz `amountCents` e `isOrderBump`. Configure os dois IDs em `HUBLA_FRONT_PRODUCT_IDS` para cobrir outras ofertas do mesmo produto.
+- O teste usa o produto real da conta, com `invoice.id`, `orderId` e `payerId` terminados em `-tester`. O receptor trata esse sufixo como sandbox mesmo se o cabeçalho `x-hubla-sandbox` faltar.
+- `invoice.refunded` de teste chega com histórico `unpaid → refunded`, sem `paid`, todos com o mesmo horário. É dado fictício; o receptor classifica como revisão (`missing_paid_history`). Se um reembolso real chegar assim, ele também vai para revisão em vez de ser descontado.
+- `paymentSession` de teste não traz `url` nem `cookies`; `params` traz `src` e `sck`. `payer.phone` veio sem código do país; não há campo `document`.
 
 ## Limitações conhecidas
 

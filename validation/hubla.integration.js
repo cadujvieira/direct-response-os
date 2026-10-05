@@ -266,8 +266,9 @@ async function main() {
     assert.equal(Number((await order(stuck.event.invoice.id)).valor), 297);
     pass("ACK somente apos persistir; falha interna reverte tudo, agenda nova tentativa e conclui depois; aviso preso e recuperado");
 
-    const today = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
-    const ltv = (await admin("/api/revenue/ltv?from=" + today + "&to=" + today)).ltv;
+    // Os avisos tem ate 1h de idade: perto da meia-noite de Sao Paulo eles caem no dia anterior.
+    const day = offset => new Date(Date.now() - 3 * 3600000 - offset * 86400000).toISOString().slice(0, 10);
+    const ltv = (await admin("/api/revenue/ltv?from=" + day(1) + "&to=" + day(0))).ltv;
     const fronts = await scalar("SELECT COUNT(*)::int AS n FROM dr_funnel_orders WHERE kind = 'front'");
     assert.equal(Number(ltv.front_purchases), fronts);
     assert.equal(Number(ltv.front_revenue), await scalar("SELECT SUM(o.valor) AS n FROM dr_orders o JOIN dr_funnel_orders f USING (order_id) WHERE f.kind = 'front'"));
