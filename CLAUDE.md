@@ -171,6 +171,8 @@ Default system rules:
 - `post_call_without_mentorship`: call_attended -> 24 h -> skip if mentorship_purchase -> high-priority sales follow-up.
 
 Do not rename or destructively recreate existing tables.
+
+`scripts/zerar-dados-de-teste.js` is the only sanctioned way to clear test data: it is run by the owner in the Render shell, lists what will be removed, keeps configuration tables, requires a typed phrase and refuses to run once real volume exists. Every new table must be added to its `WIPE` or `KEEP` list (an unclassified table makes it stop). Never expose this as an HTTP route.
 Migrations must preserve production data.
 
 ## Reporting rules
