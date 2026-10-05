@@ -37,6 +37,7 @@ const { initCpaDb, registerCpaRoutes } = require("./cpaEngine");
 const { registerDecisionRoutes } = require("./decisionEngine");
 const { normalizeTracking, ingestTracking } = require("./trackingIngestion");
 const { initFunnelDb, registerFunnelRoutes } = require("./funnelIntegration");
+const { initHublaDb, registerHublaRoutes, startHublaWorker } = require("./hublaWebhook");
 
 const app = express();
 
@@ -269,6 +270,8 @@ registerTrackingHealthRoutes(app, pool);
 registerCpaRoutes(app, pool);
 registerDecisionRoutes(app, pool);
 registerFunnelRoutes(app, pool, ingestionHooks);
+const hublaRuntime = { kick: null };
+registerHublaRoutes(app, pool, ingestionHooks, hublaRuntime);
 
 app.get("/", async (req, res) => {
 
@@ -1060,6 +1063,11 @@ app.get("/dashboard", (req, res) => {
   res.sendFile(__dirname + "/dashboard.html");
 });
 
+app.get("/assets/dr-checkout.js", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.sendFile(__dirname + "/checkoutLinks.js");
+});
+
 app.get("/admin", (req, res) => {
   res.sendFile(__dirname + "/admin.html");
 });
@@ -1079,7 +1087,9 @@ async function start() {
     await initUtmifyDb(pool);
     await initCpaDb(pool);
     await initFunnelDb(pool);
+    await initHublaDb(pool);
     startAutomationWorker(pool);
+    hublaRuntime.kick = startHublaWorker(pool, ingestionHooks).kick;
 
     app.listen(PORT, () => {
       console.log("Oferta DR online na porta " + PORT);

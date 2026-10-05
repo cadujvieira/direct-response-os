@@ -38,7 +38,8 @@ function normalizeFunnelEvent(input, now = new Date()) {
   const value = monetary ? amount(input.value, "value", true) : 0;
   if (!monetary && input.value != null && amount(input.value, "value") !== 0) invalid("evento de call/checkout nao registra receita");
   if (PAID.has(name) && input.payment_status !== "approved") invalid("registre receita somente com payment_status approved");
-  if (name === "refund" && input.payment_status !== "refunded") invalid("registre somente reembolso confirmado, com payment_status refunded");
+  // chargeback = estorno definitivo pela operadora; desconta como reembolso confirmado, nunca disputa em aberto.
+  if (name === "refund" && !["refunded", "chargeback"].includes(input.payment_status)) invalid("registre somente reembolso confirmado (refunded) ou chargeback definitivo");
   const key = PAID.has(name) ? [name, orderId] : [name, name === "refund" ? orderId : frontId || clickId, externalId];
   const eventId = name === "purchase" ? "purchase_" + orderId : "funnel_" + crypto.createHash("sha256").update(JSON.stringify(key)).digest("hex");
   return { event_name: name, event_id: eventId, source_event_id: externalId, order_id: orderId,

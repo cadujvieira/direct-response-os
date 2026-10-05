@@ -1,12 +1,12 @@
 # Checkout e pós-compra
 
-A integração ainda é uma API canônica para uso entre servidores. Não existe conector de Hotmart, Kiwify ou outro checkout configurado neste projeto. O adaptador da plataforma escolhida deve verificar a autenticidade do webhook e traduzir somente pagamentos aprovados/reembolsos confirmados para este contrato. Nunca envie o segredo administrativo para o navegador, URL de checkout ou metadados do comprador.
+Esta é a API canônica para uso entre servidores. O checkout escolhido é a Hubla; o adaptador dela está em `hublaWebhook.js` (ver `HUBLA_INTEGRATION.md`) e ainda não foi validado com avisos reais. Qualquer adaptador deve verificar a autenticidade do webhook e traduzir somente pagamentos aprovados/reembolsos confirmados para este contrato. Nunca envie o segredo administrativo para o navegador, URL de checkout ou metadados do comprador.
 
 ## Contrato protegido
 
 - `GET /api/integrations/funnel/status`: estado do canal, contagem de eventos integrados e data da última recepção; não retorna contatos ou credenciais.
 - `POST /api/integrations/funnel/events`: usa `x-admin-secret`, o mesmo guard administrativo do sistema. Chamadas somente pelo backend/adaptador confiável.
-- `provider_connected: false` é intencional até a implementação de um adaptador real. A existência de eventos canônicos não prova uma conexão com o checkout.
+- `provider_connected: false` neste endpoint é intencional: eventos canônicos não provam conexão com o checkout. O estado real da Hubla fica em `GET /api/integrations/hubla/status`.
 
 Campos comuns: `event_name`, `event_id`, `order_id`, `front_order_id`, `click_id`, `email`, `telefone`, `nome`, `produto`, `value`, `currency`, `occurred_at`, `payment_status`. Campos desconhecidos são rejeitados; payloads e tokens do provedor não devem ser repassados integralmente.
 
@@ -80,7 +80,7 @@ Mentoria e futuro `order_bump_purchase` possuem pedido próprio e usam `front_or
 }
 ```
 
-Use o pedido reembolsado (front, mentoria ou bump) e o ID estável do reembolso, não um ID novo de entrega. Suporta reembolsos parciais distintos; sua soma não pode exceder o valor pago. O pedido recebe `partially_refunded` ou `refunded`. A receita líquida/LTV/CPA descontam o valor uma vez. O lifecycle CRM mantém a regra existente: qualquer evento de refund sinaliza o lead como `refunded`, inclusive reembolso parcial.
+Use o pedido reembolsado (front, mentoria ou bump) e o ID estável do reembolso, não um ID novo de entrega. `payment_status` aceita `refunded` (reembolso confirmado) ou `chargeback` (estorno definitivo pela operadora); solicitação de reembolso e disputa em aberto não são aceitas. Suporta reembolsos parciais distintos; sua soma não pode exceder o valor pago. O pedido recebe `partially_refunded` ou `refunded`. A receita líquida/LTV/CPA descontam o valor uma vez. O lifecycle CRM mantém a regra existente: qualquer evento de refund sinaliza o lead como `refunded`, inclusive reembolso parcial.
 
 ## Reenvios, ordem e falhas
 

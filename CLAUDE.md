@@ -70,6 +70,7 @@ Spend ingestion is an upsert by daily media scope.
 - `dr_utmify_connection`: selected UTMify dashboard metadata and enabled Meta accounts; never stores the MCP token.
 - `dr_utmify_syncs`: audited UTMify snapshot runs by reporting period.
 - `dr_utmify_ad_objects`: cached campaign/adset/ad objects and normalized metrics for each snapshot.
+- `dr_hubla_events`: durable inbox of Hubla webhook notices (sanitized payload, processing state, retries, sandbox flag).
 
 Offer foundation routes:
 - GET `/admin` serves the experiment administration UI.
@@ -173,7 +174,7 @@ Migrations must preserve production data.
 
 ## Reporting rules
 Funnel integration rules:
-- `/api/integrations/funnel/status` and POST `/api/integrations/funnel/events` are protected server-to-server canonical APIs. Provider adapters are not configured yet; never claim a real checkout connection from synthetic validation;
+- `/api/integrations/funnel/status` and POST `/api/integrations/funnel/events` are protected server-to-server canonical APIs. Never claim a real checkout connection from synthetic validation;
 - monetary events require approved payments/confirmed refunds, explicit BRL, finite positive amounts with <=2 decimals, stable business identifiers and an actual occurrence timestamp with timezone;
 - `dr_funnel_orders`/`dr_funnel_receipts` are additive and preserve immutable original click/buyer/order references. Post-purchase attribution uses the front order, never a guess from contact or media name;
 - purchase events are deduplicated by paid order even if delivery IDs change; calls/refunds use stable occurrence IDs. Conflicting replays return 409; missing clicks return 422;
@@ -181,7 +182,20 @@ Funnel integration rules:
 - a linked internal lead ID is trusted only from the order ledger, not accepted from public payloads;
 - refunds are bounded cumulatively by the original order value, serialized per order and deducted once; CRM retains the existing any-refund lifecycle rule;
 - no staging/production economic settings are invented or auto-confirmed. Provider selection and real platform tests remain necessary;
+- canonical `refund` accepts `payment_status` `refunded` or `chargeback` (final reversal only; never a refund request or an open dispute);
 - see `FUNNEL_INTEGRATION.md` and the loopback-only `validation/funnel.integration.js`.
+
+Hubla receiver rules (`hublaWebhook.js`, details in `HUBLA_INTEGRATION.md`):
+- POST `/api/integrations/hubla/webhook` authenticates with `x-hubla-token` (`HUBLA_WEBHOOK_TOKEN`, environment only). Admin routes under `/api/integrations/hubla/*` use `x-admin-secret`;
+- store first, ACK after the durable insert, process asynchronously through the PostgreSQL inbox. Never process inside the request and never keep the queue only in memory;
+- `invoice.status_updated` is the only financial trail; `invoice.refunded` only confirms a full refund. Do not add a second trail for the same transition;
+- products are mapped by real product/offer IDs from the environment, never by name or price;
+- a front purchase without a known `click_id` stays `pending_attribution`; never create clicks or attribute by email/UTM;
+- sandbox notices (`x-hubla-sandbox`) are stored and read only; they must never write orders, events or leads;
+- ambiguous cases (multi-product, child invoice, smart-installment follow-ups, non-BRL, unconfirmed/partial refund) go to `needs_review` instead of being guessed;
+- stored payloads exclude document, address, IP and user agent; logs never include tokens or payloads;
+- `provider_connected` on the Hubla status is true only after an authenticated non-sandbox notice;
+- GET `/assets/dr-checkout.js` is a public LP helper that forwards an existing `click_id`/UTMs to checkout links. It never creates a click.
 
 Decision Center rules:
 - protected read-only GET `/api/decisions` reuses `getCpaReport` and its exact-period/Meta/BRL rules; no new monetary aggregation, provider calls or media mutations;
@@ -239,6 +253,9 @@ node --check automationHub.js
 node --check activationHub.js
 node --check utmifyMcp.js
 node --check trackingHealth.js
+node --check hublaWebhook.js
+node --check checkoutLinks.js
+npm test
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js
 node --check /tmp/dashboard.js
 git diff --check
