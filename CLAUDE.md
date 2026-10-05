@@ -52,7 +52,7 @@ Purchase idempotency uses `order_id` / purchase event IDs.
 Lead duplicate protection is enforced at the database level for normalized email/phone.
 Spend ingestion is an upsert by daily media scope.
 ## Database tables
-- `dr_clicks`: attribution parameters, campaign/adset/ad IDs, UTM data, fbclid/gclid.
+- `dr_clicks`: attribution parameters, campaign/adset/ad IDs, UTM data, fbclid/gclid, `capture_source` (tag, router, checkout_recovered, legacy).
 - `dr_leads`: lead identity, attribution, lifecycle stage, temperature and lead score.
 - `dr_events`: generic funnel/lifecycle events.
 - `dr_orders`: paid orders.
@@ -190,12 +190,18 @@ Hubla receiver rules (`hublaWebhook.js`, details in `HUBLA_INTEGRATION.md`):
 - store first, ACK after the durable insert, process asynchronously through the PostgreSQL inbox. Never process inside the request and never keep the queue only in memory;
 - `invoice.status_updated` is the only financial trail; `invoice.refunded` only confirms a full refund. Do not add a second trail for the same transition;
 - products are mapped by real product/offer IDs from the environment, never by name or price;
-- a front purchase without a known `click_id` stays `pending_attribution`; never create clicks or attribute by email/UTM;
+- a front purchase without a `click_id` stays `pending_attribution`. A missing click is created only from the checkout's own session data when the id has the page-tag format (`dr_` + UUID), marked `capture_source = 'checkout_recovered'`; never attribute by email, name or value;
 - sandbox notices (`x-hubla-sandbox`) are stored and read only; they must never write orders, events or leads;
 - ambiguous cases (multi-product, child invoice, smart-installment follow-ups, non-BRL, unconfirmed/partial refund) go to `needs_review` instead of being guessed;
 - stored payloads exclude document, address, IP and user agent; logs never include tokens or payloads;
 - `provider_connected` on the Hubla status is true only after an authenticated non-sandbox notice;
-- GET `/assets/dr-checkout.js` is a public LP helper that forwards an existing `click_id`/UTMs to checkout links. It never creates a click.
+- GET `/assets/dr-checkout.js` (`checkoutLinks.js`) is the page tag for the no-redirect flow: it creates the `click_id` on the page when none came in the URL, reports it to POST `/track/click` in the background and forwards it to checkout links. It must stay ES5 (it is also pasted into Google Tag Manager: no arrow functions, `const`/`let`, template literals or double braces) and must never block the page.
+
+Click capture rules (`clickCapture.js`):
+- the Oferta DR server must not sit in the visitor's path. Ads point to the pages; a server outage may lose a click record but never a visit or a sale;
+- POST `/track/click` is public, validated and rate limited. Attribution (UTMs + media IDs) is one block and is written to an existing click only when that click has none; `/go/:slug` follows the same rule. Never add a path that overwrites the origin of an existing click;
+- media IDs come from explicit `campaign_id`/`adset_id`/`ad_id` or from the UTMify `name|id` suffix; never from names;
+- `/track/purchase` and `/track/spend` require `x-admin-secret`. `/track/event` is public only for non-monetary navigation events with value 0; revenue and post-purchase event names require the secret.
 
 Decision Center rules:
 - protected read-only GET `/api/decisions` reuses `getCpaReport` and its exact-period/Meta/BRL rules; no new monetary aggregation, provider calls or media mutations;
@@ -254,6 +260,8 @@ node --check activationHub.js
 node --check utmifyMcp.js
 node --check trackingHealth.js
 node --check hublaWebhook.js
+node --check clickCapture.js
+node --check hublaDashboard.js
 node --check checkoutLinks.js
 npm test
 awk '/<script>/{flag=1;next}/<\/script>/{flag=0}flag' dashboard.html > /tmp/dashboard.js

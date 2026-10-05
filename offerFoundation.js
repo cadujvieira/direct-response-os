@@ -523,20 +523,21 @@ function registerOfferRoutes({ app, pool, hashIp, parseReportRange }) {
         hashIp(ip)
       ]);
 
+      // Um click_id que ja existe mantem a origem gravada; a URL do router so completa campos vazios.
       await pool.query(`
         UPDATE dr_clicks
-        SET utm_source = COALESCE($2, utm_source),
-            utm_medium = COALESCE($3, utm_medium),
-            utm_campaign = COALESCE($4, utm_campaign),
-            utm_content = COALESCE($5, utm_content),
-            utm_term = COALESCE($6, utm_term),
-            campaign_id = COALESCE($7, campaign_id),
-            adset_id = COALESCE($8, adset_id),
-            ad_id = COALESCE($9, ad_id),
-            page_url = COALESCE($10, page_url),
-            referrer = COALESCE($11, referrer),
-            user_agent = COALESCE($12, user_agent),
-            ip_hash = COALESCE($13, ip_hash)
+        SET utm_source = COALESCE(utm_source, $2),
+            utm_medium = COALESCE(utm_medium, $3),
+            utm_campaign = COALESCE(utm_campaign, $4),
+            utm_content = COALESCE(utm_content, $5),
+            utm_term = COALESCE(utm_term, $6),
+            campaign_id = COALESCE(campaign_id, $7),
+            adset_id = COALESCE(adset_id, $8),
+            ad_id = COALESCE(ad_id, $9),
+            page_url = COALESCE(page_url, $10),
+            referrer = COALESCE(referrer, $11),
+            user_agent = COALESCE(user_agent, $12),
+            ip_hash = COALESCE(ip_hash, $13)
         WHERE click_id = $1
       `, [
         clickId,

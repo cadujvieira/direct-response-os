@@ -38,7 +38,7 @@ Na Hubla, crie uma regra de webhook com:
 - **Valor**: `(amount.totalCents − amount.installmentFeeCents) / 100`, em reais. Juros de parcelamento pagos pelo comprador não são receita do produtor. `amount.total` (reais, enviado desde 23/09/2026) serve apenas para conferir a unidade; divergência → revisão. Taxas da Hubla **não** são descontadas aqui (o CPA Máximo modela taxas sobre a venda bruta); o líquido do vendedor fica disponível no payload guardado para conciliação.
 - **Horário**: `when` do status no histórico (primeiro `paid`; último `refunded`/`chargeback`), não o horário de recebimento.
 - **Produto**: pelo ID em `event.product.id`, `event.products[].id` ou `event.products[].offers[].id`. Nunca por nome ou por valor R$297. Sem mapeamento → `unmapped_product` (reprocessado a cada reinício do serviço, depois de configurar o ID).
-- **click_id**: lido de `invoice.paymentSession.params.<click_id>` (ou da query string de `paymentSession.url`). Sem click, ou com click que não existe em `dr_clicks`, a compra front fica `pending_attribution`: o pagamento é preservado e visível, mas não entra em receita/LTV/CPA. Nenhum click é criado e nada é atribuído por email, nome ou UTM.
+- **click_id**: lido de `invoice.paymentSession.params.<click_id>` (ou da query string de `paymentSession.url`). Sem click, ou com click que não existe em `dr_clicks`, a compra front fica `pending_attribution`: o pagamento é preservado e visível, mas não entra em receita/LTV/CPA. Um click só é criado pela recuperação descrita em "click_id sem redirecionamento"; nada é atribuído por email, nome ou valor.
 - **Mentoria**: pedido próprio ligado ao front pelo `payerId` da Hubla. Exatamente um front integrado para o comprador → vincula. Nenhum → `pending_front_order`. Mais de um → `needs_review`.
 - **Reembolso**: a Hubla envia `invoice.refunded` apenas no reembolso total e não informa o valor no parcial. Com `invoice.refunded` recebido → desconta o saldo do pedido uma vez. Sem ele, espera 30 min (`pending_refund_confirmation`) e então vai para `needs_review` sem descontar nada, até alguém informar o valor em `resolve-refund`.
 - **Disputa** (`disputed`): registrada, sem desconto. Disputa ganha (`disputed → paid`) mantém a venda.
@@ -52,13 +52,30 @@ Tabela `dr_hubla_events` (aditiva). O ACK 200 só sai depois do `INSERT`. A Hubl
 
 O payload é guardado sem documento (CPF/CNPJ), endereço, IP, user agent e contatos de recebedores. Logs registram apenas o ID interno do aviso e o código do erro.
 
-## click_id da LP até o checkout
+## click_id sem redirecionamento (tag das páginas)
 
-`/go/:slug` entrega `click_id` na URL da LP. A LP precisa repassá-lo ao link do checkout como `?click_id=...`. O script `GET /assets/dr-checkout.js` faz isso para links de `pay.hub.la`/`hub.la`: guarda o click e as UTMs da entrada e completa os links (sem sobrescrever UTMs já presentes e sem criar click quando ele não veio). O click fica guardado por 7 dias para páginas seguintes do mesmo funil, mas uma visita que chega com UTMs/`gclid`/`fbclid` e sem `click_id` não reaproveita o click antigo. Atributos opcionais na tag: `data-checkout-hosts`, `data-click-param`.
+Os anúncios apontam direto para as páginas. O servidor do Oferta DR não fica no caminho do visitante; se ele cair, página e venda seguem normais.
 
-Não coberto: checkout embutido em iframe, botões que redirecionam por JavaScript sem link, e funis em que a LP fica em um domínio e o botão em outro (o click precisa estar na URL da página do botão).
+A tag (`checkoutLinks.js`, servida em `GET /assets/dr-checkout.js` ou colada inteira no GTM com o endereço fixo no lugar de `__DR_ENDPOINT__`):
 
-**A confirmar com compra real**: a documentação afirma que qualquer parâmetro da URL do checkout aparece em `paymentSession.params`, mas o sandbox usa valores fictícios. Só uma fatura real mostra se `click_id` volta no aviso.
+1. Usa o `click_id` da URL quando ele vem (router ou link entre domínios próprios) e está em formato válido.
+2. Sem `click_id` na URL, cria um (`dr_` + UUID) e guarda por 7 dias em `localStorage`, com cookie da própria página como reserva.
+3. Mesma origem (mesmos UTMs/IDs/`fbclid`/`gclid`) em outra página = mesmo clique. Origem diferente = outro clique. URL sem nada = reaproveita o guardado.
+4. Avisa `POST /track/click` em segundo plano, uma vez por clique; se falhar, tenta na próxima página. Nada bloqueia a página.
+5. Acrescenta `click_id`, UTMs e IDs aos links de `pay.hub.la`/`hub.la` e aos links para outro domínio próprio, também no momento do clique (botões liberados pelo vídeo).
+
+No servidor:
+
+- `POST /track/click` é público, valida formato e tamanho, tem limite de volume por origem e geral, e **nunca troca a origem de um clique existente**. UTMs e IDs de mídia são um bloco único: só entram em um clique que ainda não tem nenhuma origem. O router (`/go/:slug`) segue a mesma regra.
+- IDs de campanha, conjunto e anúncio vêm de `campaign_id`/`adset_id`/`ad_id` ou, na falta deles, do padrão da UTMify `nome|id` em `utm_campaign`/`utm_medium`/`utm_content`. Nada é deduzido de nomes sem o sufixo numérico.
+- **Recuperação pelo checkout**: se a venda chega com um `click_id` no formato da tag que não está em `dr_clicks`, o receptor cria o clique com o que o checkout devolveu em `paymentSession` (UTMs, IDs, `fbclid`/`gclid`), com `capture_source = 'checkout_recovered'` e horário da criação da fatura. Um `click_id` em outro formato continua como `pending_attribution`. Nada é atribuído por email, nome ou valor.
+- `dr_clicks.capture_source`: `tag`, `router`, `checkout_recovered` ou `legacy`.
+
+Consequências conhecidas: cliques sem compra ficam subcontados quando o navegador bloqueia o aviso; uma URL com `click_id` compartilhada entre pessoas faz todas usarem o mesmo clique; UTMs internas em links entre páginas iniciam outro clique.
+
+Comprovado em 05/10/2026 com compra real: a Hubla devolve em `paymentSession.params` os parâmetros da URL do checkout, inclusive `click_id`.
+
+Não coberto: checkout embutido em iframe e botões que redirecionam por JavaScript sem link.
 
 ## Formato observado no teste oficial (05/10/2026)
 
@@ -72,8 +89,8 @@ Não coberto: checkout embutido em iframe, botões que redirecionam por JavaScri
 1. Formato real dos avisos (modo recomendado, order bump, parcelamento inteligente, reembolso parcial) ainda não observado.
 2. Parcelas 2+ do parcelamento inteligente não entram como receita (ficam em revisão). Relevante se a mentoria for vendida assim.
 3. `checkout_started` não é gerado a partir da Hubla.
-4. Compras front sem click ficam fora de receita/LTV/CPA por decisão de contrato.
-5. As pendências aparecem só pela API administrativa; ainda não há tela no dashboard.
+4. Compras front sem `click_id`, ou com `click_id` fora do formato da tag e desconhecido, ficam fora de receita/LTV/CPA até serem resolvidas.
+5. As pendências aparecem na aba Integrações do dashboard (`hublaDashboard.js`), com as ações de tentar de novo e informar valor de reembolso.
 
 ## Homologação local
 

@@ -2674,6 +2674,13 @@
       font-size: 11px;
     }
 
+    .crm-table.hubla-table { min-width: 720px; }
+    .crm-table.hubla-table td:nth-child(4) { white-space: normal; min-width: 220px; line-height: 1.45; }
+    .hubla-table small { display: block; color: #6e7784; font-size: 9px; margin-top: 3px; }
+    .hubla-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .hubla-refund-input { width: 110px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
+    #hublaCard { margin-top: 14px; }
+
     .integration-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -4681,6 +4688,63 @@
             <div><span>Anúncios</span><strong id="utmifySyncAds">0</strong></div>
           </div>
         </div>
+
+        <div class="panel integration-card" id="hublaCard">
+          <div class="integration-card-head">
+            <div>
+              <div class="integration-brand-row">
+                <span class="integration-logo-mark">H</span>
+                <div>
+                  <h3>Hubla — checkout</h3>
+                  <p>Vendas, reembolsos e chargebacks recebidos por webhook.</p>
+                </div>
+              </div>
+            </div>
+            <span class="status-badge" id="hublaStatusBadge">Não verificado</span>
+          </div>
+
+          <div class="integration-grid">
+            <div class="integration-detail">
+              <span>Avisos reais recebidos</span>
+              <strong id="hublaLiveEvents">0</strong>
+              <small id="hublaLastEvent">—</small>
+            </div>
+            <div class="integration-detail">
+              <span data-tooltip="Faturas pagas que a Hubla avisou e que ainda não entraram em receita, LTV e CPA.">Vendas fora do funil</span>
+              <strong id="hublaPendingPayments">0</strong>
+              <small id="hublaPendingValue">—</small>
+            </div>
+            <div class="integration-detail">
+              <span data-tooltip="Reembolsos ou chargebacks recebidos e ainda não descontados.">Reversões pendentes</span>
+              <strong id="hublaPendingReversals">0</strong>
+              <small>Reembolso parcial exige informar o valor</small>
+            </div>
+            <div class="integration-detail">
+              <span data-tooltip="Cliques que a página não conseguiu avisar e que foram criados com os dados devolvidos pelo checkout.">Cliques recuperados</span>
+              <strong id="hublaRecoveredClicks">0</strong>
+              <small>Origem vinda do próprio checkout</small>
+            </div>
+          </div>
+
+          <div class="integration-sync-box">
+            <div>
+              <h4>Pendências</h4>
+              <p id="hublaConfig">—</p>
+            </div>
+            <div class="integration-actions">
+              <button class="crm-secondary-btn" id="hublaRefreshBtn" type="button">Atualizar</button>
+            </div>
+          </div>
+
+          <div class="crm-table-wrap">
+            <table class="crm-table hubla-table">
+              <thead><tr><th>Recebido</th><th>Situação</th><th>Valor</th><th>Motivo</th><th>Ação</th></tr></thead>
+              <tbody id="hublaPendingBody"><tr><td class="crm-table-empty" colspan="5">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="integration-message" id="hublaMessage"></div>
+        </div>
       </div>
     </section>
 
@@ -4847,6 +4911,7 @@
 
   <script src="/assets/cpa-dashboard.js"></script>
   <script src="/assets/decision-dashboard.js"></script>
+  <script src="/assets/hubla-dashboard.js"></script>
   <script>
     function percentage(value, total) {
       if (!total) return 0;
@@ -6740,6 +6805,7 @@ async function loadUtmifyStatus() {
     const data = await utmifyFetch("/api/integrations/utmify/status");
     utmifySetProtectedState(true);
     renderUtmifyStatus(data);
+    if (typeof loadHublaPanel === "function") loadHublaPanel();
   } catch (error) {
     if (error.status === 401) {
       sessionStorage.removeItem("dr_admin_secret");

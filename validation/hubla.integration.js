@@ -192,6 +192,7 @@ async function main() {
     assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_leads WHERE email = $1", [noClick.event.invoice.payer.email]), 0, "sem atribuicao por email");
     status = await admin("/api/integrations/hubla/status");
     assert.deepEqual(status.payments_not_integrated, { invoices: 2, known_value: 594 });
+    assert.equal(status.clicks_recovered_from_checkout, 0);
     await http("/track/click", { body: { click_id: lateClick, utm_source: "meta" } });
     await pool.query("UPDATE dr_clicks SET created_at = NOW() AT TIME ZONE 'UTC' - INTERVAL '3 hours' WHERE click_id = $1", [lateClick]);
     const retried = await admin("/api/integrations/hubla/events/" + (await row(unknown)).id + "/retry", { body: {} });
@@ -221,6 +222,52 @@ async function main() {
     const weird = notice({ click: clicks[6] }); weird.event.invoice.statusAt = [];
     assert.equal((await deliver(weird)).reason_code, "missing_paid_history");
     pass("pagamento sem click fica pendente e visivel (sem inventar click nem atribuir por email); click tardio libera o reprocessamento; produto desconhecido nao e contado");
+
+    // Sem redirecionamento: a tag cria o clique na pagina. Se o aviso do clique nao chegou, o checkout devolve a origem.
+    const tagClick = "dr_" + crypto.randomUUID(), recovered = notice({ click: tagClick });
+    Object.assign(recovered.event.invoice.paymentSession, { utm: { source: "FB", medium: "Conj|120222222222", campaign: "Camp|120211111111", content: "Ad|120233333333" },
+      params: { click_id: tagClick, fbclid: "fb-recuperado", sck: "utmify" } });
+    assert.equal((await deliver(recovered)).status, "processed");
+    const recoveredClick = (await pool.query("SELECT * FROM dr_clicks WHERE click_id = $1", [tagClick])).rows[0];
+    assert.equal(recoveredClick.capture_source, "checkout_recovered"); assert.equal(recoveredClick.utm_source, "FB");
+    assert.deepEqual([recoveredClick.campaign_id, recoveredClick.adset_id, recoveredClick.ad_id], ["120211111111", "120222222222", "120233333333"]);
+    assert.equal(recoveredClick.fbclid, "fb-recuperado");
+    assert(recoveredClick.created_at <= (await pool.query("SELECT created_at FROM dr_events WHERE event_id = $1", ["purchase_hubla:" + recovered.event.invoice.id])).rows[0].created_at);
+    assert.equal((await order(recovered.event.invoice.id)).click_id, tagClick);
+    assert.equal((await admin("/api/integrations/hubla/status")).clicks_recovered_from_checkout, 1);
+    // Clique avisado pela tag antes da compra: vale o registro da tag, e o checkout nao troca a origem.
+    const reported = "dr_" + crypto.randomUUID();
+    await http("/track/click", { body: { click_id: reported, utm_source: "FB", utm_campaign: "Original|120299999999", page_url: "https://lp.example.test/vsl-10" } });
+    await http("/track/click", { body: { click_id: reported, utm_source: "trocado", utm_campaign: "Outra|120200000000", ad_id: "120244444444" } });
+    await pool.query("UPDATE dr_clicks SET created_at = NOW() AT TIME ZONE 'UTC' - INTERVAL '3 hours' WHERE click_id = $1", [reported]);
+    const viaTag = notice({ click: reported });
+    viaTag.event.invoice.paymentSession.utm = { source: "outra-origem", campaign: "Diferente|120288888888" };
+    assert.equal((await deliver(viaTag)).status, "processed");
+    const kept = (await pool.query("SELECT * FROM dr_clicks WHERE click_id = $1", [reported])).rows[0];
+    assert.equal(kept.capture_source, "tag"); assert.equal(kept.utm_source, "FB"); assert.equal(kept.campaign_id, "120299999999");
+    assert.equal(kept.ad_id, null, "um segundo envio nao mistura IDs de outra origem no clique");
+    // O router tambem nao troca a origem de um clique que ja existe.
+    await fetch(new URL("/go/" + prefix + "?click_id=" + reported + "&utm_source=sequestro&campaign_id=666", base), { redirect: "manual" });
+    assert.equal((await pool.query("SELECT utm_source, campaign_id FROM dr_clicks WHERE click_id = $1", [reported])).rows[0].utm_source, "FB");
+    // Clique de acesso direto (sem origem) aceita a origem uma unica vez, inteira.
+    const direct = "dr_" + crypto.randomUUID();
+    await http("/track/click", { body: { click_id: direct } });
+    await http("/track/click", { body: { click_id: direct, utm_source: "FB", utm_campaign: "A|120211111111" } });
+    await http("/track/click", { body: { click_id: direct, utm_source: "outra", ad_id: "120255555555" } });
+    const directRow = (await pool.query("SELECT utm_source, campaign_id, ad_id FROM dr_clicks WHERE click_id = $1", [direct])).rows[0];
+    assert.deepEqual({ ...directRow }, { utm_source: "FB", campaign_id: "120211111111", ad_id: null });
+    assert.equal((await admin("/api/integrations/hubla/status")).clicks_recovered_from_checkout, 1);
+    await http("/track/click", { body: { click_id: "tem espaco" }, status: 400 });
+    // Rotas antigas: receita e pos-compra exigem senha; navegacao continua publica.
+    await http("/track/purchase", { body: { order_id: prefix + ":forjado", click_id: reported, email: "x@example.test", valor: 297 }, status: 401 });
+    await http("/track/spend", { body: { spend_date: "2026-10-01", campaign_id: "1", spend: 10 }, status: 401 });
+    for (const event_name of ["purchase", "refund", "mentorship_purchase", "call_attended"]) {
+      await http("/track/event", { body: { event_name, event_id: prefix + ":forjado:" + event_name, click_id: reported, value: event_name.includes("call") ? 0 : 297 }, status: 401 });
+    }
+    await http("/track/event", { body: { event_name: "landing_view", event_id: prefix + ":lv", click_id: reported, value: 50 }, status: 401 });
+    await http("/track/event", { body: { event_name: "landing_view", event_id: prefix + ":lv", click_id: reported } });
+    assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_orders WHERE order_id = $1", [prefix + ":forjado"]), 0);
+    pass("clique criado pela tag: recuperado pelo checkout quando o aviso falha, nunca sobrescrito; rotas antigas de receita fechadas");
 
     const frontInvoice = prefix + "-mfront", buyer = prefix + "-buyer";
     const mentorEarly = notice({ kind: "mentorship", payer: buyer, history: [["unpaid", 9], ["paid", 8]] });

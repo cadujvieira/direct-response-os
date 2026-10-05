@@ -4,6 +4,7 @@
 const crypto = require("crypto");
 const { requireAdmin } = require("./trackingHealth");
 const { normalizeFunnelEvent, ingestFunnelEvent } = require("./funnelIntegration");
+const { TAG_CLICK_ID, normalizeClick, saveClick } = require("./clickCapture");
 
 const ENDPOINT = "/api/integrations/hubla/webhook";
 const FINANCIAL_TRAIL = "invoice.status_updated";
@@ -111,6 +112,23 @@ function clickFromSession(invoice, param) {
   if (found.length && values.length !== 1) return { click_id: null, problem: "click_id invalido ou repetido no checkout" };
   return { click_id: values[0] || null, problem: values[0] ? null : "click_id ausente no checkout (paymentSession.params)" };
 }
+// Dados de origem que o proprio checkout devolve (UTMs e IDs que estavam na URL do checkout).
+function sessionOrigin(invoice) {
+  const session = invoice?.paymentSession && typeof invoice.paymentSession === "object" ? invoice.paymentSession : {};
+  const params = {};
+  if (session.params && typeof session.params === "object") {
+    for (const [key, value] of Object.entries(session.params)) if (!(key.toLowerCase() in params)) params[key.toLowerCase()] = value;
+  }
+  const utm = session.utm && typeof session.utm === "object" ? session.utm : {};
+  const cookies = session.cookies && typeof session.cookies === "object" ? session.cookies : {};
+  const pick = (a, b) => (typeof a === "string" && a.trim() ? a : typeof b === "string" && b.trim() ? b : null);
+  return { utm_source: pick(utm.source, params.utm_source), utm_medium: pick(utm.medium, params.utm_medium),
+    utm_campaign: pick(utm.campaign, params.utm_campaign), utm_content: pick(utm.content, params.utm_content),
+    utm_term: pick(utm.term, params.utm_term), campaign_id: params.campaign_id, adset_id: params.adset_id, ad_id: params.ad_id,
+    fbclid: pick(params.fbclid, cookies.fbclid), gclid: pick(params.gclid, cookies.gclid),
+    started_at: statusTime(invoice, "unpaid") || (typeof invoice?.createdAt === "string" && Number.isFinite(Date.parse(invoice.createdAt))
+      ? new Date(invoice.createdAt).toISOString() : null) };
+}
 function envelope(body) {
   const event = body?.event && typeof body.event === "object" ? body.event : {};
   const invoice = event.invoice && typeof event.invoice === "object" ? event.invoice : null;
@@ -181,7 +199,7 @@ function interpretInvoice(body, config) {
       const at = statusTime(invoice, s, true), again = statusTime(invoice, "paid", true);
       return at && again && again > at;
     }),
-    click_id: click.click_id, click_problem: click.problem, email, telefone: /^\d{8,15}$/.test(phone || "") ? phone : null,
+    click_id: click.click_id, click_problem: click.problem, session: sessionOrigin(invoice), email, telefone: /^\d{8,15}$/.test(phone || "") ? phone : null,
     nome: clean([payer.firstName, payer.lastName].filter(Boolean).join(" "), 200),
     produto: clean(event.product?.name ?? products[0]?.name, 300),
     payer_id: clean(invoice.payerId ?? payer.id, 100) } };
@@ -238,6 +256,17 @@ function fromIngestError(error, kind) {
   return { status: "needs_review", code: error.statusCode === 409 ? "ledger_conflict" : "canonical_rejected",
     reason: (kind ? kind + ": " : "") + error.message };
 }
+// O aviso do clique feito pela tag pode nao ter chegado (bloqueador, servico fora do ar). Quando o click_id tem o
+// formato gerado pela tag, o clique e criado com os dados que o checkout devolveu, marcado como recuperado.
+// Nada e deduzido de email, nome ou valor; click_id em outro formato continua como pendencia.
+async function recoverClickFromCheckout(pool, sale) {
+  if (!TAG_CLICK_ID.test(sale.click_id || "")) return false;
+  if ((await pool.query("SELECT 1 FROM dr_clicks WHERE click_id = $1", [sale.click_id])).rows.length) return false;
+  const click = normalizeClick({ ...sale.session, click_id: sale.click_id, page_url: "checkout:hubla" });
+  if (!click) return false;
+  const occurredAt = sale.session.started_at && sale.session.started_at <= sale.paid_at ? sale.session.started_at : sale.paid_at;
+  return (await saveClick(pool, click, { source: "checkout_recovered", occurredAt })).created;
+}
 async function ensurePaidOrder(pool, sale, hooks, now) {
   if (await ledgerOrder(pool, sale.order_id)) return null;
   const base = { order_id: sale.order_id, value: sale.value, currency: "BRL", payment_status: "approved",
@@ -246,6 +275,7 @@ async function ensurePaidOrder(pool, sale, hooks, now) {
   if (sale.kind === "front") {
     if (!sale.click_id) return { status: "pending_attribution", code: "missing_click", reason: sale.click_problem };
     if (!sale.email && !sale.telefone) return { status: "needs_review", code: "missing_contact", reason: "comprador sem email ou telefone valido" };
+    await recoverClickFromCheckout(pool, sale);
     input = { ...base, event_name: "purchase", click_id: sale.click_id, email: sale.email, telefone: sale.telefone, nome: sale.nome };
   } else if (sale.kind === "mentorship") {
     // Vinculo pelo ID estavel do comprador na Hubla (nunca por email/nome). Zero ou mais de um pedido front = pendencia.
@@ -473,6 +503,7 @@ function registerHublaRoutes(app, pool, hooks, runtime = {}) {
         required_events: REQUIRED_EVENTS,
         // Conexao real = pelo menos um aviso autenticado fora do sandbox. Testes nao contam.
         provider_connected: live.events > 0, live, sandbox: side(true),
+        clicks_recovered_from_checkout: (await pool.query("SELECT COUNT(*)::int AS n FROM dr_clicks WHERE capture_source = 'checkout_recovered'")).rows[0].n,
         payments_not_integrated: { invoices: waiting.invoices, known_value: Number(waiting.value) },
         reversals_not_integrated: { invoices: reversals.invoices } });
     } catch (error) { fail(res, error); }
@@ -482,11 +513,13 @@ function registerHublaRoutes(app, pool, hooks, runtime = {}) {
     res.set("Cache-Control", "no-store");
     try {
       const status = clean(req.query.status, 40), limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+      // pending=true: tudo que ainda depende de acao ou de nova tentativa (usado pela tela de pendencias).
+      const statuses = req.query.pending === "true" ? [...RETRYABLE, "needs_review", "processing"] : status ? [status] : null;
       const sandbox = req.query.sandbox == null ? null : isSandbox(req.query.sandbox);
       // Sem payload e sem dados pessoais: somente o necessario para auditar pendencias.
       res.json({ ok: true, events: (await pool.query(`SELECT ${PUBLIC_COLUMNS} FROM dr_hubla_events
-        WHERE ($1::text IS NULL OR status = $1) AND ($2::boolean IS NULL OR sandbox = $2) ORDER BY id DESC LIMIT $3`,
-      [status, sandbox, limit])).rows });
+        WHERE ($1::text[] IS NULL OR status = ANY($1::text[])) AND ($2::boolean IS NULL OR sandbox = $2) ORDER BY id DESC LIMIT $3`,
+      [statuses, sandbox, limit])).rows });
     } catch (error) { fail(res, error); }
   });
   app.post("/api/integrations/hubla/process", async (req, res) => {
@@ -522,7 +555,8 @@ function registerHublaRoutes(app, pool, hooks, runtime = {}) {
       if (!sale || !sale.refunded_at || !(await ledgerOrder(pool, sale.order_id))) return res.status(409).json({ ok: false, error: "pedido original nao integrado" });
       const result = await applyReversal(pool, sale, hooks, new Date(), "refunded", Math.round(value * 100) / 100);
       if (result.status === "processed") await finishRow(pool, row, { ...result, reason: "reembolso com valor informado manualmente" });
-      res.status(result.status === "processed" ? 200 : 409).json({ ok: result.status === "processed", status: result.status, reason: result.reason });
+      res.status(result.status === "processed" ? 200 : 409).json({ ok: result.status === "processed", status: result.status,
+        reason: result.reason, ...(result.status === "processed" ? {} : { error: result.reason }) });
     } catch (error) { fail(res, error); }
   });
 }

@@ -68,6 +68,9 @@ test("envelope extrai fatura, versao, comprador e IDs de produto e oferta", () =
 test("compra front paga vira pedido com prefixo, valor em reais e horario real do pagamento", () => {
   const result = sale();
   assert.equal(result.outcome, "ok");
+  assert.deepEqual(result.sale.session, { utm_source: "meta", utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null,
+    campaign_id: undefined, adset_id: undefined, ad_id: undefined, fbclid: "fb", gclid: null, started_at: "2026-09-28T20:35:22.671Z" });
+  delete result.sale.session;
   assert.deepEqual({ ...result.sale, repaid_after_reversal: undefined, click_problem: undefined }, { kind: "front",
     invoice_id: "7614b1bb-1d1a-43ba-890c-50d74216eb56", order_id: "hubla:7614b1bb-1d1a-43ba-890c-50d74216eb56", status: "paid",
     value: 297, charged_total: 297, seller_net: 267.3, paid_at: "2026-09-28T20:35:33.512Z", refunded_at: null, chargeback_at: null,

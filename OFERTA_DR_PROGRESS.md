@@ -11,6 +11,15 @@ Registro vivo das pendências do handoff de 04/10/2026. Atualize a cada entrega.
 - Teste oficial da Hubla recebido: 4 avisos, todos gravados como sandbox, nenhum pedido criado. `provider_connected` segue falso (nenhum aviso real).
 - ID do produto observado no aviso: `E2BQDamsTpmOHKIqPLde` (a oferta é `HC0TaiMJfWxtvfCzBISz`).
 
+### Decisão de arquitetura (05/10/2026): sem redirecionamento
+
+- Requisito do Carlos: nada pode tirar o caminho do anúncio do ar. Decisão: os anúncios apontam direto para as páginas; a tag cria o `click_id`; o Oferta DR sai do caminho do visitante. O router continua no sistema, sem uso em anúncios.
+- Plano de ida para produção revisado pelo Carlos em documento próprio (Claude Docs, "Oferta DR — plano de ida para produção").
+- Entregue nesta etapa: tag versão 2, `POST /track/click` endurecido, recuperação do clique pelo checkout, rotas antigas de receita com senha, painel de pendências da Hubla.
+- Testes: unitários completos, `validation/hubla.integration.js` (10 grupos), `validation/funnel.integration.js` (7 grupos), tag em Chromium real (12 cenários), painel conferido em desktop e celular. Revisão independente feita; achados de atribuição corrigidos.
+- Produção na Render: serviço e banco estão no plano gratuito. **O banco de produção expira em 29/10/2026** se não for para plano pago. O Carlos vai contratar.
+- Pendente: publicar no staging, testar a tag versão 2 nas páginas reais, Black Track trocar a tag no GTM, aprovação de produção.
+
 ### Compra real controlada (05/10/2026, staging)
 
 - Router `teste-hubla` (staging) → checkout da Hubla com `click_id` → Pix de R$297 pago pelo titular.
