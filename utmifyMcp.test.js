@@ -341,3 +341,14 @@ test("calcula campos internos de valor real sem mídia", () => {
   assert.equal(fields.mentorship_attach_rate_pct, 50);
   assert.equal(fields.tracked_total_roas, null);
 });
+
+test("UTMIFY_META_ACCOUNTS restringe as contas por nome ou ID e nunca cai para todas", () => {
+  const { filterMetaAccounts } = require("./utmifyMcp");
+  const accounts = [{ id: "act_111", name: "USD 01" }, { id: "act_222", name: "USD 02" }, { id: "act_333", name: "USD 03" }];
+  assert.equal(filterMetaAccounts(accounts, {}).length, 3, "sem a variavel valem todas");
+  assert.deepEqual(filterMetaAccounts(accounts, { UTMIFY_META_ACCOUNTS: " usd 01 , USD 03 " }).map((a) => a.id), ["act_111", "act_333"]);
+  assert.deepEqual(filterMetaAccounts(accounts, { UTMIFY_META_ACCOUNTS: "222,act_333" }).map((a) => a.name), ["USD 02", "USD 03"]);
+  assert.throws(() => filterMetaAccounts(accounts, { UTMIFY_META_ACCOUNTS: "USD 01,USD 09" }), /USD 09|usd 09/i);
+  assert.throws(() => filterMetaAccounts(accounts, { UTMIFY_META_ACCOUNTS: "outra" }), /Contas disponiveis: USD 01, USD 02, USD 03/);
+  assert.throws(() => filterMetaAccounts([], { UTMIFY_META_ACCOUNTS: "USD 01" }), /conta nao encontrada/);
+});

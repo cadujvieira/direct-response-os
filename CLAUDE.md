@@ -124,6 +124,7 @@ Tracking Health rules:
 
 UTMify MCP rules:
 - credentials are environment-only: `UTMIFY_MCP_TOKEN`, optional `UTMIFY_MCP_ENDPOINT`, optional `UTMIFY_MCP_RESOURCES`, optional `UTMIFY_DASHBOARD_ID`;
+- optional `UTMIFY_META_ACCOUNTS` (comma-separated account names or IDs) restricts discovery and sync to the ad accounts of this offer. When it is set and any listed account is missing, discovery/sync fail with an explicit message; it never falls back to all accounts;
 - never store or return the MCP token, full authenticated URL or provider error body;
 - current allowed tools are read-only: dashboard discovery and Meta ad-object metrics;
 - sync a bounded range of at most 31 days and fetch campaign/adset/ad sequentially to avoid abusive MCP traffic;

@@ -192,6 +192,26 @@ function toMcpDateRange(from, to, timeZone) {
   };
 }
 
+// UTMIFY_META_ACCOUNTS (opcional): contas de anuncio desta oferta, separadas por virgula, pelo nome ou pelo ID
+// que aparecem na UTMify. Sem a variavel, valem todas as contas habilitadas no dashboard.
+// Se a variavel existir e nenhuma conta corresponder, o erro e explicito: nunca cai para "todas as contas".
+function filterMetaAccounts(accounts, env = process.env) {
+  const wanted = String(env.UTMIFY_META_ACCOUNTS || "").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  const list = Array.isArray(accounts) ? accounts : [];
+  if (!wanted.length) return list;
+  const strip = (value) => String(value || "").trim().toLowerCase();
+  const chosen = list.filter((account) => wanted.includes(strip(account.id)) || wanted.includes(strip(account.name)) ||
+    wanted.includes(strip(account.id).replace(/^act_/, "")));
+  const missing = wanted.filter((name) => !list.some((account) => [strip(account.id), strip(account.name), strip(account.id).replace(/^act_/, "")].includes(name)));
+  if (!chosen.length || missing.length) {
+    const error = new Error("UTMIFY_META_ACCOUNTS: conta nao encontrada no dashboard (" + (missing.join(", ") || "nenhuma corresponde") +
+      "). Contas disponiveis: " + (list.map((account) => account.name || account.id).join(", ") || "nenhuma"));
+    error.statusCode = 400;
+    throw error;
+  }
+  return chosen;
+}
+
 function normalizeDashboard(raw) {
   const metaAccounts = [];
   for (const profile of Array.isArray(raw?.metaProfiles) ? raw.metaProfiles : []) {
@@ -419,7 +439,7 @@ async function discoverUtmify(pool) {
     selected.name,
     selected.time_zone,
     selected.currency,
-    JSON.stringify(selected.meta_accounts)
+    JSON.stringify(filterMetaAccounts(selected.meta_accounts))
   ]);
 
   return {
@@ -469,9 +489,9 @@ async function syncUtmify(pool, input = {}) {
     Number(connection.time_zone || 0)
   );
 
-  const enabledAccounts = Array.isArray(connection.meta_accounts)
-    ? connection.meta_accounts.map((item) => item.id).filter(Boolean)
-    : [];
+  // O filtro vale tambem aqui: mudar a variavel ja restringe a proxima sincronizacao.
+  const enabledAccounts = filterMetaAccounts(connection.meta_accounts)
+    .map((item) => item.id).filter(Boolean);
 
   const syncResult = await pool.query(`
     INSERT INTO dr_utmify_syncs (
@@ -1184,6 +1204,7 @@ function registerUtmifyRoutes(app, pool) {
 }
 
 module.exports = {
+  filterMetaAccounts,
   ALLOWED_LEVELS,
   MAX_SYNC_DAYS,
   buildEconomicsSummary,

@@ -152,3 +152,5 @@ Variáveis novas (todas opcionais): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `DR_
 - Purchase da Black Track para a Meta: problema era do lado deles e foi resolvido por eles.
 - Decisão do titular: rota `mmd` com as 22 páginas em partes iguais e leitura inicial no painel a partir de 5 compradores por página (confirmação a partir de 30). O monitor passa a conferir até 40 páginas.
 - Pedido do titular: zerar os dados de teste da produção antes da operação real. Criado `scripts/zerar-dados-de-teste.js` (executado por ele no shell do Render; mantém rotas e configurações; com travas). Conferido antes: a produção tinha só 9 cliques e 2 compras, todos de teste.
+- Dados de teste da produção zerados pelo titular (cópia exportada antes); painel verde com 22/22 páginas no ar.
+- UTMify ligada na produção (dashboard Principal). A pedido do titular, nova variável opcional `UTMIFY_META_ACCOUNTS` para usar só as contas de anúncio desta oferta.
