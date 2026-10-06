@@ -197,3 +197,37 @@ test("descartes do router: so o que aconteceu na ultima hora vira alerta", async
   clock += 60000; dropped = 4; assert.equal((await collector.collect()).router.dropped_1h, 4);
   clock += 2 * 3600000; assert.equal((await collector.collect()).router.dropped_1h, 0);
 });
+
+test("dominio inteiro respondendo 404 ao monitor e um unico alerta de atencao, nao 12 criticos", () => {
+  const s = healthy();
+  s.pages = [{ route: "mmd", name: "Geral", host: "a.com", page: "a.com", ok: true, status: 200, ms: 300 }]
+    .concat([1, 2, 3, 4].map(n => ({ route: "mmd", name: "VSL 0" + n, host: "b.com", page: "b.com/vsl-0" + n, ok: false, status: 404, ms: 200 })));
+  const result = evaluate(s);
+  assert.equal(result.level, "attention");
+  assert.deepEqual(result.alerts.map(a => a.title), ["Não consegui conferir as páginas de b.com"]);
+  assert.match(result.alerts[0].text, /4 páginas de b\.com responderam 404/);
+  assert.equal(result.metrics.pages.filter(p => p.refused_by_host).length, 4);
+  // uma unica pagina com 404 entre outras saudaveis do mesmo dominio continua sendo queda
+  const one = healthy();
+  one.pages = [1, 2, 3].map(n => ({ route: "mmd", name: "P" + n, host: "b.com", page: "b.com/p" + n, ok: n !== 2, status: n === 2 ? 404 : 200, ms: 100 }));
+  assert.deepEqual(evaluate(one).alerts.map(a => a.title), ["Landing page fora do ar: P2"]);
+  // dominio inteiro sem conexao ou com erro 5xx e queda de verdade
+  const down = healthy();
+  down.pages = [1, 2, 3].map(n => ({ route: "mmd", name: "P" + n, host: "b.com", page: "b.com/p" + n, ok: false, status: n === 1 ? 503 : 0, ms: 100, error: "sem conexão" }));
+  assert.equal(evaluate(down).level, "critical");
+  assert.equal(evaluate(down).alerts.length, 3);
+});
+
+test("paginas do mesmo dominio sao consultadas uma por vez; dominio barrado nao acelera as consultas", async () => {
+  let clock = 0, active = 0, maxActive = 0, calls = 0;
+  const routes = [1, 2, 3, 4].map(n => ({ slug: "mmd", name: "P" + n, destination_url: "https://b.com/p" + n }));
+  const collector = createCollector({ pool: fakePool(routes), router: null, monitor: createMonitor({ query: async () => ({ rows: [] }) }), env: {},
+    fetchImpl: async () => { calls += 1; active += 1; maxActive = Math.max(maxActive, active); await new Promise(r => setTimeout(r, 5)); active -= 1; return reply(404); },
+    retryMs: 0, gapMs: 0, now: () => clock, lookup: async () => [{ address: "93.184.216.34" }] });
+  const s = await collector.collect();
+  assert.equal(maxActive, 1, "nunca duas consultas simultaneas ao mesmo dominio");
+  assert.equal(s.pages.every(p => p.host === "b.com" && p.status === 404), true);
+  const first = calls; clock += 70000; await collector.collect();
+  assert.equal(calls, first, "com o dominio inteiro recusando, nao reconsulta a cada minuto");
+  clock += 300000; await collector.collect(); assert(calls > first);
+});

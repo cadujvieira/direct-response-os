@@ -351,4 +351,8 @@ test("UTMIFY_META_ACCOUNTS restringe as contas por nome ou ID e nunca cai para t
   assert.throws(() => filterMetaAccounts(accounts, { UTMIFY_META_ACCOUNTS: "USD 01,USD 09" }), /USD 09|usd 09/i);
   assert.throws(() => filterMetaAccounts(accounts, { UTMIFY_META_ACCOUNTS: "outra" }), /Contas disponiveis: USD 01, USD 02, USD 03/);
   assert.throws(() => filterMetaAccounts([], { UTMIFY_META_ACCOUNTS: "USD 01" }), /conta nao encontrada/);
+  const decorated = [{ id: "act_1", name: "\u25CF USD 01" }, { id: "act_2", name: "\uD83D\uDFE2 USD 02 " }, { id: "act_3", name: "\u25CF USD 03" }];
+  assert.deepEqual(filterMetaAccounts(decorated, { UTMIFY_META_ACCOUNTS: "USD 01,USD 02" }).map((a) => a.id), ["act_1", "act_2"], "simbolos e emojis no nome nao atrapalham");
+  assert.equal(filterMetaAccounts(decorated, { UTMIFY_META_ACCOUNTS: "usd01" }).length, 1);
+  assert.equal(filterMetaAccounts(decorated, { UTMIFY_META_ACCOUNTS: " , " }).length, 3, "variavel vazia vale como ausente");
 });

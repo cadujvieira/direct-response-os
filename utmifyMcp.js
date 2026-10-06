@@ -196,13 +196,14 @@ function toMcpDateRange(from, to, timeZone) {
 // que aparecem na UTMify. Sem a variavel, valem todas as contas habilitadas no dashboard.
 // Se a variavel existir e nenhuma conta corresponder, o erro e explicito: nunca cai para "todas as contas".
 function filterMetaAccounts(accounts, env = process.env) {
-  const wanted = String(env.UTMIFY_META_ACCOUNTS || "").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  // Compara so letras e numeros: nomes de conta costumam ter simbolos ou emojis na frente ("● USD 01").
+  const key = (value) => String(value || "").toLowerCase().replace(/^act_/, "").replace(/[^\p{L}\p{N}]+/gu, "");
+  const wanted = String(env.UTMIFY_META_ACCOUNTS || "").split(",").map((item) => item.trim()).filter((item) => key(item));
   const list = Array.isArray(accounts) ? accounts : [];
   if (!wanted.length) return list;
-  const strip = (value) => String(value || "").trim().toLowerCase();
-  const chosen = list.filter((account) => wanted.includes(strip(account.id)) || wanted.includes(strip(account.name)) ||
-    wanted.includes(strip(account.id).replace(/^act_/, "")));
-  const missing = wanted.filter((name) => !list.some((account) => [strip(account.id), strip(account.name), strip(account.id).replace(/^act_/, "")].includes(name)));
+  const matches = (account, name) => key(account.id) === key(name) || key(account.name) === key(name);
+  const chosen = list.filter((account) => wanted.some((name) => matches(account, name)));
+  const missing = wanted.filter((name) => !list.some((account) => matches(account, name)));
   if (!chosen.length || missing.length) {
     const error = new Error("UTMIFY_META_ACCOUNTS: conta nao encontrada no dashboard (" + (missing.join(", ") || "nenhuma corresponde") +
       "). Contas disponiveis: " + (list.map((account) => account.name || account.id).join(", ") || "nenhuma"));
@@ -1148,8 +1149,10 @@ function registerUtmifyRoutes(app, pool) {
     try {
       const result = await discoverUtmify(pool);
       res.json({ ok: true, ...result });
-    } catch {
-      res.status(502).json({ ok: false, error: "nao foi possivel conectar a UTMify" });
+    } catch (error) {
+      // Erros de configuracao (ex.: conta nao encontrada) chegam ao painel com o motivo; falhas do provedor, nao.
+      res.status(error.statusCode || 502).json({ ok: false,
+        error: error.statusCode === 400 ? error.message : "nao foi possivel conectar a UTMify" });
     }
   });
 

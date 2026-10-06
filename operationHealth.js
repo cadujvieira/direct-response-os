@@ -125,6 +125,21 @@ async function probeOnce(url, fetchImpl, lookup) {
 }
 // Respostas que indicam protecao contra robos, nao queda.
 const unverifiable = status => [401, 403, 406, 429].includes(status);
+// Dominio em que TODAS as paginas (3 ou mais) responderam erro 4xx ao mesmo tempo. Paginas diferentes nao somem
+// juntas com 404: o padrao e de hospedagem barrando o monitor. Queda real costuma vir como falha de conexao ou 5xx.
+function refusedHosts(pages) {
+  const groups = new Map();
+  for (const page of pages || []) {
+    if (!page || !page.host || page.skipped) continue;
+    if (!groups.has(page.host)) groups.set(page.host, []);
+    groups.get(page.host).push(page);
+  }
+  const refused = new Map();
+  for (const [host, list] of groups) {
+    if (list.length >= 3 && list.every(page => !page.ok && page.status >= 400 && page.status < 500)) refused.set(host, list);
+  }
+  return refused;
+}
 // Uma falha isolada nao vira alarme: a consulta e repetida uma vez antes de acusar queda.
 async function probe(url, fetchImpl, lookup = dns.lookup, retryMs = 2000) {
   const first = await probeOnce(url, fetchImpl, lookup);
@@ -135,7 +150,7 @@ async function probe(url, fetchImpl, lookup = dns.lookup, retryMs = 2000) {
 const pageLabel = value => { try { const u = new URL(value); return u.hostname + (u.pathname === "/" ? "" : u.pathname); } catch (error) { return "endereco invalido"; } };
 
 function createCollector({ pool, router, monitor, env = process.env, fetchImpl = (...args) => fetch(...args), now = () => Date.now(),
-  lookup = dns.lookup, retryMs = 2000 }) {
+  lookup = dns.lookup, retryMs = 2000, gapMs = 400 }) {
   const cache = { site: null, pages: null };
   const startedAt = now();
   const drops = []; // leituras do contador de descartes do router, para saber o que e recente
@@ -162,10 +177,26 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
     // O checkout nao e consultado: visitas do monitor distorceriam os numeros de conversao da Hubla.
     const chosen = targets.filter(target => probeAllowed(target.destination_url) &&
       !/(^|\.)hub\.la$/i.test(new URL(target.destination_url).hostname)).slice(0, MAX_PAGES);
-    // Em paralelo: varias paginas fora do ar nao somam os tempos de espera.
-    const value = await Promise.all(chosen.map(async target => ({ route: target.slug, name: target.name,
-      page: pageLabel(target.destination_url), ...(await probe(target.destination_url, fetchImpl, lookup, retryMs)) })));
-    const bad = value.find(item => !item.ok && !item.skipped && !unverifiable(item.status));
+    // Dominios diferentes em paralelo; dentro do mesmo dominio, uma pagina por vez e com intervalo, para a
+    // hospedagem nao tratar o monitor como ataque (12 consultas simultaneas ja fizeram um host responder 404 a todas).
+    const byHost = new Map();
+    chosen.forEach((target, index) => {
+      const host = new URL(target.destination_url).hostname.toLowerCase();
+      if (!byHost.has(host)) byHost.set(host, []);
+      byHost.get(host).push({ target, index, host });
+    });
+    const value = new Array(chosen.length);
+    await Promise.all([...byHost.values()].map(async group => {
+      for (const item of group) {
+        if (item !== group[0] && gapMs) await new Promise(resolve => setTimeout(resolve, gapMs));
+        value[item.index] = { route: item.target.slug, name: item.target.name, host: item.host,
+          page: pageLabel(item.target.destination_url), ...(await probe(item.target.destination_url, fetchImpl, lookup, retryMs)) };
+      }
+    }));
+    const refused = refusedHosts(value);
+    const bad = value.find(item => !item.ok && !item.skipped && !unverifiable(item.status) && !refused.has(item.host));
+    // Pagina isolada com falha: confere de novo em 1 minuto. Dominio inteiro recusando o monitor: mantem o
+    // ritmo normal, porque insistir so piora o bloqueio.
     cache.pages = { at: now(), value, key, failing: Boolean(bad) };
     if (value.length) monitor.record("lp", !bad, Math.max(...value.map(item => item.ms)), bad ? bad.page + " " + (bad.status || bad.error) : "");
     return value;
@@ -266,7 +297,16 @@ function evaluate(s) {
   }
 
   // Landing pages que recebem trafego
-  for (const page of s.pages || []) {
+  const refused = refusedHosts(s.pages);
+  for (const [host, list] of refused) {
+    const codes = [...new Set(list.map(page => page.status))].join(", ");
+    add("attention", "Não consegui conferir as páginas de " + host, "As " + list.length + " páginas de " + host + " responderam " + codes +
+      " ao monitor ao mesmo tempo. Quando todas falham juntas com esse tipo de resposta, o mais comum é a hospedagem estar barrando o monitor, e não as páginas terem caído.",
+      "Abra uma delas em uma aba anônima. Se abrir normal, os visitantes e as vendas não são afetados; peça à hospedagem para liberar o monitor (ele se identifica como OfertaDRMonitor). Se não abrir, o site caiu: tire o peso dessas páginas na aba Router.");
+  }
+  s.pages = (s.pages || []).map(page => (refused.has(page.host) ? { ...page, refused_by_host: true } : page));
+  for (const page of s.pages) {
+    if (page.refused_by_host) continue;
     const label = page.name + " (" + page.page + ")";
     if (page.ok) { if (page.ms > 5000) add("attention", "Landing page lenta: " + page.name, label + " levou " + seconds(page.ms) + " para abrir.", "Página lenta derruba conversão. Veja a hospedagem dessa página."); }
     else if (page.skipped) continue;

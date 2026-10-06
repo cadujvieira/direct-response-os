@@ -27,7 +27,8 @@ function healthChips(m) {
   const router = m.router || {}, latency = m.router_latency || {}, clicks = m.clicks || {}, sales = m.sales || {};
   const hubla = m.hubla || {}, pages = m.pages || [], site = m.site || {}, errors = m.errors || {}, utmify = m.utmify || {};
   const pagesOk = pages.filter(page => page.ok).length;
-  const pagesDown = pages.filter(page => !page.ok && !page.skipped && [401, 403, 406, 429].indexOf(page.status) < 0).length;
+  const pagesUnchecked = pages.filter(page => !page.ok && (page.refused_by_host || page.skipped || [401, 403, 406, 429].indexOf(page.status) >= 0)).length;
+  const pagesDown = pages.filter(page => !page.ok).length - pagesUnchecked;
   const hublaOpen = Number(hubla.queue_late || 0) + Number(hubla.stuck || 0) + Number(hubla.unattributed_24h || 0) + Number(hubla.review || 0);
   const slowest = Math.max(0, ...Object.values(site).map(item => (item && item.ms) || 0));
   return [
@@ -37,7 +38,8 @@ function healthChips(m) {
       latency.samples ? "média " + healthMs(latency.avg_ms) + " · " + healthCount(m.active_routes) + " rota(s)" : healthCount(m.active_routes) + " rota(s) ativa(s)",
       router.dropped_1h || router.queue ? "bad" : "good"),
     healthChip("Landing pages", pages.length ? pagesOk + "/" + pages.length + " no ar" : "—",
-      pages.length ? "conferidas a cada 5 minutos" : "nenhuma página em rotação", pagesDown ? "bad" : pages.length ? "good" : ""),
+      !pages.length ? "nenhuma página em rotação" : pagesUnchecked ? pagesUnchecked + " sem conferência (monitor barrado)" : "conferidas a cada 5 minutos",
+      pagesDown ? "bad" : pagesUnchecked ? "" : pages.length ? "good" : ""),
     healthChip("Hubla", !hubla.token_configured ? "Não ligada" : hublaOpen ? healthCount(hublaOpen) + " pendência(s)" : "Em dia",
       hubla.last_at ? "último aviso às " + healthTime(hubla.last_at) : "nenhum aviso real ainda", !hubla.token_configured || hublaOpen ? "bad" : "good"),
     healthChip("Tag das páginas", healthCount(clicks.recovered_24h) + " recuperado(s)", "cliques que só o checkout informou (24 h)",
