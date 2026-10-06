@@ -196,21 +196,25 @@ function toMcpDateRange(from, to, timeZone) {
 // que aparecem na UTMify. Sem a variavel, valem todas as contas habilitadas no dashboard.
 // Se a variavel existir e nenhuma conta corresponder, o erro e explicito: nunca cai para "todas as contas".
 function filterMetaAccounts(accounts, env = process.env) {
-  // Compara so letras e numeros: nomes de conta costumam ter simbolos ou emojis na frente ("● USD 01").
+  // Compara so letras e numeros: nomes de conta costumam ter simbolos, emojis ou uma letra de marcacao na frente
+  // ("● USD 01", "α USD 01"). Vale o nome exato; sem nome exato, vale o nome que CONTEM o texto pedido, desde que
+  // so uma conta contenha. Texto que serve para duas contas e erro, nunca um palpite.
   const key = (value) => String(value || "").toLowerCase().replace(/^act_/, "").replace(/[^\p{L}\p{N}]+/gu, "");
   const wanted = String(env.UTMIFY_META_ACCOUNTS || "").split(",").map((item) => item.trim()).filter((item) => key(item));
   const list = Array.isArray(accounts) ? accounts : [];
   if (!wanted.length) return list;
-  const matches = (account, name) => key(account.id) === key(name) || key(account.name) === key(name);
-  const chosen = list.filter((account) => wanted.some((name) => matches(account, name)));
-  const missing = wanted.filter((name) => !list.some((account) => matches(account, name)));
-  if (!chosen.length || missing.length) {
-    const error = new Error("UTMIFY_META_ACCOUNTS: conta nao encontrada no dashboard (" + (missing.join(", ") || "nenhuma corresponde") +
-      "). Contas disponiveis: " + (list.map((account) => account.name || account.id).join(", ") || "nenhuma"));
-    error.statusCode = 400;
-    throw error;
+  const available = "Contas disponiveis: " + (list.map((account) => account.name || account.id).join(", ") || "nenhuma");
+  const fail = (message) => { const error = new Error("UTMIFY_META_ACCOUNTS: " + message + ". " + available); error.statusCode = 400; throw error; };
+  const chosen = new Set(), missing = [];
+  for (const name of wanted) {
+    const exact = list.filter((account) => key(account.id) === key(name) || key(account.name) === key(name));
+    const partial = exact.length ? exact : list.filter((account) => key(account.name).includes(key(name)));
+    if (!partial.length) missing.push(name);
+    else if (!exact.length && partial.length > 1) fail("\"" + name + "\" serve para mais de uma conta (" + partial.map((account) => account.name).join(", ") + "); escreva o nome completo");
+    else partial.forEach((account) => chosen.add(account));
   }
-  return chosen;
+  if (missing.length || !chosen.size) fail("conta nao encontrada no dashboard (" + (missing.join(", ") || "nenhuma corresponde") + ")");
+  return list.filter((account) => chosen.has(account));
 }
 
 function normalizeDashboard(raw) {

@@ -355,4 +355,10 @@ test("UTMIFY_META_ACCOUNTS restringe as contas por nome ou ID e nunca cai para t
   assert.deepEqual(filterMetaAccounts(decorated, { UTMIFY_META_ACCOUNTS: "USD 01,USD 02" }).map((a) => a.id), ["act_1", "act_2"], "simbolos e emojis no nome nao atrapalham");
   assert.equal(filterMetaAccounts(decorated, { UTMIFY_META_ACCOUNTS: "usd01" }).length, 1);
   assert.equal(filterMetaAccounts(decorated, { UTMIFY_META_ACCOUNTS: " , " }).length, 3, "variavel vazia vale como ausente");
+  const greek = [{ id: "act_1", name: "\u03B1 USD 01" }, { id: "act_2", name: "\u03B1 USD 02" }, { id: "act_3", name: "\u03B1 USD 03" }];
+  assert.deepEqual(filterMetaAccounts(greek, { UTMIFY_META_ACCOUNTS: "USD 01,USD 02" }).map((a) => a.id), ["act_1", "act_2"], "letra de marcacao na frente do nome");
+  assert.throws(() => filterMetaAccounts(greek, { UTMIFY_META_ACCOUNTS: "USD" }), /serve para mais de uma conta/);
+  assert.throws(() => filterMetaAccounts(greek, { UTMIFY_META_ACCOUNTS: "USD 01,USD 0" }), /serve para mais de uma conta/);
+  const overlap = [{ id: "act_1", name: "USD 1" }, { id: "act_2", name: "USD 10" }];
+  assert.deepEqual(filterMetaAccounts(overlap, { UTMIFY_META_ACCOUNTS: "USD 1" }).map((a) => a.id), ["act_1"], "nome exato vence o nome que apenas contem");
 });
