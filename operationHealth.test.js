@@ -182,11 +182,14 @@ test("pagina com falha e conferida de novo no minuto seguinte; saudavel so a cad
   const routes = [{ slug: "vsl", name: "A", destination_url: "https://a.com/x" }];
   const collector = createCollector({ pool: fakePool(routes), router: null, monitor: createMonitor({ query: async () => ({ rows: [] }) }), env: {},
     fetchImpl: async () => { calls += 1; return reply(status); }, retryMs: 0, now: () => clock, lookup: async () => [{ address: "93.184.216.34" }] });
+  const settle = () => new Promise(resolve => setTimeout(resolve, 20));
   await collector.collect(); assert.equal(calls, 2);
   clock += 30000; await collector.collect(); assert.equal(calls, 2, "dentro de 1 minuto usa a leitura guardada");
-  clock += 40000; status = 200; const back = await collector.collect(); assert.equal(calls, 3); assert.equal(back.pages[0].ok, true);
-  clock += 120000; await collector.collect(); assert.equal(calls, 3, "pagina saudavel: nova consulta so depois de 5 minutos");
-  clock += 200000; await collector.collect(); assert.equal(calls, 4);
+  // vencido o prazo, devolve a leitura anterior na hora e confere de novo em segundo plano
+  clock += 40000; status = 200; const stale = await collector.collect(); assert.equal(stale.pages[0].ok, false);
+  await settle(); assert.equal(calls, 3); assert.equal((await collector.collect()).pages[0].ok, true);
+  clock += 120000; await collector.collect(); await settle(); assert.equal(calls, 3, "pagina saudavel: nova consulta so depois de 5 minutos");
+  clock += 200000; await collector.collect(); await settle(); assert.equal(calls, 4);
 });
 
 test("descartes do router: so o que aconteceu na ultima hora vira alerta", async () => {
@@ -227,7 +230,40 @@ test("paginas do mesmo dominio sao consultadas uma por vez; dominio barrado nao 
   const s = await collector.collect();
   assert.equal(maxActive, 1, "nunca duas consultas simultaneas ao mesmo dominio");
   assert.equal(s.pages.every(p => p.host === "b.com" && p.status === 404), true);
-  const first = calls; clock += 70000; await collector.collect();
+  const settle = () => new Promise(resolve => setTimeout(resolve, 60));
+  assert.equal(calls, 4, "resposta 4xx nao e repetida");
+  const first = calls; clock += 70000; await collector.collect(); await settle();
   assert.equal(calls, first, "com o dominio inteiro recusando, nao reconsulta a cada minuto");
-  clock += 300000; await collector.collect(); assert(calls > first);
+  clock += 300000; const again = await collector.collect(); await settle();
+  assert.equal(calls, first + 1, "dominio barrado: uma unica consulta de sondagem por rodada");
+  assert.equal(again.pages.length, 4);
+  assert.equal((await collector.collect()).pages.every(p => p.status === 404), true);
+});
+
+test("dominio que volta a aceitar o monitor e conferido por inteiro de novo", async () => {
+  let clock = 0, calls = 0, status = 404;
+  const routes = [1, 2, 3].map(n => ({ slug: "mmd", name: "P" + n, destination_url: "https://b.com/p" + n }));
+  const collector = createCollector({ pool: fakePool(routes), router: null, monitor: createMonitor({ query: async () => ({ rows: [] }) }), env: {},
+    fetchImpl: async () => { calls += 1; return reply(status); }, retryMs: 0, gapMs: 0, now: () => clock, lookup: async () => [{ address: "93.184.216.34" }] });
+  const settle = () => new Promise(resolve => setTimeout(resolve, 40));
+  assert.equal(evaluate({ ...healthy(), pages: (await collector.collect()).pages }).level, "attention");
+  clock += 400000; status = 200; await collector.collect(); await settle();
+  assert.equal(calls, 3 + 3, "sondagem respondeu: as outras paginas sao conferidas na mesma rodada");
+  const back = await collector.collect();
+  assert.equal(back.pages.every(p => p.ok), true);
+  assert.equal(evaluate({ ...healthy(), pages: back.pages }).level, "ok");
+});
+
+test("a leitura de saude nao espera a conferencia das paginas", async () => {
+  let release;
+  const routes = [{ slug: "mmd", name: "Lenta", destination_url: "https://b.com/lenta" }];
+  const collector = createCollector({ pool: fakePool(routes), router: null, monitor: createMonitor({ query: async () => ({ rows: [] }) }), env: {},
+    fetchImpl: () => new Promise(resolve => { release = () => resolve(reply(200)); }), retryMs: 0, gapMs: 0, firstWaitMs: 30,
+    lookup: async () => [{ address: "93.184.216.34" }] });
+  const started = Date.now(), s = await collector.collect();
+  assert(Date.now() - started < 1000); assert.deepEqual(s.pages, []); assert.equal(s.pages_pending, true);
+  const result = evaluate(s); assert.equal(result.metrics.pages_pending, true);
+  assert.equal(result.alerts.some(a => /Landing page|conferir/.test(a.title)), false, "sem leitura ainda, sem alarme de pagina");
+  release(); await new Promise(resolve => setTimeout(resolve, 30));
+  assert.equal((await collector.collect()).pages[0].ok, true);
 });

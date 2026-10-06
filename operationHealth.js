@@ -140,17 +140,18 @@ function refusedHosts(pages) {
   }
   return refused;
 }
-// Uma falha isolada nao vira alarme: a consulta e repetida uma vez antes de acusar queda.
+// Uma falha passageira nao vira alarme: sem conexao ou erro 5xx sao repetidos uma vez antes de acusar queda.
+// Respostas 4xx sao definitivas (pagina inexistente ou monitor barrado): repetir so aumenta a chance de bloqueio.
 async function probe(url, fetchImpl, lookup = dns.lookup, retryMs = 2000) {
   const first = await probeOnce(url, fetchImpl, lookup);
-  if (first.ok || first.skipped || unverifiable(first.status)) return first;
+  if (first.ok || first.skipped || (first.status >= 400 && first.status < 500)) return first;
   await new Promise(resolve => setTimeout(resolve, retryMs));
   return probeOnce(url, fetchImpl, lookup);
 }
 const pageLabel = value => { try { const u = new URL(value); return u.hostname + (u.pathname === "/" ? "" : u.pathname); } catch (error) { return "endereco invalido"; } };
 
 function createCollector({ pool, router, monitor, env = process.env, fetchImpl = (...args) => fetch(...args), now = () => Date.now(),
-  lookup = dns.lookup, retryMs = 2000, gapMs = 400 }) {
+  lookup = dns.lookup, retryMs = 2000, gapMs = 400, firstWaitMs = 12000 }) {
   const cache = { site: null, pages: null };
   const startedAt = now();
   const drops = []; // leituras do contador de descartes do router, para saber o que e recente
@@ -170,10 +171,11 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
     return value;
   }
   // Cada landing page que esta recebendo trafego do router, a cada 5 minutos.
-  async function measurePages(targets) {
-    // Confere de novo a cada 5 minutos; a cada minuto enquanto houver pagina com falha; e na hora se as rotas mudarem.
-    const key = targets.map(target => target.slug + "|" + target.destination_url).join("\n");
-    if (cache.pages && cache.pages.key === key && now() - cache.pages.at < (cache.pages.failing ? SITE_TTL_MS : PAGES_TTL_MS)) return cache.pages.value;
+  // As paginas sao conferidas em segundo plano: a leitura de saude nunca espera por elas (22 paginas, uma por vez,
+  // passam facil de 30 segundos). Quem pergunta recebe a ultima leitura; so a primeira de todas espera um pouco.
+  let pagesRefresh = null;
+  const refusing = new Set(); // dominios que estao barrando o monitor
+  async function refreshPages(targets, key) {
     // O checkout nao e consultado: visitas do monitor distorceriam os numeros de conversao da Hubla.
     const chosen = targets.filter(target => probeAllowed(target.destination_url) &&
       !/(^|\.)hub\.la$/i.test(new URL(target.destination_url).hostname)).slice(0, MAX_PAGES);
@@ -186,20 +188,46 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
       byHost.get(host).push({ target, index, host });
     });
     const value = new Array(chosen.length);
-    await Promise.all([...byHost.values()].map(async group => {
-      for (const item of group) {
-        if (item !== group[0] && gapMs) await new Promise(resolve => setTimeout(resolve, gapMs));
-        value[item.index] = { route: item.target.slug, name: item.target.name, host: item.host,
-          page: pageLabel(item.target.destination_url), ...(await probe(item.target.destination_url, fetchImpl, lookup, retryMs)) };
+    const entry = (item, result) => ({ route: item.target.slug, name: item.target.name, host: item.host,
+      page: pageLabel(item.target.destination_url), ...result });
+    await Promise.all([...byHost.entries()].map(async ([host, group]) => {
+      let rest = group, asked = false;
+      if (refusing.has(host)) {
+        asked = true;
+        // Dominio barrando o monitor: uma unica consulta de sondagem por rodada. Insistir em todas as paginas
+        // mantem o bloqueio; com uma so, ele tende a expirar. Voltando a responder, confere todas de novo.
+        const canary = await probeOnce(group[0].target.destination_url, fetchImpl, lookup);
+        if (!canary.ok && canary.status >= 400 && canary.status < 500) {
+          group.forEach(item => { value[item.index] = entry(item, { ok: false, status: canary.status, ms: canary.ms }); });
+          return;
+        }
+        refusing.delete(host);
+        value[group[0].index] = entry(group[0], canary);
+        rest = group.slice(1);
+      }
+      for (const item of rest) {
+        if (asked && gapMs) await new Promise(resolve => setTimeout(resolve, gapMs));
+        asked = true;
+        value[item.index] = entry(item, await probe(item.target.destination_url, fetchImpl, lookup, retryMs));
       }
     }));
     const refused = refusedHosts(value);
+    for (const host of byHost.keys()) { if (refused.has(host)) refusing.add(host); else refusing.delete(host); }
     const bad = value.find(item => !item.ok && !item.skipped && !unverifiable(item.status) && !refused.has(item.host));
     // Pagina isolada com falha: confere de novo em 1 minuto. Dominio inteiro recusando o monitor: mantem o
     // ritmo normal, porque insistir so piora o bloqueio.
     cache.pages = { at: now(), value, key, failing: Boolean(bad) };
     if (value.length) monitor.record("lp", !bad, Math.max(...value.map(item => item.ms)), bad ? bad.page + " " + (bad.status || bad.error) : "");
     return value;
+  }
+  async function measurePages(targets) {
+    // Confere de novo a cada 5 minutos; a cada minuto enquanto houver pagina com falha; e na hora se as rotas mudarem.
+    const key = targets.map(target => target.slug + "|" + target.destination_url).join("\n");
+    const known = cache.pages && cache.pages.key === key ? cache.pages : null;
+    if (known && now() - known.at < (known.failing ? SITE_TTL_MS : PAGES_TTL_MS)) return known.value;
+    if (!pagesRefresh) pagesRefresh = refreshPages(targets, key).catch(() => null).finally(() => { pagesRefresh = null; });
+    if (known) return known.value;
+    try { return await withTimeout(pagesRefresh, firstWaitMs); } catch (error) { return null; }
   }
 
   async function collect() {
@@ -226,6 +254,7 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
       SELECT 1 FROM dr_experiment_variants v WHERE v.experiment_id = e.id AND v.active = TRUE AND v.weight > 0) ORDER BY e.id LIMIT 10`)).rows.map(r => r.slug);
     s.active_routes = new Set(routes.map(r => r.slug)).size;
     s.pages = await measurePages(routes);
+    if (s.pages === null) { s.pages = []; s.pages_pending = true; } // primeira conferencia ainda em andamento
 
     const clicks = await one(`SELECT COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '30 minutes')::int AS m30,
         COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '60 minutes')::int AS m60,
@@ -371,7 +400,7 @@ function close(alerts, s) {
   const at = new Date(s.now || Date.now());
   const sales = s.sales || {};
   // Metricas mostradas no painel e enviadas ao diagnostico: somente contagens e tempos.
-  const metrics = { db_ms: s.db_ms == null ? null : s.db_ms, site: s.site || null, pages: s.pages || [], active_routes: s.active_routes || 0,
+  const metrics = { db_ms: s.db_ms == null ? null : s.db_ms, site: s.site || null, pages: s.pages || [], pages_pending: Boolean(s.pages_pending), active_routes: s.active_routes || 0,
     router: s.router || null, router_latency: s.router_latency || null, clicks: s.clicks || null,
     sales: s.sales ? { m60: sales.m60, h6: sales.h6, h24: sales.h24, last_at: sales.last_at, minutes_since_last: minutesSince(sales.last_at, at.toISOString()) } : null,
     hubla: s.hubla || null, utmify: s.utmify || null, automations: s.automations || null,

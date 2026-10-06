@@ -37,6 +37,7 @@ function healthChips(m) {
     healthChip("Router", router.queue ? healthCount(router.queue) + " em fila" : "Redirecionando",
       latency.samples ? "média " + healthMs(latency.avg_ms) + " · " + healthCount(m.active_routes) + " rota(s)" : healthCount(m.active_routes) + " rota(s) ativa(s)",
       router.dropped_1h || router.queue ? "bad" : "good"),
+    m.pages_pending ? healthChip("Landing pages", "Conferindo...", "primeira conferência depois de reiniciar") :
     healthChip("Landing pages", pages.length ? pagesOk + "/" + pages.length + " no ar" : "—",
       !pages.length ? "nenhuma página em rotação" : pagesUnchecked ? pagesUnchecked + " sem conferência (monitor barrado)" : "conferidas a cada 5 minutos",
       pagesDown ? "bad" : pagesUnchecked ? "" : pages.length ? "good" : ""),
