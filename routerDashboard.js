@@ -58,7 +58,54 @@ function renderRouterPerformance(node, rows) {
     body + "</tbody></table></div>";
   if (typeof decorateTooltips === "function") decorateTooltips(node);
 }
+// Paginas com link direto: mesmas regras de leitura das LPs da rota (amostra minima e margem de acaso).
+const pagePerfState = { request: 0 };
+function renderPagePerformance(node, pages) {
+  const real = pages.filter(page => !page.unidentified);
+  if (!pages.length) { node.innerHTML = '<div class="section-empty">Nenhum clique de link direto neste período.</div>'; return; }
+  const asRoute = real.map((page, index) => ({ variant_id: "p" + index, variant: page.name, assigned_clicks: page.clicks, buyers: page.buyers }));
+  const verdict = routerVerdict(asRoute);
+  const leader = verdict.leader ? real[Number(String(verdict.leader).slice(1))] : null;
+  const body = pages.map(page => {
+    const clicks = page.clicks, buyers = page.buyers, conversion = routerRate(buyers, clicks), spend = Number(page.spend || 0);
+    const net = Number(page.net_revenue || 0), cpa = buyers > 0 && spend > 0 ? spend / buyers : null, roas = spend > 0 ? net / spend : null;
+    const note = page.spend_without_page ? "<small>gasto de anúncio sem clique registrado</small>" : page.unidentified ? "<small>clique sem página (recuperado pelo checkout)</small>"
+      : clicks > 0 && buyers < ROUTER_MIN_BUYERS ? "<small>amostra pequena</small>" : buyers < ROUTER_CONFIRM_BUYERS ? "<small>leitura inicial</small>" : "";
+    return "<tr" + (leader === page ? ' class="router-leader"' : "") + "><td>" + escapeHtml(page.name) +
+      (page.page && page.page !== page.name ? "<small>" + escapeHtml(page.page) + "</small>" : "") + note + "</td><td>" +
+      routerNumber(clicks) + "</td><td>" + routerNumber(buyers) + "</td><td>" + (conversion == null ? "—" : formatPercent(conversion)) + "</td><td>" +
+      escapeHtml(formatMoney(spend)) + "</td><td>" + (cpa == null ? "—" : escapeHtml(formatMoney(cpa))) + "</td><td>" +
+      escapeHtml(formatMoney(page.front_revenue)) + "</td><td>" + escapeHtml(formatMoney(page.mentorship_revenue)) + "</td><td>" +
+      escapeHtml(formatMoney(page.refunds)) + "</td><td>" + escapeHtml(formatMoney(net)) + "</td><td>" +
+      (roas == null ? "—" : roas.toFixed(2).replace(".", ",") + "x") + "</td></tr>";
+  }).join("");
+  node.innerHTML = '<div class="router-verdict ' + verdict.tone + '">' + escapeHtml(verdict.text.replace(/LPs?\b/g, m => m === "LP" ? "página" : "páginas")) + "</div>" +
+    '<div class="crm-table-wrap"><table class="crm-table router-table"><thead><tr><th>Página</th><th>Cliques</th>' +
+    '<th data-tooltip="Cliques que geraram pelo menos uma compra front.">Compradores</th><th data-tooltip="Compradores divididos pelos cliques que chegaram nesta página.">Conversão</th>' +
+    '<th data-tooltip="Gasto dos anúncios (UTMify) dividido entre as páginas na proporção dos cliques de cada anúncio.">Investimento</th>' +
+    '<th data-tooltip="Investimento dividido pelos compradores.">CPA</th><th>Front</th><th>Mentoria</th><th>Reembolsos</th>' +
+    '<th data-tooltip="Front + mentoria + bump, menos reembolsos e chargebacks.">Líquido</th>' +
+    '<th data-tooltip="Líquido dividido pelo investimento.">ROAS</th></tr></thead><tbody>' + body + "</tbody></table></div>";
+  if (typeof decorateTooltips === "function") decorateTooltips(node);
+}
+async function loadPagePerformance() {
+  const node = document.getElementById("pagePerformance");
+  if (!node) return;
+  const request = ++pagePerfState.request;
+  const range = typeof reportRange === "object" && reportRange ? reportRange : {};
+  const query = range.from && range.to ? "?from=" + encodeURIComponent(range.from) + "&to=" + encodeURIComponent(range.to) : "";
+  try {
+    const response = await fetch("/api/pages/performance" + query, { cache: "no-store" });
+    if (!response.ok) throw new Error("erro");
+    const data = await response.json();
+    if (request !== pagePerfState.request) return;
+    renderPagePerformance(node, Array.isArray(data.pages) ? data.pages : []);
+  } catch (error) {
+    if (request === pagePerfState.request) node.innerHTML = '<div class="section-empty">Não foi possível carregar o desempenho por página.</div>';
+  }
+}
 async function loadRouterPerformance() {
+  loadPagePerformance();
   const nodes = [...document.querySelectorAll("[data-router-slug]")];
   if (!nodes.length) return;
   const request = ++routerPerfState.request;

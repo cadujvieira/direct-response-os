@@ -165,3 +165,9 @@ Causa: a Visão geral, o gráfico e a tabela de campanhas leem o investimento de
 Correção: busca automática do investimento na UTMify a cada 30 minutos (por anúncio, com campanha e conjunto), gravada por dia em `dr_ad_spend`; últimos 31 dias na primeira vez. Respeita as contas de `UTMIFY_META_ACCOUNTS`. Saúde da operação avisa se a busca parar de funcionar.
 
 Testado: testes automáticos; `validation/spend.integration.js` (5 grupos, banco real em loopback e UTMify simulada); roteiros de saúde, Hubla e funil sem regressão.
+
+## 09/10/2026 — Aba Router: venda por página com link direto
+
+Pedido do titular: a aba Router não mostrava em qual landing page saiu a venda. Causa: ele está usando um link por criativo direto para as páginas (sem router), e a aba só somava cliques que passam pelo router.
+
+Entregue: quadro "Páginas com link direto (sem router)" no topo da aba Router, com cliques, compradores, conversão, investimento (UTMify, dividido pelos cliques de cada anúncio), CPA, receita, reembolsos, líquido e ROAS por página, com a mesma leitura cautelosa da rota. Testado com `validation/pages.integration.js` (3 grupos) e na tela em computador e celular.

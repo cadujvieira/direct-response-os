@@ -41,6 +41,7 @@ const { initHublaDb, registerHublaRoutes, startHublaWorker } = require("./hublaW
 const { initClickCaptureDb, registerClickRoutes, hasAdminSecret, publicEventAllowed, requireAdmin } = require("./clickCapture");
 const { initMonitorDb, createMonitor, startHealthWatch, registerHealthRoutes } = require("./operationHealth");
 const { startUtmifySpendFeed, registerSpendFeedRoutes } = require("./utmifySpendFeed");
+const { registerPagePerformanceRoutes } = require("./pagePerformance");
 
 const app = express();
 
@@ -272,6 +273,7 @@ await pool.query(`
 }
 
 const { router } = registerOfferRoutes({ app, pool, hashIp, parseReportRange });
+registerPagePerformanceRoutes(app, pool, parseReportRange);
 const healthWatch = startHealthWatch({ pool, router, monitor });
 registerHealthRoutes(app, healthWatch);
 const spendFeed = startUtmifySpendFeed({ pool, monitor });

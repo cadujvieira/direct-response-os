@@ -211,6 +211,11 @@ Router rules (`resilientRouter.js`, GET `/go/:slug`):
 - GET `/api/experiments/:slug/performance` accepts `from`/`to` (São Paulo day of the click assignment) and returns clicks, buyers and revenue per LP; downstream revenue of those clicks counts even after the period;
 - the dashboard Router tab (`routerDashboard.js`) compares only LPs with at least 5 buyers and only when the conversion difference passes a two-proportion test. With fewer than 30 buyers on either of the two best LPs the reading is labelled "indicação inicial" (owner's decision for routes with many pages); "na frente" is reserved for 30+ buyers each. Never present the initial reading as a closed result.
 
+Direct-link page performance (`pagePerformance.js`, GET `/api/pages/performance?from&to`, panel at the top of the Router tab):
+- for ads that point straight to a page (no router). Groups non-router clicks by the page the tag recorded (`dr_clicks.page_url` normalized to host + path, no www/query/fragment/trailing slash); router clicks stay in the route table; clicks without a page (`checkout:hubla` recoveries) show as "Página não identificada";
+- period = São Paulo day of the click; downstream purchases/mentorship/refunds of those clicks count even later. Page names come from router variant destinations when the address matches;
+- spend per page splits each ad's `dr_ad_spend` across pages in proportion to that ad's clicks in the period; spend of ads without any click is shown as "Anúncios sem clique registrado" so totals match. Same reading rules as the route table (5 buyers minimum, 30 to confirm, two-proportion test). Covered by `validation/pages.integration.js`.
+
 Operation health rules (`operationHealth.js`, dashboard block in `healthDashboard.js`):
 - the health block at the top of the dashboard mirrors the Garagem em Escala monitor: one traffic light, alerts in plain Portuguese with "o que fazer", chips per integration, and an optional AI diagnosis;
 - `dr_monitor_log` stores signals (`erro` for 5xx responses, `hubla_auth` for refused webhook tokens, `site`/`lp` for outside probes, `saude` for level changes). `record` never throws and is capped per minute per source; rows older than 30 days are pruned;
