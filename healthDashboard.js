@@ -46,7 +46,8 @@ function healthChips(m) {
     healthChip("Tag das páginas", healthCount(clicks.recovered_24h) + " recuperado(s)", "cliques que só o checkout informou (24 h)",
       Number(clicks.recovered_24h || 0) >= 3 ? "bad" : ""),
     healthChip("UTMify", !utmify.token_configured ? "Não ligada" : utmify.last_status === "failed" ? "Falhou" : "Ligada",
-      utmify.last_ok_at ? "atualizada em " + crmFormatDateTime(utmify.last_ok_at) : "sem atualização ainda", utmify.last_status === "failed" ? "bad" : ""),
+      utmify.feed && utmify.feed.last_ok ? "investimento às " + healthTime(utmify.feed.last_ok) : utmify.last_ok_at ? "atualizada em " + crmFormatDateTime(utmify.last_ok_at) : "sem atualização ainda",
+      utmify.last_status === "failed" || (utmify.feed && utmify.feed.total >= 2 && utmify.feed.failures === utmify.feed.total) ? "bad" : ""),
     healthChip("Velocidade", healthMs(slowest || null), "banco " + healthMs(m.db_ms) + " · serviço " + (site.service ? healthMs(site.service.ms) : "—"),
       slowest > 4000 || m.db_ms > 800 ? "bad" : slowest ? "good" : ""),
     healthChip("Erros do servidor", healthCount(errors.total), "última hora", errors.total ? "bad" : "good")

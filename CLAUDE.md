@@ -142,6 +142,7 @@ UTMify MCP rules:
 - purchase and front-revenue tracking coverage compare Oferta DR against UTMify and must be shown alongside total ROAS; do not present total ROAS as validated attribution when those sources materially diverge;
 - never add UTMify front revenue to Oferta DR front revenue in one total, because that would double count the same economic layer;
 - the existing direct Meta integration remains frozen/optional and must not be silently mixed into UTMify snapshots.
+- automatic spend feed (`utmifySpendFeed.js`): every 30 min the server fetches the UTMify day (campaign, adset and ad levels, one call at a time) and replaces that day's `dr_ad_spend` rows with `source = 'utmify'`, one row per ad with campaign/adset names (plus a campaign-level row for any unexplained remainder). Today on every run, yesterday every 2 h, the last 7 days once a day, the last 31 days when no UTMify spend exists yet. Days follow the UTMify dashboard time zone. It respects `UTMIFY_META_ACCOUNTS`, never runs when the direct Meta integration is configured (no double counting), and on failure keeps what is stored and records `utmify_gasto` in the monitor. POST `/api/integrations/utmify/spend-refresh` (admin) runs it now. Covered by `validation/spend.integration.js`.
 
 List Activation rules:
 - the dashboard `Listas` tab reuses CRM filters and saved segments; do not create a separate segmentation model;

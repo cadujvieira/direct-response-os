@@ -1218,6 +1218,7 @@ module.exports = {
   buildMcpUrl,
   callMcpTool,
   discoverUtmify,
+  ensureConnection,
   getEconomics,
   getPerformance,
   internalPerformanceFields,

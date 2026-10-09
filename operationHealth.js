@@ -288,7 +288,8 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
 
     s.utmify = { token_configured: Boolean(String(env.UTMIFY_MCP_TOKEN || "").trim()),
       ...(await one(`SELECT (SELECT status FROM dr_utmify_syncs ORDER BY id DESC LIMIT 1) AS last_status,
-        (SELECT MAX(finished_at) FROM dr_utmify_syncs WHERE status = 'completed') AS last_ok_at`)) };
+        (SELECT MAX(finished_at) FROM dr_utmify_syncs WHERE status = 'completed') AS last_ok_at`)),
+      feed: await sourceSummary(pool, "utmify_gasto", 120) };
     s.automations = await one(`SELECT COUNT(*) FILTER (WHERE status = 'failed' AND updated_at >= NOW() - INTERVAL '60 minutes')::int AS failed_1h,
         COUNT(*) FILTER (WHERE status = 'pending' AND scheduled_for < NOW() - INTERVAL '15 minutes')::int AS late
       FROM dr_automation_runs WHERE updated_at >= NOW() - INTERVAL '7 days' OR status = 'pending'`);
@@ -381,6 +382,10 @@ function evaluate(s) {
 
   // UTMify, automacoes, erros, processo
   const utmify = s.utmify || {};
+  const feed = utmify.feed || {};
+  if (utmify.token_configured && feed.total >= 2 && feed.failures === feed.total) add("attention", "Investimento da UTMify não está atualizando",
+    "As últimas " + feed.total + " buscas automáticas do investimento falharam. Motivo: " + (feed.reason || "sem detalhe") + ".",
+    "O investimento da Visão geral fica parado até voltar. Se o motivo citar UTMIFY_META_ACCOUNTS, confira os nomes das contas no Render; se não, me avise.");
   if (utmify.token_configured && utmify.last_status === "failed") add("attention", "Última atualização da UTMify falhou", "Os números de anúncios do painel podem estar desatualizados.", "Abra Integrações e clique em sincronizar de novo.");
   const automations = s.automations || {};
   if (Number(automations.late || 0) > 0) add("attention", "Automações atrasadas", plural(Number(automations.late), "tarefa automática está", "tarefas automáticas estão") + " há mais de 15 minutos na fila.", "Me avise se não normalizar em meia hora.");

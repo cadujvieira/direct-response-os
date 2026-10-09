@@ -155,3 +155,13 @@ Variáveis novas (todas opcionais): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `DR_
 - Dados de teste da produção zerados pelo titular (cópia exportada antes); painel verde com 22/22 páginas no ar.
 - UTMify ligada na produção (dashboard Principal). A pedido do titular, nova variável opcional `UTMIFY_META_ACCOUNTS` para usar só as contas de anúncio desta oferta.
 - Alarme falso corrigido: a hospedagem do felipelona.com passou a responder 404 ao monitor em todas as 12 páginas (as páginas abrem normalmente no navegador). O monitor agora consulta uma página por vez por domínio e trata "domínio inteiro recusando" como um único aviso de atenção. Filtro de contas da UTMify passou a ignorar símbolos no nome da conta e a mostrar o motivo quando a conta não é encontrada.
+
+## 09/10/2026 — Investimento não aparecia no painel
+
+Problema relatado pelo titular: o painel não mostrava o investimento em tráfego (Visão geral com R$ 0,00).
+
+Causa: a Visão geral, o gráfico e a tabela de campanhas leem o investimento de `dr_ad_spend`, que só era preenchida pela integração direta da Meta (nunca ligada) ou por envio manual. A UTMify só alimentava as abas Economia e Performance, e apenas depois de uma sincronização manual de um período exato.
+
+Correção: busca automática do investimento na UTMify a cada 30 minutos (por anúncio, com campanha e conjunto), gravada por dia em `dr_ad_spend`; últimos 31 dias na primeira vez. Respeita as contas de `UTMIFY_META_ACCOUNTS`. Saúde da operação avisa se a busca parar de funcionar.
+
+Testado: testes automáticos; `validation/spend.integration.js` (5 grupos, banco real em loopback e UTMify simulada); roteiros de saúde, Hubla e funil sem regressão.

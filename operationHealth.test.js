@@ -267,3 +267,12 @@ test("a leitura de saude nao espera a conferencia das paginas", async () => {
   release(); await new Promise(resolve => setTimeout(resolve, 30));
   assert.equal((await collector.collect()).pages[0].ok, true);
 });
+
+test("investimento automatico da UTMify: alerta so quando todas as buscas recentes falham", () => {
+  const titles = feed => evaluate({ ...healthy(), utmify: { token_configured: true, last_status: "completed", feed } }).alerts.map(a => a.title);
+  const name = "Investimento da UTMify não está atualizando";
+  assert.ok(titles({ total: 3, failures: 3, reason: "UTMify MCP indisponivel" }).includes(name));
+  assert.ok(!titles({ total: 3, failures: 2, reason: "x" }).includes(name), "uma busca boa recente basta");
+  assert.ok(!titles({ total: 1, failures: 1, reason: "x" }).includes(name), "uma falha isolada nao alarma");
+  assert.ok(!titles({ total: 0, failures: 0 }).includes(name));
+});

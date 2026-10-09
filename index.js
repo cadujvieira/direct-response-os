@@ -40,6 +40,7 @@ const { initFunnelDb, registerFunnelRoutes } = require("./funnelIntegration");
 const { initHublaDb, registerHublaRoutes, startHublaWorker } = require("./hublaWebhook");
 const { initClickCaptureDb, registerClickRoutes, hasAdminSecret, publicEventAllowed, requireAdmin } = require("./clickCapture");
 const { initMonitorDb, createMonitor, startHealthWatch, registerHealthRoutes } = require("./operationHealth");
+const { startUtmifySpendFeed, registerSpendFeedRoutes } = require("./utmifySpendFeed");
 
 const app = express();
 
@@ -273,6 +274,8 @@ await pool.query(`
 const { router } = registerOfferRoutes({ app, pool, hashIp, parseReportRange });
 const healthWatch = startHealthWatch({ pool, router, monitor });
 registerHealthRoutes(app, healthWatch);
+const spendFeed = startUtmifySpendFeed({ pool, monitor });
+registerSpendFeedRoutes(app, spendFeed, requireAdmin);
 registerAutomationRoutes(app, pool);
 registerActivationRoutes(app, pool);
 registerUtmifyRoutes(app, pool);
@@ -1016,6 +1019,7 @@ async function start() {
     await initClickCaptureDb(pool);
     await initMonitorDb(pool);
     healthWatch.begin();
+    spendFeed.begin();
     startAutomationWorker(pool);
     hublaRuntime.kick = startHublaWorker(pool, ingestionHooks).kick;
 
