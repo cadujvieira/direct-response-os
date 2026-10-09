@@ -78,6 +78,21 @@ async function main() {
     assert.deepEqual(log.map(r => r.ok), [true, true, false]);
     console.log("PASS falha da UTMify preserva o investimento gravado e fica registrada no monitor");
 
+    // 4b. UTMify recusando so os dias antigos (limite de chamadas): hoje e ontem gravados, rodada conta como feita
+    failNext = false; spendToday = 210;
+    let olderCalls = 0;
+    const picky = startUtmifySpendFeed({ pool, env, now: () => clock, sleep: async () => {}, gapMs: 0,
+      callTool: async (name, args) => { const day = args.dateRange.from.slice(0, 10);
+        if (day !== today && day !== yesterday) { olderCalls++; throw new Error("UTMify MCP retornou erro"); } return callTool(name, args); } });
+    const partial = await picky.run();
+    assert.equal(partial.ok, true, JSON.stringify(partial));
+    assert.equal(partial.days, 2);
+    assert.equal(partial.pending_from, shiftDay(today, -2));
+    assert.equal(olderCalls, 3, "tenta de novo antes de desistir do dia antigo");
+    assert.equal(Number((await get("/api/summary?from=" + today + "&to=" + today)).summary.spend), 210);
+    assert.equal(Number((await get("/api/summary?from=" + shiftDay(today, -5) + "&to=" + shiftDay(today, -5))).summary.spend), 10, "dia antigo ja gravado fica como estava");
+    console.log("PASS limite da UTMify em dias antigos nao derruba a rodada nem apaga dados");
+
     // 5. Conta pedida que nao existe: erro explicito, nada buscado
     failNext = false; calls.length = 0;
     const wrong = startUtmifySpendFeed({ pool, env: { UTMIFY_MCP_TOKEN: "fake", UTMIFY_META_ACCOUNTS: "USD 03" }, now: () => clock, callTool, sleep: async () => {}, gapMs: 0 });

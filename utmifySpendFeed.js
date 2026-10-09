@@ -12,7 +12,7 @@
 const { callMcpTool, ensureConnection, filterMetaAccounts, normalizeMetaObject, toMcpDateRange } = require("./utmifyMcp");
 const { normalizeSpendInput, upsertSpend } = require("./spendStore");
 
-const TICK_MS = 30 * 60000, YESTERDAY_EVERY_MS = 2 * 3600000, CALL_GAP_MS = 700, BACKFILL_DAYS = 31, WEEK_DAYS = 7;
+const TICK_MS = 30 * 60000, YESTERDAY_EVERY_MS = 2 * 3600000, CALL_GAP_MS = 2500, RETRY_WAITS_MS = [10000, 30000], BACKFILL_DAYS = 31, WEEK_DAYS = 7;
 const LEVELS = ["campaign", "adset", "ad"];
 
 function dayInZone(ms, timeZoneHours) {
@@ -55,15 +55,21 @@ function metaDirectConfigured(env) {
 }
 
 function startUtmifySpendFeed({ pool, monitor, env = process.env, now = () => Date.now(), callTool = callMcpTool,
-  sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), tickMs = TICK_MS, gapMs = CALL_GAP_MS }) {
+  sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), tickMs = TICK_MS, gapMs = CALL_GAP_MS, retryWaits = RETRY_WAITS_MS }) {
   const state = { running: null, timer: null, lastYesterdayAt: 0, weekCheckedDay: "", last: null };
 
   async function fetchDay(connection, accounts, day) {
     const objects = {};
     for (const level of LEVELS) {
-      const payload = await callTool("get_meta_ad_objects", { dashboardId: connection.dashboard_id,
+      const args = { dashboardId: connection.dashboard_id,
         dateRange: toMcpDateRange(day, day, Number(connection.time_zone || 0)), level,
-        metaAdAccountIds: accounts.length ? accounts : null, accountStatuses: ["ACTIVE"] });
+        metaAdAccountIds: accounts.length ? accounts : null, accountStatuses: ["ACTIVE"] };
+      // A UTMify recusa chamadas muito seguidas (visto em producao): espera e tenta de novo antes de desistir.
+      let payload;
+      for (let attempt = 0; ; attempt++) {
+        try { payload = await callTool("get_meta_ad_objects", args); break; }
+        catch (error) { if (attempt >= retryWaits.length) throw error; await sleep(retryWaits[attempt]); }
+      }
       objects[level] = (Array.isArray(payload?.results) ? payload.results : []).map(raw => normalizeMetaObject(raw, level));
       await sleep(gapMs);
     }
@@ -100,15 +106,24 @@ function startUtmifySpendFeed({ pool, monitor, env = process.env, now = () => Da
       const today = dayInZone(now(), connection.time_zone);
       const { days, back } = await plan(today, force);
       let total = 0;
+      // Hoje e ontem vem primeiro e sao gravados na hora. Falha num dia antigo nao desfaz o que ja foi gravado:
+      // a rodada conta como feita (hoje esta certo) e a semana e conferida de novo na proxima rodada.
+      let done = 0, pending = "";
       for (const day of days) {
-        const rows = await fetchDay(connection, accounts, day);
-        await saveDay(day, rows);
-        if (day === today) total = rows.reduce((sum, row) => sum + row.spend, 0);
+        try {
+          const rows = await fetchDay(connection, accounts, day);
+          await saveDay(day, rows);
+          if (day === today) total = rows.reduce((sum, row) => sum + row.spend, 0);
+          done++;
+        } catch (error) {
+          if (day === today) throw error;
+          pending = day; break;
+        }
       }
-      if (days.length > 1) state.lastYesterdayAt = now();
-      if (back) state.weekCheckedDay = today;
-      state.last = { ok: true, at: new Date(now()).toISOString(), days: days.length, today, today_spend: money(total) };
-      if (monitor) monitor.record("utmify_gasto", true, now() - started, days.length + " dia(s)");
+      if (days.length > 1 && done > 1) state.lastYesterdayAt = now();
+      if (back && !pending) state.weekCheckedDay = today;
+      state.last = { ok: true, at: new Date(now()).toISOString(), days: done, today, today_spend: money(total), ...(pending ? { pending_from: pending } : {}) };
+      if (monitor) monitor.record("utmify_gasto", true, now() - started, done + " dia(s)" + (pending ? "; dias antigos ficam para a proxima rodada" : ""));
       return state.last;
     } catch (error) {
       const reason = error.statusCode === 400 ? String(error.message).slice(0, 160) : String(error.message || "falha").slice(0, 120);
