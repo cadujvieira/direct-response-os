@@ -1,12 +1,14 @@
-/* Oferta DR - tag das paginas (versao 2).
+/* Oferta DR - tag das paginas (versao 3).
    Cria o click_id na propria pagina quando ele nao veio na URL, avisa o Oferta DR em segundo plano e
    repassa click_id e UTMs para o link do checkout. Nada aqui bloqueia a pagina: se o aviso falhar, a
    venda segue normalmente e o clique e recuperado depois pelo aviso do checkout.
-   Uso: tag script apontando para /assets/dr-checkout.js (o endereco do aviso e o do proprio script), ou
-   colada inteira no GTM com o endereco fixo abaixo.
+   Uso: colada direto no <head> da pagina (forma recomendada: funciona mesmo quando um bloqueador impede o
+   GTM de carregar), tag script apontando para /assets/dr-checkout.js, ou colada no GTM. Se carregar mais de
+   uma vez na mesma pagina, so a primeira roda.
    Opcoes na tag: data-endpoint, data-checkout-hosts, data-own-hosts, data-click-param, data-create-click="false". */
 (function () {
   "use strict";
+  if (window.DRTracking) return;
   var script = document.currentScript;
   var attr = function (name, fallback) { return (script && script.getAttribute(name)) || fallback; };
   var hosts = function (value) {
@@ -97,7 +99,8 @@
     body.page_url = window.location.origin + window.location.pathname;
     if (document.referrer) body.referrer = document.referrer.split("?")[0].slice(0, 300);
     try {
-      window.fetch(ENDPOINT + "/track/click", { method: "POST", mode: "cors", credentials: "omit", keepalive: true,
+      /* caminho neutro: listas de bloqueio costumam barrar enderecos com "track" */
+      window.fetch(ENDPOINT + "/v1/visit", { method: "POST", mode: "cors", credentials: "omit", keepalive: true,
         headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
         .then(function (response) {
           if (!response || !response.ok) return;

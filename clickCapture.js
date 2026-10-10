@@ -103,7 +103,8 @@ function publicEventAllowed(body) {
 }
 function registerClickRoutes(app, pool, hashIp) {
   const allow = createRateLimiter();
-  app.post("/track/click", async (req, res) => {
+  // /v1/visit e o mesmo aviso com caminho neutro (a tag v3 usa este; bloqueadores costumam barrar "track").
+  app.post(["/track/click", "/v1/visit"], async (req, res) => {
     res.set("Cache-Control", "no-store");
     try {
       const click = normalizeClick(req.body);

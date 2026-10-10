@@ -70,7 +70,7 @@ test("eventos de receita e pos-compra nao sao publicos; navegacao continua", () 
 test("rota de clique valida, limita volume e nao expoe erro interno", async () => {
   let handler; const saved = [];
   const pool = { query: async (sql, values) => { saved.push(values); return { rows: [{ created: true }] }; } };
-  registerClickRoutes({ post: (path, fn) => { assert.equal(path, "/track/click"); handler = fn; } }, pool, ip => "hash:" + ip);
+  registerClickRoutes({ post: (path, fn) => { assert.deepEqual(path, ["/track/click", "/v1/visit"]); handler = fn; } }, pool, ip => "hash:" + ip);
   const call = (body, ip = "1.1.1.1") => new Promise(resolve => {
     const res = { set: () => res, status: code => ({ json: json => resolve({ status: code, json }) }), json: json => resolve({ status: 200, json }) };
     handler({ body, headers: { "x-forwarded-for": ip + ", 10.0.0.1", "user-agent": "UA" }, socket: {} }, res);

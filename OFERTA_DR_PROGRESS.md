@@ -175,3 +175,11 @@ Entregue: quadro "Páginas com link direto (sem router)" no topo da aba Router, 
 ## 10/10/2026 — Vendas do painel iguais às da Hubla
 
 Pedido do titular: a quantidade de vendas do painel precisa bater com o gateway. Antes, venda paga cujo checkout chegava sem o código do clique ficava fora dos totais (pendente de atribuição). Agora ela entra nas vendas e na receita, sem campanha, com o aviso "Venda sem origem" na saúde. Não conta como clique. Testado com os roteiros da Hubla, funil, saúde, páginas e investimento.
+
+## 10/10/2026 — Por que a venda das 18h36 perdeu a origem
+
+Fatos: o checkout dessa venda chegou sem click_id e sem nenhuma UTM; a Meta recebeu a compra (Black Track) sem atribuir campanha. A página repassa a URL inteira para o checkout e a tag (via GTM) acrescenta o click_id. Para o checkout sair "limpo", a tag não rodou e a pessoa estava na página sem parâmetros (voltou depois pelo endereço direto) ou entrou direto no checkout. A causa mais comum de a tag não rodar é bloqueador de anúncios/navegador que barra o Google Tag Manager — o mesmo bloqueio impede o pixel/Black Track, o que explica a Meta também não atribuir.
+
+Correção preparada: tag v3 colada direto no <head> da página (não depende do GTM), aviso no caminho neutro /v1/visit, proteção para rodar uma vez só. Testado em Chromium real com GTM bloqueado, com GTM e servidor bloqueados e com a tag antiga do GTM rodando junto: o link do checkout sempre sai com click_id e UTMs, inclusive no retorno sem parâmetros.
+
+Os 98 cliques sem ID de anúncio (06/10, campanhas "REMOLD" de outras contas) e os 141 cliques sem UTM em /geral no mesmo dia não se repetiram; desde 08/10 o tráfego chega com UTM completa.
