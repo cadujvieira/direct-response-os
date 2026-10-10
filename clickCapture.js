@@ -7,7 +7,10 @@ const { secretMatches } = require("./metaAds");
 const CLICK_ID = /^[A-Za-z0-9_.:=+\/-]{1,200}$/;
 // Formato gerado pela tag: "dr_" + UUID. So esse formato pode ser recuperado a partir do checkout.
 const TAG_CLICK_ID = /^dr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SOURCES = new Set(["tag", "router", "checkout_recovered", "legacy"]);
+// checkout_sem_origem: venda paga cujo checkout nao trouxe codigo de clique; o "clique" so existe para a venda
+// entrar nos totais (decisao do titular: vendas iguais ao gateway). Fica sem campanha, a nao ser que o proprio
+// checkout tenha devolvido UTMs.
+const SOURCES = new Set(["tag", "router", "checkout_recovered", "checkout_sem_origem", "legacy"]);
 const RATE_WINDOW_MS = 60000, RATE_MAX = 120, RATE_KEYS_MAX = 50000, RATE_GLOBAL_MAX = 6000;
 // Eventos que so um servidor confiavel pode gravar. Os demais (ex.: landing_view) continuam publicos.
 const PROTECTED_EVENTS = new Set(["purchase", "mentorship_purchase", "order_bump_purchase", "refund",

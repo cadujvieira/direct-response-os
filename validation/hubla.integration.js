@@ -185,13 +185,21 @@ async function main() {
 
     const noClick = notice({});
     const orphan = await deliver(noClick);
-    assert.equal(orphan.status, "pending_attribution"); assert.equal(orphan.reason_code, "missing_click"); assert.equal(Number(orphan.amount), 297);
+    // Decisao do titular: venda paga sem clique entra nos totais (igual ao gateway), sem campanha.
+    assert.equal(orphan.status, "processed"); assert.equal(orphan.reason_code, "paid_no_origin"); assert.equal(Number(orphan.amount), 297);
+    const noOriginClick = "sem_origem:hubla:" + noClick.event.invoice.id;
+    assert.deepEqual((await pool.query("SELECT capture_source, campaign_id, page_url FROM dr_clicks WHERE click_id = $1", [noOriginClick])).rows,
+      [{ capture_source: "checkout_sem_origem", campaign_id: null, page_url: "checkout:hubla" }]);
+    assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_events WHERE event_name = 'purchase' AND click_id = $1", [noOriginClick]), 1);
+    assert.equal((await deliver(noClick)).reason_code, "paid_no_origin", "reenvio do mesmo aviso nao duplica");
+    assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_events WHERE event_name = 'purchase' AND click_id = $1", [noOriginClick]), 1);
     const lateClick = "dr_" + prefix + "_late", unknown = notice({ click: lateClick });
     assert.equal((await deliver(unknown)).reason_code, "unknown_click");
-    assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_orders WHERE order_id = ANY($1::text[])", [["hubla:" + noClick.event.invoice.id, "hubla:" + unknown.event.invoice.id]]), 0);
-    assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_leads WHERE email = $1", [noClick.event.invoice.payer.email]), 0, "sem atribuicao por email");
+    assert.equal(await scalar("SELECT COUNT(*)::int AS n FROM dr_orders WHERE order_id = ANY($1::text[])", [["hubla:" + noClick.event.invoice.id, "hubla:" + unknown.event.invoice.id]]), 1);
+    assert.equal(await scalar(`SELECT COUNT(*)::int AS n FROM dr_leads WHERE email = $1 AND (click_id IS NULL OR click_id = $2)`,
+      [noClick.event.invoice.payer.email, noOriginClick]), 1, "comprador registrado sem herdar campanha de ninguem");
     status = await admin("/api/integrations/hubla/status");
-    assert.deepEqual(status.payments_not_integrated, { invoices: 2, known_value: 594 });
+    assert.deepEqual(status.payments_not_integrated, { invoices: 1, known_value: 297 });
     assert.equal(status.clicks_recovered_from_checkout, 0);
     await http("/track/click", { body: { click_id: lateClick, utm_source: "meta" } });
     await pool.query("UPDATE dr_clicks SET created_at = NOW() AT TIME ZONE 'UTC' - INTERVAL '3 hours' WHERE click_id = $1", [lateClick]);
@@ -201,8 +209,8 @@ async function main() {
     const unmapped = await deliver(notice({ click: clicks[6], product: "produto-desconhecido" }));
     assert.equal(unmapped.status, "unmapped_product");
     assert.equal((await deliver(notice({ click: clicks[6], amount: { totalCents: 29700, total: 29700 } }))).reason_code, "amount_units");
-    const listed = await admin("/api/integrations/hubla/events?status=pending_attribution");
-    assert.equal(listed.events.length, 1, JSON.stringify(listed)); assert.equal(JSON.stringify(listed).includes("example.test"), false);
+    const listed = await admin("/api/integrations/hubla/events?status=processed");
+    assert(listed.events.some(e => e.reason_code === "paid_no_origin"), JSON.stringify(listed)); assert.equal(JSON.stringify(listed).includes("example.test"), false);
     // Aviso de reembolso que desistiu de tentar volta sozinho para a fila quando o pagamento da mesma fatura entra.
     const sibClick = "dr_" + prefix + "_sib", sibInvoice = prefix + "-sib";
     const sibPaid = notice({ invoice: sibInvoice, click: sibClick });

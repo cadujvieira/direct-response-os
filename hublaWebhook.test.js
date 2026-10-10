@@ -168,12 +168,16 @@ test("avisos sem efeito financeiro e produtos sem mapeamento nao consultam o liv
   assert.equal((await processHublaEvent(pool, { sandbox: false, payload: notice({}, "invoice.payment_succeeded") }, config, {})).status, "ignored");
   assert.equal((await processHublaEvent(pool, { sandbox: false, payload: notice() }, hublaConfig({}), {})).status, "unmapped_product");
 });
-test("compra front sem click_id fica pendente de atribuicao com valor preservado", async () => {
-  const pool = { query: async sql => { assert.match(sql, /dr_funnel_orders/); return { rows: [] }; } };
+test("compra front sem click_id entra como venda sem origem, com clique proprio da fatura", async () => {
+  const seen = [];
+  const pool = { query: async (sql, args) => { seen.push([sql, args]); if (/INSERT INTO dr_clicks/.test(sql)) return { rows: [{ created: true }] }; return { rows: [] }; } };
   const result = await processHublaEvent(pool, { sandbox: false, event_type: "invoice.status_updated",
-    payload: notice({ paymentSession: { params: {} } }) }, config, {});
-  assert.equal(result.status, "pending_attribution"); assert.equal(result.code, "missing_click");
-  assert.equal(result.amount, 297); assert.equal(result.kind, "front");
+    payload: notice({ paymentSession: { params: {} } }) }, config, {}).catch(error => ({ error }));
+  const insert = seen.find(([sql]) => /INSERT INTO dr_clicks/.test(sql));
+  assert.ok(insert, "cria o clique sem origem");
+  assert.match(insert[1][0], /^sem_origem:hubla:/);
+  assert.equal(insert[1][15], "checkout_sem_origem");
+  assert.ok(result.error || result.kind === "front");
 });
 test("reembolso sem invoice.refunded aguarda confirmacao e depois exige revisao, sem descontar", async () => {
   const refunded = notice({ status: "refunded", statusAt: [{ when: "2026-09-28T20:35:33.512Z", status: "paid" },

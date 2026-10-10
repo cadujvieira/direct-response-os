@@ -77,6 +77,17 @@ async function main() {
     assert.equal(split["Mães"].spend, 165);
     console.log("PASS anuncio com cliques em mais de uma pagina divide o gasto pelos cliques");
 
+    // Venda sem origem (checkout sem codigo do clique): conta nas vendas, nao conta como clique
+    const before = (await http("/api/summary?from=" + today + "&to=" + today)).summary;
+    await pool.query(`INSERT INTO dr_clicks (click_id, page_url, capture_source) VALUES ('sem_origem:hubla:qa1', 'checkout:hubla', 'checkout_sem_origem')`);
+    await buy("sem_origem:hubla:qa1", 9);
+    const after = (await http("/api/summary?from=" + today + "&to=" + today)).summary;
+    assert.equal(Number(after.purchases), Number(before.purchases) + 1);
+    assert.equal(Number(after.clicks), Number(before.clicks), "registro da venda sem origem nao e visita");
+    const noOrigin = (await http("/api/pages/performance?from=" + today + "&to=" + today)).pages.find(p => p.name === "Página não identificada");
+    assert.equal(noOrigin.buyers, 2);
+    console.log("PASS venda sem origem entra nas vendas e na linha 'Página não identificada', sem inflar cliques");
+
     // Periodo sem dados e periodo invalido
     assert.deepEqual((await http("/api/pages/performance?from=2020-01-01&to=2020-01-02")).pages, []);
     await http("/api/pages/performance?from=2020-13-01&to=2020-01-02", { status: 400 });

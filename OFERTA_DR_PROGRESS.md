@@ -171,3 +171,7 @@ Testado: testes automáticos; `validation/spend.integration.js` (5 grupos, banco
 Pedido do titular: a aba Router não mostrava em qual landing page saiu a venda. Causa: ele está usando um link por criativo direto para as páginas (sem router), e a aba só somava cliques que passam pelo router.
 
 Entregue: quadro "Páginas com link direto (sem router)" no topo da aba Router, com cliques, compradores, conversão, investimento (UTMify, dividido pelos cliques de cada anúncio), CPA, receita, reembolsos, líquido e ROAS por página, com a mesma leitura cautelosa da rota. Testado com `validation/pages.integration.js` (3 grupos) e na tela em computador e celular.
+
+## 10/10/2026 — Vendas do painel iguais às da Hubla
+
+Pedido do titular: a quantidade de vendas do painel precisa bater com o gateway. Antes, venda paga cujo checkout chegava sem o código do clique ficava fora dos totais (pendente de atribuição). Agora ela entra nas vendas e na receita, sem campanha, com o aviso "Venda sem origem" na saúde. Não conta como clique. Testado com os roteiros da Hubla, funil, saúde, páginas e investimento.

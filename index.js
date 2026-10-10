@@ -334,7 +334,9 @@ app.get("/api/summary", async (req, res) => {
           (
             SELECT COUNT(*)
             FROM dr_clicks
-            WHERE (
+            -- Venda paga sem clique ganha um registro proprio so para entrar nos totais; nao e visita.
+            WHERE COALESCE(capture_source, '') <> 'checkout_sem_origem'
+            AND (
               $1::date IS NULL OR
               ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
             )

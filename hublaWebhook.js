@@ -244,7 +244,7 @@ async function storeHublaEvent(pool, body, headers = {}) {
   return { inserted: inserted.rows.length > 0, id: inserted.rows[0]?.id || null, sandbox };
 }
 async function ledgerOrder(pool, orderId) {
-  return (await pool.query(`SELECT f.kind, f.front_order_id, f.refunded_value, f.paid_at, o.valor
+  return (await pool.query(`SELECT f.kind, f.front_order_id, f.refunded_value, f.paid_at, o.valor, o.click_id
     FROM dr_funnel_orders f JOIN dr_orders o ON o.order_id = f.order_id WHERE f.order_id = $1`, [orderId])).rows[0] || null;
 }
 function fromIngestError(error, kind) {
@@ -267,14 +267,30 @@ async function recoverClickFromCheckout(pool, sale) {
   const occurredAt = sale.session.started_at && sale.session.started_at <= sale.paid_at ? sale.session.started_at : sale.paid_at;
   return (await saveClick(pool, click, { source: "checkout_recovered", occurredAt })).created;
 }
+// Venda paga sem codigo de clique no checkout (entrou direto no checkout, outro aparelho, link sem a tag).
+// Decisao do titular (10/10/2026): o painel precisa bater com o gateway, entao a venda entra nos totais com um
+// clique proprio "sem origem" (id fixo por fatura). So usa o que o proprio checkout devolveu (UTMs da sessao);
+// nunca liga a venda a um clique de outra pessoa nem deduz campanha por email, nome ou valor.
+const NO_ORIGIN_PREFIX = "sem_origem:hubla:";
+async function createNoOriginClick(pool, sale) {
+  const click = normalizeClick({ ...sale.session, click_id: NO_ORIGIN_PREFIX + sale.invoice_id, page_url: "checkout:hubla" });
+  if (!click) return null;
+  const occurredAt = sale.session.started_at && sale.session.started_at <= sale.paid_at ? sale.session.started_at : sale.paid_at;
+  await saveClick(pool, click, { source: "checkout_sem_origem", occurredAt });
+  return click.click_id;
+}
 async function ensurePaidOrder(pool, sale, hooks, now) {
   if (await ledgerOrder(pool, sale.order_id)) return null;
   const base = { order_id: sale.order_id, value: sale.value, currency: "BRL", payment_status: "approved",
     occurred_at: sale.paid_at, produto: sale.produto };
   let input;
   if (sale.kind === "front") {
-    if (!sale.click_id) return { status: "pending_attribution", code: "missing_click", reason: sale.click_problem };
     if (!sale.email && !sale.telefone) return { status: "needs_review", code: "missing_contact", reason: "comprador sem email ou telefone valido" };
+    if (!sale.click_id) {
+      sale.click_id = await createNoOriginClick(pool, sale);
+      if (!sale.click_id) return { status: "pending_attribution", code: "missing_click", reason: sale.click_problem };
+      sale.no_origin = true;
+    }
     await recoverClickFromCheckout(pool, sale);
     input = { ...base, event_name: "purchase", click_id: sale.click_id, email: sale.email, telefone: sale.telefone, nome: sale.nome };
   } else if (sale.kind === "mentorship") {
@@ -327,6 +343,9 @@ async function processHublaEvent(pool, row, config, hooks, now = new Date()) {
     const order = await ledgerOrder(pool, sale.order_id);
     if (Number(order.refunded_value) > 0 && sale.repaid_after_reversal) return { ...details, status: "needs_review",
       code: "paid_after_reversal", reason: "fatura voltou para paga depois de reembolso/chargeback ja descontado" };
+    if (sale.no_origin || String(order.click_id || "").startsWith(NO_ORIGIN_PREFIX)) {
+      return ok("paid_no_origin", "pagamento integrado sem origem: o checkout nao trouxe o codigo do clique");
+    }
     return ok("paid", "pagamento integrado");
   }
   if (sale.status === "disputed") return ok("disputed", "disputa aberta registrada; nao e perda definitiva e nada foi descontado");

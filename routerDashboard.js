@@ -69,7 +69,7 @@ function renderPagePerformance(node, pages) {
   const body = pages.map(page => {
     const clicks = page.clicks, buyers = page.buyers, conversion = routerRate(buyers, clicks), spend = Number(page.spend || 0);
     const net = Number(page.net_revenue || 0), cpa = buyers > 0 && spend > 0 ? spend / buyers : null, roas = spend > 0 ? net / spend : null;
-    const note = page.spend_without_page ? "<small>gasto de anúncio sem clique registrado</small>" : page.unidentified ? "<small>clique sem página (recuperado pelo checkout)</small>"
+    const note = page.spend_without_page ? "<small>gasto de anúncio sem clique registrado</small>" : page.unidentified ? "<small>venda ou clique sem página: o checkout não trouxe o código do clique</small>"
       : clicks > 0 && buyers < ROUTER_MIN_BUYERS ? "<small>amostra pequena</small>" : buyers < ROUTER_CONFIRM_BUYERS ? "<small>leitura inicial</small>" : "";
     return "<tr" + (leader === page ? ' class="router-leader"' : "") + "><td>" + escapeHtml(page.name) +
       (page.page && page.page !== page.name ? "<small>" + escapeHtml(page.page) + "</small>" : "") + note + "</td><td>" +

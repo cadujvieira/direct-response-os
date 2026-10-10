@@ -263,7 +263,7 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
         COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '60 minutes' AND capture_source = 'router')::int AS router_m60,
         COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '60 minutes' AND capture_source = 'tag')::int AS tag_m60,
         COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '24 hours' AND capture_source = 'checkout_recovered')::int AS recovered_24h
-      FROM dr_clicks WHERE created_at >= ${utcNow} - INTERVAL '25 hours'`);
+      FROM dr_clicks WHERE created_at >= ${utcNow} - INTERVAL '25 hours' AND COALESCE(capture_source, '') <> 'checkout_sem_origem'`);
     s.clicks = clicks;
     s.sales = await one(`SELECT COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '60 minutes')::int AS m60,
         COUNT(*) FILTER (WHERE created_at >= ${utcNow} - INTERVAL '6 hours')::int AS h6,
@@ -275,7 +275,7 @@ function createCollector({ pool, router, monitor, env = process.env, fetchImpl =
         COUNT(*) FILTER (WHERE status = 'received' AND next_attempt_at < NOW() - INTERVAL '5 minutes')::int AS queue_late,
         COUNT(*) FILTER (WHERE status = 'processing' AND locked_at < NOW() - INTERVAL '10 minutes')::int AS stuck,
         COUNT(*) FILTER (WHERE status = 'failed' AND updated_at >= NOW() - INTERVAL '60 minutes')::int AS failed_1h,
-        COUNT(DISTINCT invoice_id) FILTER (WHERE status = 'pending_attribution' AND received_at >= NOW() - INTERVAL '24 hours')::int AS unattributed_24h,
+        COUNT(DISTINCT invoice_id) FILTER (WHERE (status = 'pending_attribution' OR reason_code = 'paid_no_origin') AND received_at >= NOW() - INTERVAL '24 hours')::int AS unattributed_24h,
         COUNT(DISTINCT invoice_id) FILTER (WHERE status = 'needs_review')::int AS review,
         COUNT(DISTINCT invoice_id) FILTER (WHERE status = 'unmapped_product' AND received_at >= NOW() - INTERVAL '24 hours')::int AS unmapped_24h,
         COUNT(*) FILTER (WHERE received_at >= NOW() - INTERVAL '24 hours')::int AS notices_24h,
@@ -372,7 +372,7 @@ function evaluate(s) {
   const unattributed = Number(hubla.unattributed_24h || 0);
   // Critico so quando e parte relevante das vendas: com volume alto, alguns compradores entram direto no checkout.
   if (unattributed >= 3 && unattributed >= Math.max(Number(sales.h24 || 0), unattributed) * 0.2) add("critical", "Vendas chegando sem origem", unattributed + " vendas das últimas 24 horas chegaram sem o código do clique.", "Alguma página não está repassando o clique ao checkout. Confira com a Black Track se a tag continua publicada em todas as páginas.");
-  else if (unattributed > 0) add("attention", "Venda sem origem", plural(unattributed, "venda chegou", "vendas chegaram") + " sem o código do clique nas últimas 24 horas.", "Veja em Integrações > Hubla. Pode ser alguém que entrou direto no checkout.");
+  else if (unattributed > 0) add("attention", "Venda sem origem", plural(unattributed, "venda chegou", "vendas chegaram") + " sem o código do clique nas últimas 24 horas. Ela conta nos totais do painel, mas fica sem campanha.", "Pode ser alguém que entrou direto no checkout ou comprou em outro aparelho. Só investigue se continuar acontecendo.");
   if (Number(hubla.review || 0) > 0) add("attention", "Vendas da Hubla esperando sua conferência", plural(Number(hubla.review), "fatura precisa", "faturas precisam") + " de revisão (reembolso parcial, parcelamento ou caso fora do padrão).", "Abra Integrações > Hubla e resolva as pendências da lista.");
   if (Number(hubla.unmapped_24h || 0) > 0) add("attention", "Venda de produto não cadastrado", plural(Number(hubla.unmapped_24h), "venda", "vendas") + " das últimas 24 horas de um produto que o Oferta DR não conhece.", "Me passe o produto para eu cadastrar; a venda entra sozinha depois.");
   if ((hubla.refused || {}).failures >= 3) add("attention", "Avisos recusados por token errado", hubla.refused.failures + " avisos chegaram com token diferente do cadastrado na última hora.", "Se você trocou o token na Hubla, atualize HUBLA_WEBHOOK_TOKEN no Render. Se não trocou, pode ignorar.");
