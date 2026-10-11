@@ -81,6 +81,8 @@ function buildCheckoutReport(rows, config = hublaConfig()) {
     const totalCents = Number.isInteger(invoice.amount?.totalCents) ? invoice.amount.totalCents : null;
     const created = Date.parse(invoice.createdAt);
     return {
+      // Chave interna para agrupar por pessoa; nunca sai na resposta.
+      _person: text(invoice.payerId ?? invoice.payer?.id, 100) || "fatura:" + id,
       invoice: id.slice(0, 8),
       created_at: new Date(Number.isFinite(created) ? created : item.first).toISOString(),
       status: text(invoice.status, 40),
@@ -95,31 +97,85 @@ function buildCheckoutReport(rows, config = hublaConfig()) {
     };
   }).sort((a, b) => b.created_at.localeCompare(a.created_at));
 
-  const count = (list, key) => list.reduce((acc, item) => { acc[item[key]] = (acc[item[key]] || 0) + 1; return acc; }, {});
   const front = invoices.filter(i => i.product_kind === "front");
+  const people = buildPeople(front);
+  const count = (list, key) => list.reduce((acc, item) => { acc[item[key]] = (acc[item[key]] || 0) + 1; return acc; }, {});
   const campaigns = new Map();
-  for (const item of front) {
-    const fromAds = /^(fb|facebook|ig|instagram|meta)$/i.test(item.utm_source || "");
-    const key = fromAds ? (item.utm_campaign || "Anúncio sem nome de campanha") : item.utm_source ? "Outra origem: " + item.utm_source : "Sem UTM no checkout";
-    const row = campaigns.get(key) || { campaign: key, from_ads: fromAds, invoices: 0, paid: 0, paid_value: 0 };
-    row.invoices++;
-    if (item.outcome === "pago") { row.paid++; row.paid_value += item.amount || 0; }
+  for (const person of people) {
+    const key = campaignKey(person);
+    const row = campaigns.get(key) || { campaign: key, from_ads: isAdSource(person.utm_source), people: 0, paid: 0, paid_value: 0 };
+    row.people++;
+    if (person.outcome === "pago") { row.paid++; row.paid_value += person.paid_value; }
     campaigns.set(key, row);
   }
+  const paidPeople = people.filter(p => p.outcome === "pago");
   return {
     summary: {
+      people: people.length,
+      paid: paidPeople.length,
+      paid_value: round2(paidPeople.reduce((sum, p) => sum + p.paid_value, 0)),
+      by_outcome: count(people, "outcome_label"),
+      attempts: people.reduce((sum, p) => sum + p.attempts, 0),
       invoices: invoices.length,
       front_invoices: front.length,
       other_product_invoices: invoices.length - front.length,
-      paid: front.filter(i => i.outcome === "pago").length,
-      paid_value: front.filter(i => i.outcome === "pago").reduce((sum, i) => sum + (i.amount || 0), 0),
-      by_outcome: count(front, "outcome_label"),
-      by_method: count(front, "payment_method"),
       abandoned_checkouts: abandoned.size
     },
-    campaigns: [...campaigns.values()].sort((a, b) => b.paid - a.paid || b.invoices - a.invoices),
-    invoices
+    people,
+    campaigns: [...campaigns.values()].sort((a, b) => b.paid - a.paid || b.people - a.people),
+    invoices: invoices.map(({ _person, ...rest }) => rest)
   };
+}
+
+const ATTEMPT_GAP_MS = 2 * 60 * 1000;
+const round2 = value => Math.round(value * 100) / 100;
+function isAdSource(source) { return /^(fb|facebook|ig|instagram|meta)$/i.test(source || ""); }
+function campaignKey(item) {
+  return isAdSource(item.utm_source) ? (item.utm_campaign || "Anúncio sem nome de campanha")
+    : item.utm_source ? "Outra origem: " + item.utm_source : "Sem UTM no checkout";
+}
+// Uma pessoa = um comprador da Hubla (payerId). Faturas criadas com ate 2 minutos entre si contam como uma
+// tentativa (o parcelamento inteligente cria duas faturas por tentativa).
+function buildPeople(front) {
+  const byPerson = new Map();
+  for (const item of front) {
+    if (!byPerson.has(item._person)) byPerson.set(item._person, []);
+    byPerson.get(item._person).push(item);
+  }
+  const people = [...byPerson.values()].map(list => {
+    list.sort((a, b) => a.created_at.localeCompare(b.created_at));
+    const attempts = [];
+    for (const item of list) {
+      const last = attempts[attempts.length - 1];
+      const previous = last && last[last.length - 1];
+      if (previous && Date.parse(item.created_at) - Date.parse(previous.created_at) <= ATTEMPT_GAP_MS) last.push(item);
+      else attempts.push([item]);
+    }
+    const attemptOutcome = group => group.some(i => i.outcome === "pago") ? "pago"
+      : group.some(i => i.outcome === "cartao_nao_aprovado") ? "cartao_nao_aprovado"
+      : (group.find(i => i.outcome !== "sem_forma_de_pagamento") || group[0]).outcome;
+    const outcomes = attempts.map(attemptOutcome);
+    const outcome = outcomes.includes("pago") ? "pago" : outcomes[outcomes.length - 1];
+    const lastAttempt = attempts[attempts.length - 1];
+    const withOrigin = [...list].reverse().find(i => i.utm_source || i.utm_campaign) || list[list.length - 1];
+    const paidValue = round2(list.filter(i => i.outcome === "pago").reduce((sum, i) => sum + (i.amount || 0), 0));
+    const attemptValue = Math.max(0, ...lastAttempt.map(i => i.amount || 0));
+    return {
+      first_at: list[0].created_at,
+      last_at: list[list.length - 1].created_at,
+      attempts: attempts.length,
+      payment_methods: [...new Set(list.map(i => i.payment_method))],
+      outcome, outcome_label: OUTCOME_LABEL[outcome],
+      amount: outcome === "pago" ? paidValue : attemptValue || null,
+      paid_value: paidValue,
+      utm_source: withOrigin.utm_source,
+      utm_campaign: withOrigin.utm_campaign,
+      campaign: campaignKey(withOrigin),
+      has_click_id: list.some(i => i.has_click_id),
+      invoices: list.map(i => i.invoice)
+    };
+  }).sort((a, b) => b.last_at.localeCompare(a.last_at));
+  return people;
 }
 
 function registerHublaCheckoutReport(app, pool) {

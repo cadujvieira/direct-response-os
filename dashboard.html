@@ -2731,6 +2731,23 @@
     .crm-table.hubla-table { min-width: 720px; }
     .crm-table.hubla-table td:nth-child(4) { white-space: normal; min-width: 220px; line-height: 1.45; }
     .hubla-table small { display: block; color: #6e7784; font-size: 9px; margin-top: 3px; }
+    .hubla-checkout-panel { margin-top: 16px; padding-bottom: 16px; }
+    .hubla-checkout-panel > :not(.panel-head) { margin-left: 16px; margin-right: 16px; }
+    .hubla-checkout-cards { margin-top: 14px; margin-bottom: 6px; }
+    @media (max-width: 700px) {
+      .hubla-checkout-panel > :not(.panel-head) { margin-left: 10px; margin-right: 10px; }
+      .stage-metrics.hubla-checkout-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .hubla-checkout-cards .metric-value { font-size: 24px; }
+    }
+    .hubla-checkout-title { margin: 18px 0 8px; font-size: 13px; color: #c9d1d9; }
+    .crm-table.hubla-checkout-table { min-width: 760px; }
+    .crm-table.hubla-checkout-campaigns { min-width: 520px; }
+    .hubla-checkout-table small { display: block; color: #6e7784; font-size: 10px; margin-top: 3px; }
+    .hubla-outcome { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap;
+      background: rgba(139, 148, 158, .16); color: #c9d1d9; }
+    .hubla-outcome.ok { background: rgba(46, 160, 67, .18); color: #56d364; }
+    .hubla-outcome.warn { background: rgba(210, 153, 34, .18); color: #e3b341; }
+    .hubla-outcome.danger { background: rgba(248, 81, 73, .16); color: #ff7b72; }
     .hubla-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .hubla-refund-input { width: 110px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
     #hublaCard { margin-top: 14px; }
@@ -3937,6 +3954,30 @@
         <div class="card"><div class="metric-label" data-tooltip="Percentual de leads que chegaram ao checkout.">Lead → Checkout</div><div class="metric-value" id="convCheckout">0%</div><div class="metric-sub">Conversão intermediária</div></div>
         <div class="card"><div class="metric-label" data-tooltip="Percentual dos checkouts que se converteram em compra aprovada.">Checkout → Venda</div><div class="metric-value" id="convSale">0%</div><div class="metric-sub">Eficiência do checkout</div></div>
         <div class="card"><div class="metric-label" data-tooltip="Checkouts iniciados que ainda não resultaram em compra no período.">Abandono estimado</div><div class="metric-value" id="stageCheckoutAbandon">0</div><div class="metric-sub">Checkout sem compra</div></div>
+      </div>
+
+      <div class="panel hubla-checkout-panel" id="hublaCheckoutPanel">
+        <div class="panel-head">
+          <div>
+            <h3 data-tooltip="Vem dos avisos da Hubla. Uma linha por pessoa: tentativas no mesmo minuto (parcelado gera duas faturas) contam como uma.">Quem chegou ao checkout da Hubla</h3>
+            <p id="hublaCheckoutNote">Carregando...</p>
+          </div>
+        </div>
+        <div class="metrics stage-metrics hubla-checkout-cards" id="hublaCheckoutCards"></div>
+        <h4 class="hubla-checkout-title">Por pessoa</h4>
+        <div class="crm-table-wrap">
+          <table class="crm-table hubla-checkout-table">
+            <thead><tr><th>Última tentativa</th><th>Resultado</th><th>Campanha</th><th>Pagamento</th><th data-tooltip="Quantas vezes tentou pagar.">Tentativas</th><th>Valor</th><th data-tooltip="Código das faturas. Procure por ele nas vendas da Hubla para achar o contato.">Fatura na Hubla</th></tr></thead>
+            <tbody id="hublaCheckoutPeople"><tr><td class="crm-table-empty" colspan="7">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+        <h4 class="hubla-checkout-title">Por campanha</h4>
+        <div class="crm-table-wrap">
+          <table class="crm-table hubla-checkout-campaigns">
+            <thead><tr><th>Campanha (UTM do checkout)</th><th>Pessoas no checkout</th><th>Pagaram</th><th>Valor pago</th></tr></thead>
+            <tbody id="hublaCheckoutCampaigns"><tr><td class="crm-table-empty" colspan="4">Carregando...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -5222,6 +5263,8 @@ function setActiveStage(viewName) {
   if (viewName === "tracking") {
     loadTrackingHealth();
   }
+
+  if (viewName === "checkout" && typeof loadHublaCheckoutReport === "function") loadHublaCheckoutReport();
 }
 
 function initStageNavigation() {
@@ -9447,6 +9490,10 @@ function initBreakdownControls() {
 
       if (activeView === "tracking") {
         tasks.push(loadTrackingHealth());
+      }
+
+      if (activeView === "checkout" && typeof loadHublaCheckoutReport === "function") {
+        tasks.push(loadHublaCheckoutReport());
       }
 
       return Promise.allSettled(tasks);

@@ -124,3 +124,66 @@ function initHublaPanel() {
 }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initHublaPanel);
 else initHublaPanel();
+
+// Aba Checkout: quem chegou a gerar pagamento na Hubla (Pix, boleto ou cartao), agrupado por pessoa, e por campanha.
+// Somente leitura. Sem nome, e-mail ou telefone: o codigo da fatura serve para achar a pessoa no painel da Hubla.
+const hublaCheckoutState = { request: 0 };
+const hublaOutcomeTone = { pago: "ok", cartao_nao_aprovado: "danger", pix_sem_pagamento: "warn", boleto_sem_pagamento: "warn" };
+function hublaCheckoutCard(label, value, sub, tip) {
+  return '<div class="card"><div class="metric-label"' + (tip ? ' data-tooltip="' + hublaText(tip) + '"' : "") + ">" + hublaText(label) +
+    '</div><div class="metric-value">' + hublaText(value) + '</div><div class="metric-sub">' + hublaText(sub) + "</div></div>";
+}
+function renderHublaCheckoutReport(data) {
+  const s = data.summary || {}, people = data.people || [], campaigns = data.campaigns || [];
+  const by = s.by_outcome || {};
+  const pending = (by["Pix gerado e não pago"] || 0) + (by["Boleto gerado e não pago"] || 0);
+  document.getElementById("hublaCheckoutCards").innerHTML =
+    hublaCheckoutCard("Pessoas no checkout", Number(s.people || 0).toLocaleString("pt-BR"),
+      Number(s.attempts || 0) + (Number(s.attempts) === 1 ? " tentativa" : " tentativas") + " de pagamento",
+      "Pessoas que chegaram a gerar Pix ou boleto ou a passar cartão na Hubla. A Meta conta 'checkout iniciado' já no clique do botão, por isso o número dela é maior.") +
+    hublaCheckoutCard("Pagaram", Number(s.paid || 0).toLocaleString("pt-BR"), formatMoney(s.paid_value || 0)) +
+    hublaCheckoutCard("Cartão recusado", Number(by["Cartão não aprovado"] || 0).toLocaleString("pt-BR"), "Sem pagamento até agora",
+      "Pessoa que passou cartão e a Hubla não aprovou. Boa chance de recuperar oferecendo Pix ou outro cartão.") +
+    hublaCheckoutCard("Pix/boleto não pago", Number(pending).toLocaleString("pt-BR"), "Gerou e não pagou");
+  const peopleBody = document.getElementById("hublaCheckoutPeople");
+  peopleBody.innerHTML = people.length ? people.map(p => {
+    const tone = hublaOutcomeTone[p.outcome] || "";
+    return "<tr><td>" + hublaText(crmFormatDateTime(p.last_at)) + '</td><td><span class="hubla-outcome ' + tone + '">' +
+      hublaText(p.outcome_label) + "</span></td><td>" + hublaText(p.campaign) +
+      (p.has_click_id ? "" : "<small>sem código do clique</small>") + "</td><td>" + hublaText((p.payment_methods || []).join(" + ")) +
+      "</td><td>" + Number(p.attempts || 0) + "</td><td>" + (p.amount == null ? "—" : hublaText(formatMoney(p.amount))) + "</td><td>" +
+      '<span title="' + hublaText((p.invoices || []).join(", ")) + '">' + hublaText((p.invoices || [])[0] || "—") +
+      ((p.invoices || []).length > 1 ? " <small>+" + ((p.invoices || []).length - 1) + " fatura(s)</small>" : "") + "</span></td></tr>";
+  }).join("") : '<tr><td class="crm-table-empty" colspan="7">Ninguém chegou a gerar pagamento na Hubla neste período.</td></tr>';
+  const campaignBody = document.getElementById("hublaCheckoutCampaigns");
+  campaignBody.innerHTML = campaigns.length ? campaigns.map(c => "<tr><td>" + hublaText(c.campaign) + "</td><td>" +
+    Number(c.people || 0) + "</td><td>" + Number(c.paid || 0) + "</td><td>" + hublaText(formatMoney(c.paid_value || 0)) + "</td></tr>").join("")
+    : '<tr><td class="crm-table-empty" colspan="4">Sem dados no período.</td></tr>';
+  const first = data.webhook_first_notice_at;
+  const other = Number(s.other_product_invoices || 0);
+  document.getElementById("hublaCheckoutNote").textContent =
+    "Pessoas que geraram Pix ou boleto ou passaram cartão na Hubla." +
+    (first ? " Dados da Hubla desde " + crmFormatDateTime(first) + "." : "") +
+    (other ? " " + other + (other === 1 ? " fatura de outro produto ficou de fora." : " faturas de outros produtos ficaram de fora.") : "");
+  if (typeof decorateTooltips === "function") decorateTooltips(document.getElementById("hublaCheckoutPanel"));
+}
+async function loadHublaCheckoutReport() {
+  const panel = document.getElementById("hublaCheckoutPanel");
+  if (!panel) return;
+  if (!utmifyAdminSecret()) {
+    document.getElementById("hublaCheckoutNote").textContent = "Conecte a sessão administrativa pelo CRM para ver quem chegou ao checkout.";
+    return;
+  }
+  const request = ++hublaCheckoutState.request;
+  const range = typeof reportRange === "object" && reportRange ? reportRange : {};
+  const query = range.from && range.to ? "?from=" + encodeURIComponent(range.from) + "&to=" + encodeURIComponent(range.to) : "";
+  try {
+    const data = await utmifyFetch("/api/integrations/hubla/checkout-report" + query);
+    if (request !== hublaCheckoutState.request) return; // resposta antiga nao sobrescreve a mais nova
+    renderHublaCheckoutReport(data);
+  } catch (error) {
+    if (request !== hublaCheckoutState.request) return;
+    document.getElementById("hublaCheckoutNote").textContent = error.status === 401
+      ? "Conecte a sessão administrativa pelo CRM para ver quem chegou ao checkout." : "Não foi possível carregar o checkout da Hubla.";
+  }
+}

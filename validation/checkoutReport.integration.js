@@ -42,8 +42,9 @@ async function main() {
     assert.equal(report.summary.front_invoices, 3);
     assert.equal(report.summary.other_product_invoices, 1);
     assert.equal(report.summary.paid, 1);
+    assert.equal(report.summary.people, 3, "sem payerId cada fatura conta como uma pessoa");
     assert.deepEqual(report.summary.by_outcome, { "Pago": 1, "Pix gerado e não pago": 1, "Cartão não aprovado": 1 });
-    assert.deepEqual(report.campaigns.map(c => [c.campaign, c.invoices, c.paid]).sort(),
+    assert.deepEqual(report.campaigns.map(c => [c.campaign, c.people, c.paid]).sort(),
       [["Sem UTM no checkout", 1, 0], ["[CV 03]", 1, 0], ["[CV 07]", 1, 1]]);
     assert(report.webhook_first_notice_at);
     assert.doesNotMatch(JSON.stringify(report), /pessoa|@/i, "sem dados pessoais");
