@@ -183,3 +183,11 @@ Fatos: o checkout dessa venda chegou sem click_id e sem nenhuma UTM; a Meta rece
 Correção preparada: tag v3 colada direto no <head> da página (não depende do GTM), aviso no caminho neutro /v1/visit, proteção para rodar uma vez só. Testado em Chromium real com GTM bloqueado, com GTM e servidor bloqueados e com a tag antiga do GTM rodando junto: o link do checkout sempre sai com click_id e UTMs, inclusive no retorno sem parâmetros.
 
 Os 98 cliques sem ID de anúncio (06/10, campanhas "REMOLD" de outras contas) e os 141 cliques sem UTM em /geral no mesmo dia não se repetiram; desde 08/10 o tráfego chega com UTM completa.
+
+## 11/10/2026 — Auditoria Meta x Hubla e relatório de checkouts
+
+Pedido do titular: compras chegando na Meta com valor R$ 0,00; conferir vendas da Hubla contra a Meta por campanha; entender o abandono no checkout.
+
+Fatos levantados (somente leitura): o GTM da página (Black Track) dispara no navegador apenas PageView e InitiateCheckout; o InitiateCheckout sai no clique do botão de compra, antes de a pessoa preencher o checkout. O Purchase vai para a Meta pelo servidor da Black Track (webhook da Hubla) e não aparece no GTM, então o valor depende da configuração da Black Track. UTMify (CA - 02, 11/09 a 11/10): 48 checkouts iniciados e nenhuma venda aprovada registrada nela. Inbox da Hubla no Oferta DR (desde 09/10 09h22): 10 faturas, 2 pagas (R$ 594), 8 sem pagamento.
+
+Entregue para aprovação: GET `/api/integrations/hubla/checkout-report` (somente leitura) com o resultado de cada fatura (pago, Pix/boleto sem pagamento, cartão não aprovado), forma de pagamento, produto (desta oferta ou outro) e vendas por campanha pela UTM do checkout. Testado com `hublaCheckoutReport.test.js` e `validation/checkoutReport.integration.js`; roteiro da Hubla sem regressão.

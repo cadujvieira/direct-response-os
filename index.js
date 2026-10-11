@@ -38,6 +38,7 @@ const { registerDecisionRoutes } = require("./decisionEngine");
 const { normalizeTracking, ingestTracking } = require("./trackingIngestion");
 const { initFunnelDb, registerFunnelRoutes } = require("./funnelIntegration");
 const { initHublaDb, registerHublaRoutes, startHublaWorker } = require("./hublaWebhook");
+const { registerHublaCheckoutReport } = require("./hublaCheckoutReport");
 const { initClickCaptureDb, registerClickRoutes, hasAdminSecret, publicEventAllowed, requireAdmin } = require("./clickCapture");
 const { initMonitorDb, createMonitor, startHealthWatch, registerHealthRoutes } = require("./operationHealth");
 const { startUtmifySpendFeed, registerSpendFeedRoutes } = require("./utmifySpendFeed");
@@ -287,6 +288,7 @@ registerDecisionRoutes(app, pool);
 registerFunnelRoutes(app, pool, ingestionHooks);
 const hublaRuntime = { kick: null };
 registerHublaRoutes(app, pool, ingestionHooks, hublaRuntime);
+registerHublaCheckoutReport(app, pool);
 
 app.get("/", async (req, res) => {
 
