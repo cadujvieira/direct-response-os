@@ -47,7 +47,11 @@ async function main() {
     assert.deepEqual(report.campaigns.map(c => [c.campaign, c.people, c.paid]).sort(),
       [["Sem UTM no checkout", 1, 0], ["[CV 03]", 1, 0], ["[CV 07]", 1, 1]]);
     assert(report.webhook_first_notice_at);
-    assert.doesNotMatch(JSON.stringify(report), /pessoa|@/i, "sem dados pessoais");
+    const paidPerson = report.people.find(p => p.outcome === "pago");
+    assert.equal(paidPerson.contact, null, "quem pagou nao expoe contato");
+    const card = report.people.find(p => p.outcome === "cartao_nao_aprovado");
+    assert.deepEqual(card.contact, { name: "Pessoa", email: "pessoa@exemplo.com", phone: null }, "contato de quem nao pagou");
+    assert.doesNotMatch(JSON.stringify(report.invoices), /pessoa|@/i, "lista de faturas sem dados pessoais");
     console.log("PASS relatorio de checkouts: pago, Pix nao pago, cartao nao aprovado, outro produto e campanhas");
     const old = await http("/api/integrations/hubla/checkout-report?from=2020-01-01&to=2020-01-02", { headers: admin });
     assert.equal(old.summary.invoices, 0);

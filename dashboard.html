@@ -2738,11 +2738,21 @@
       .hubla-checkout-panel > :not(.panel-head) { margin-left: 10px; margin-right: 10px; }
       .stage-metrics.hubla-checkout-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .hubla-checkout-cards .metric-value { font-size: 24px; }
+      .hubla-checkout-panel .crm-table.hubla-checkout-table { min-width: 860px; }
+      .hubla-checkout-panel .hubla-checkout-table th:first-child, .hubla-checkout-panel .hubla-checkout-table td:first-child { display: none; }
+      .hubla-checkout-panel .hubla-checkout-table small.hubla-when { display: block; }
     }
     .hubla-checkout-title { margin: 18px 0 8px; font-size: 13px; color: #c9d1d9; }
-    .crm-table.hubla-checkout-table { min-width: 760px; }
+    .crm-table.hubla-checkout-table { min-width: 940px; }
+    .hubla-muted { color: #6e7784; font-size: 11px; }
+    .hubla-contact { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+    .hubla-contact strong { font-size: 12px; color: var(--text); font-weight: 600; }
+    .hubla-contact a { color: #8ab4ff; text-decoration: none; font-size: 11px; word-break: break-all; }
+    .hubla-contact a.hubla-wa { display: inline-flex; align-self: flex-start; padding: 4px 10px; border-radius: 999px; font-weight: 600;
+      background: rgba(46, 160, 67, .18); color: #56d364; word-break: normal; }
     .crm-table.hubla-checkout-campaigns { min-width: 520px; }
     .hubla-checkout-table small { display: block; color: #6e7784; font-size: 10px; margin-top: 3px; }
+    .hubla-checkout-table small.hubla-when { display: none; }
     .hubla-outcome { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap;
       background: rgba(139, 148, 158, .16); color: #c9d1d9; }
     .hubla-outcome.ok { background: rgba(46, 160, 67, .18); color: #56d364; }
@@ -3967,8 +3977,8 @@
         <h4 class="hubla-checkout-title">Por pessoa</h4>
         <div class="crm-table-wrap">
           <table class="crm-table hubla-checkout-table">
-            <thead><tr><th>Última tentativa</th><th>Resultado</th><th>Campanha</th><th>Pagamento</th><th data-tooltip="Quantas vezes tentou pagar.">Tentativas</th><th>Valor</th><th data-tooltip="Código das faturas. Procure por ele nas vendas da Hubla para achar o contato.">Fatura na Hubla</th></tr></thead>
-            <tbody id="hublaCheckoutPeople"><tr><td class="crm-table-empty" colspan="7">Carregando...</td></tr></tbody>
+            <thead><tr><th>Última tentativa</th><th>Resultado</th><th data-tooltip="Só aparece para quem não pagou. O botão abre o WhatsApp com uma mensagem pronta, que você pode editar antes de enviar.">Contato</th><th>Campanha</th><th>Pagamento</th><th data-tooltip="Quantas vezes tentou pagar.">Tentativas</th><th>Valor</th><th data-tooltip="Código das faturas. Procure por ele nas vendas da Hubla para achar o contato.">Fatura na Hubla</th></tr></thead>
+            <tbody id="hublaCheckoutPeople"><tr><td class="crm-table-empty" colspan="8">Carregando...</td></tr></tbody>
           </table>
         </div>
         <h4 class="hubla-checkout-title">Por campanha</h4>

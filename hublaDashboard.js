@@ -133,6 +133,21 @@ function hublaCheckoutCard(label, value, sub, tip) {
   return '<div class="card"><div class="metric-label"' + (tip ? ' data-tooltip="' + hublaText(tip) + '"' : "") + ">" + hublaText(label) +
     '</div><div class="metric-value">' + hublaText(value) + '</div><div class="metric-sub">' + hublaText(sub) + "</div></div>";
 }
+// Contato so vem do servidor para quem nao pagou. Mensagem pronta no WhatsApp, editavel antes de enviar.
+function hublaContactHtml(person) {
+  const c = person.contact;
+  if (!c) return person.outcome === "pago" ? '<span class="hubla-muted">—</span>' : '<span class="hubla-muted">Sem contato no aviso</span>';
+  const first = String(c.name || "").trim().split(/\s+/)[0] || "";
+  const reason = person.outcome === "cartao_nao_aprovado" ? "o pagamento no cartão não foi aprovado"
+    : person.outcome === "boleto_sem_pagamento" ? "o boleto ficou em aberto" : "o Pix ficou pendente";
+  const message = "Oi" + (first ? " " + first : "") + "! Vi que você tentou garantir sua vaga e " + reason +
+    ". Posso te ajudar a finalizar?";
+  const phone = String(c.phone || "").replace(/\D/g, "");
+  return '<div class="hubla-contact">' + (c.name ? "<strong>" + hublaText(c.name) + "</strong>" : "") +
+    (phone ? '<a class="hubla-wa" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + phone + "?text=" +
+      encodeURIComponent(message) + '">WhatsApp +' + hublaText(phone) + "</a>" : "") +
+    (c.email ? '<a href="mailto:' + encodeURIComponent(c.email).replace(/%40/g, "@") + '">' + hublaText(c.email) + "</a>" : "") + "</div>";
+}
 function renderHublaCheckoutReport(data) {
   const s = data.summary || {}, people = data.people || [], campaigns = data.campaigns || [];
   const by = s.by_outcome || {};
@@ -149,12 +164,12 @@ function renderHublaCheckoutReport(data) {
   peopleBody.innerHTML = people.length ? people.map(p => {
     const tone = hublaOutcomeTone[p.outcome] || "";
     return "<tr><td>" + hublaText(crmFormatDateTime(p.last_at)) + '</td><td><span class="hubla-outcome ' + tone + '">' +
-      hublaText(p.outcome_label) + "</span></td><td>" + hublaText(p.campaign) +
+      hublaText(p.outcome_label) + '</span><small class="hubla-when">' + hublaText(crmFormatDateTime(p.last_at)) + "</small></td><td>" + hublaContactHtml(p) + "</td><td>" + hublaText(p.campaign) +
       (p.has_click_id ? "" : "<small>sem código do clique</small>") + "</td><td>" + hublaText((p.payment_methods || []).join(" + ")) +
       "</td><td>" + Number(p.attempts || 0) + "</td><td>" + (p.amount == null ? "—" : hublaText(formatMoney(p.amount))) + "</td><td>" +
       '<span title="' + hublaText((p.invoices || []).join(", ")) + '">' + hublaText((p.invoices || [])[0] || "—") +
       ((p.invoices || []).length > 1 ? " <small>+" + ((p.invoices || []).length - 1) + " fatura(s)</small>" : "") + "</span></td></tr>";
-  }).join("") : '<tr><td class="crm-table-empty" colspan="7">Ninguém chegou a gerar pagamento na Hubla neste período.</td></tr>';
+  }).join("") : '<tr><td class="crm-table-empty" colspan="8">Ninguém chegou a gerar pagamento na Hubla neste período.</td></tr>';
   const campaignBody = document.getElementById("hublaCheckoutCampaigns");
   campaignBody.innerHTML = campaigns.length ? campaigns.map(c => "<tr><td>" + hublaText(c.campaign) + "</td><td>" +
     Number(c.people || 0) + "</td><td>" + Number(c.paid || 0) + "</td><td>" + hublaText(formatMoney(c.paid_value || 0)) + "</td></tr>").join("")

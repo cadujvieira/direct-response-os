@@ -1,6 +1,7 @@
 // Relatorio de checkouts da Hubla: o que aconteceu com cada fatura (paga, Pix/boleto sem pagamento, cartao nao
 // aprovado) e vendas por campanha (UTM do proprio checkout). Somente leitura sobre o inbox dr_hubla_events.
-// Nunca devolve nome, e-mail, telefone, documento ou URL completa do checkout.
+// Rota de administrador: devolve nome, e-mail e telefone SOMENTE de quem nao pagou (para a equipe recuperar a venda).
+// Nunca devolve documento, endereco, id do comprador na Hubla ou a URL completa do checkout.
 const { requireAdmin } = require("./trackingHealth");
 const { hublaConfig } = require("./hublaWebhook");
 
@@ -83,6 +84,7 @@ function buildCheckoutReport(rows, config = hublaConfig()) {
     return {
       // Chave interna para agrupar por pessoa; nunca sai na resposta.
       _person: text(invoice.payerId ?? invoice.payer?.id, 100) || "fatura:" + id,
+      _contact: contactOf(invoice.payer),
       invoice: id.slice(0, 8),
       created_at: new Date(Number.isFinite(created) ? created : item.first).toISOString(),
       status: text(invoice.status, 40),
@@ -123,11 +125,19 @@ function buildCheckoutReport(rows, config = hublaConfig()) {
     },
     people,
     campaigns: [...campaigns.values()].sort((a, b) => b.paid - a.paid || b.people - a.people),
-    invoices: invoices.map(({ _person, ...rest }) => rest)
+    invoices: invoices.map(({ _person, _contact, ...rest }) => rest)
   };
 }
 
 const ATTEMPT_GAP_MS = 2 * 60 * 1000;
+function contactOf(payer) {
+  if (!payer || typeof payer !== "object") return null;
+  const name = [text(payer.firstName, 80), text(payer.lastName, 80)].filter(Boolean).join(" ") || null;
+  const email = text(payer.email, 200);
+  const digits = String(payer.phone || "").replace(/\D/g, "");
+  const phone = digits.length >= 10 && digits.length <= 15 ? digits : null;
+  return name || email || phone ? { name, email, phone } : null;
+}
 const round2 = value => Math.round(value * 100) / 100;
 function isAdSource(source) { return /^(fb|facebook|ig|instagram|meta)$/i.test(source || ""); }
 function campaignKey(item) {
@@ -172,7 +182,9 @@ function buildPeople(front) {
       utm_campaign: withOrigin.utm_campaign,
       campaign: campaignKey(withOrigin),
       has_click_id: list.some(i => i.has_click_id),
-      invoices: list.map(i => i.invoice)
+      invoices: list.map(i => i.invoice),
+      // Contato so de quem nao pagou: e o que a equipe precisa para oferecer Pix ou outro cartao.
+      contact: outcome === "pago" ? null : ([...list].reverse().find(i => i._contact) || {})._contact || null
     };
   }).sort((a, b) => b.last_at.localeCompare(a.last_at));
   return people;

@@ -11,7 +11,7 @@ function notice(id, { status, method = "pix", version = 1, product = "prod-front
     invoice: { id, status, version, payerId: payer, paymentMethod: method, createdAt: at, amount: { totalCents: cents },
       statusAt: (history || [status]).map(s => ({ status: s, when: at })),
       paymentSession: { utm: utm || {}, params: params || {}, url: "https://pay.hub.la/x?nome=privado&email=a@b.c" },
-      payer: { firstName: "Privado", email: "privado@exemplo.com", phone: "+5511999999999" } } } } };
+      payer: { firstName: "Privado", lastName: "Silva", email: "privado@exemplo.com", phone: "+55 (11) 99999-9999", document: "12345678900" } } } } };
 }
 
 test("cada fatura vira um resultado: pago, Pix/boleto sem pagamento, cartao nao aprovado", () => {
@@ -42,7 +42,12 @@ test("cada fatura vira um resultado: pago, Pix/boleto sem pagamento, cartao nao 
   assert.equal(paid.has_click_id, true);
   assert.equal(paid.outcome, "pago");
   const json = JSON.stringify(report);
-  assert.doesNotMatch(json, /privado|@|5511999|payer-|_person/i, "sem dados pessoais, id do comprador ou URL do checkout");
+  assert.doesNotMatch(json, /payer-|_person|_contact|pay\.hub\.la|a@b\.c|12345678900/i, "sem documento, id do comprador ou URL do checkout");
+  const unpaid = report.people.find(p => p.outcome === "pix_sem_pagamento");
+  assert.deepEqual(unpaid.contact, { name: "Privado Silva", email: "privado@exemplo.com", phone: "5511999999999" }, "contato de quem nao pagou");
+  assert.equal(report.people.find(p => p.outcome === "pago").contact, null, "quem pagou nao expoe contato");
+  assert(report.people.find(p => p.outcome === "cartao_nao_aprovado").contact, "cartao recusado traz contato");
+  assert(!report.invoices.some(i => "contact" in i), "lista de faturas continua sem contato");
 });
 
 test("mesma pessoa: parcelado gera duas faturas por tentativa e tres tentativas viram uma linha", () => {
