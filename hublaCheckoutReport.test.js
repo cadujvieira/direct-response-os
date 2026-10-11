@@ -54,9 +54,9 @@ test("mesma pessoa: parcelado gera duas faturas por tentativa e tres tentativas 
   const card = (id, cents, status, at) => notice(id, { status, method: "credit_card", cents, at, payer: "comprador-x",
     history: ["unpaid", status], utm: { source: "FB", campaign: "[CV 10]|120251609204770561" }, params: { click_id: "dr_y" } });
   const rows = [
-    card("t1-total", 36864, "overdue", "2026-10-11T04:22:05Z"), card("t1-parc", 3072, "canceled", "2026-10-11T04:22:06Z"),
-    card("t2-total", 36864, "overdue", "2026-10-11T04:24:10Z"), card("t2-parc", 3072, "canceled", "2026-10-11T04:24:11Z"),
-    card("t3-total", 36864, "overdue", "2026-10-11T04:26:30Z"), card("t3-parc", 3072, "canceled", "2026-10-11T04:26:31Z"),
+    card("t1-total", 36864, "overdue", "2026-10-11T04:22:21Z"), card("t1-parc", 3072, "canceled", "2026-10-11T04:22:22Z"),
+    card("t2-total", 36864, "overdue", "2026-10-11T04:24:20Z"), card("t2-parc", 3072, "canceled", "2026-10-11T04:24:21Z"),
+    card("t3-total", 36864, "overdue", "2026-10-11T04:26:19Z"), card("t3-parc", 3072, "canceled", "2026-10-11T04:26:20Z"),
     notice("pix-outra", { status: "unpaid", payer: "comprador-z", at: "2026-10-10T19:56:00Z" })
   ];
   const report = buildCheckoutReport(rows, config);

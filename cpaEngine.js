@@ -251,7 +251,7 @@ async function getCpaReport(pool, input = {}) {
   };
 }
 function registerCpaRoutes(app, pool) {
-  app.get("/assets/cpa-dashboard.js", (req,res) => res.sendFile(__dirname + "/cpaDashboard.js"));
+  app.get("/assets/cpa-dashboard.js", (req,res) => { res.set("Cache-Control", "no-cache"); res.sendFile(__dirname + "/cpaDashboard.js"); });
   const handle = task => async (req,res) => {
     if (!requireAdmin(req,res)) return;
     res.set("Cache-Control", "no-store");

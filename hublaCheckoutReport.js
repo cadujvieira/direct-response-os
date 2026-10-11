@@ -129,7 +129,9 @@ function buildCheckoutReport(rows, config = hublaConfig()) {
   };
 }
 
-const ATTEMPT_GAP_MS = 2 * 60 * 1000;
+// O parcelamento inteligente cria as duas faturas de uma tentativa no mesmo instante (segundos de diferenca).
+// Tentativas reais da mesma pessoa vem com minutos de intervalo, entao a janela e curta e medida do inicio da tentativa.
+const ATTEMPT_WINDOW_MS = 30 * 1000;
 function contactOf(payer) {
   if (!payer || typeof payer !== "object") return null;
   const name = [text(payer.firstName, 80), text(payer.lastName, 80)].filter(Boolean).join(" ") || null;
@@ -144,8 +146,8 @@ function campaignKey(item) {
   return isAdSource(item.utm_source) ? (item.utm_campaign || "Anúncio sem nome de campanha")
     : item.utm_source ? "Outra origem: " + item.utm_source : "Sem UTM no checkout";
 }
-// Uma pessoa = um comprador da Hubla (payerId). Faturas criadas com ate 2 minutos entre si contam como uma
-// tentativa (o parcelamento inteligente cria duas faturas por tentativa).
+// Uma pessoa = um comprador da Hubla (payerId). Faturas criadas ate 30 s depois do inicio de uma tentativa contam
+// como a mesma tentativa (o parcelamento inteligente cria duas faturas por tentativa).
 function buildPeople(front) {
   const byPerson = new Map();
   for (const item of front) {
@@ -157,8 +159,7 @@ function buildPeople(front) {
     const attempts = [];
     for (const item of list) {
       const last = attempts[attempts.length - 1];
-      const previous = last && last[last.length - 1];
-      if (previous && Date.parse(item.created_at) - Date.parse(previous.created_at) <= ATTEMPT_GAP_MS) last.push(item);
+      if (last && Date.parse(item.created_at) - Date.parse(last[0].created_at) <= ATTEMPT_WINDOW_MS) last.push(item);
       else attempts.push([item]);
     }
     const attemptOutcome = group => group.some(i => i.outcome === "pago") ? "pago"

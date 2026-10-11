@@ -166,7 +166,7 @@ async function getDecisionReport(pool, input) {
   return buildDecisions(await getCpaReport(pool, input));
 }
 function registerDecisionRoutes(app, pool) {
-  app.get("/assets/decision-dashboard.js", (req, res) => res.sendFile(__dirname + "/decisionDashboard.js"));
+  app.get("/assets/decision-dashboard.js", (req, res) => { res.set("Cache-Control", "no-cache"); res.sendFile(__dirname + "/decisionDashboard.js"); });
   app.get("/api/decisions", async (req, res) => {
     if (!requireAdmin(req, res)) return;
     res.set("Cache-Control", "no-store");

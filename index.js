@@ -982,18 +982,23 @@ app.post("/track/spend", async (req, res) => {
 });
 
 app.get("/dashboard", (req, res) => {
+  // Sempre confere com o servidor: depois de publicar, o painel novo aparece sem precisar limpar o cache.
+  res.set("Cache-Control", "no-cache");
   res.sendFile(__dirname + "/dashboard.html");
 });
 
 app.get("/assets/router-dashboard.js", (req, res) => {
+  res.set("Cache-Control", "no-cache");
   res.sendFile(__dirname + "/routerDashboard.js");
 });
 
 app.get("/assets/health-dashboard.js", (req, res) => {
+  res.set("Cache-Control", "no-cache");
   res.sendFile(__dirname + "/healthDashboard.js");
 });
 
 app.get("/assets/hubla-dashboard.js", (req, res) => {
+  res.set("Cache-Control", "no-cache");
   res.sendFile(__dirname + "/hublaDashboard.js");
 });
 
