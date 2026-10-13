@@ -323,6 +323,54 @@ async function applyReversal(pool, sale, hooks, now, mode, value) {
       reason: (mode === "chargeback" ? "chargeback confirmado" : "reembolso confirmado") + (result.duplicate ? " (ja integrado)" : "") };
   } catch (error) { return fromIngestError(error, mode); }
 }
+// Checkout iniciado (decisao do titular 13/10/2026): toda fatura de venda do produto front na Hubla, paga ou nao,
+// e a prova de que a pessoa chegou ao checkout. Vira um evento checkout_started ligado ao clique do proprio
+// checkout, uma vez por clique (as duas faturas do parcelamento inteligente e as novas tentativas contam uma vez).
+// Sem codigo do clique: usa o mesmo clique "sem origem" que a venda paga desta fatura usaria, uma vez por comprador.
+// Nunca liga a pessoa a um clique de outra pessoa nem deduz campanha por email, nome ou valor. Falha aqui nunca
+// muda o resultado financeiro do aviso.
+async function recordCheckout(pool, row, config, hooks, now) {
+  if (row.sandbox || row.event_type !== FINANCIAL_TRAIL) return null;
+  const event = row.payload?.event, invoice = event?.invoice;
+  if (!invoice || typeof invoice !== "object" || invoice.type !== "sell" || invoice.parentInvoiceId) return null;
+  const kinds = new Set(productIds(event).map(id => config.kinds.get(id)).filter(Boolean));
+  if (kinds.size !== 1 || !kinds.has("front")) return null;
+  const invoiceId = clean(invoice.id, 80);
+  const session = sessionOrigin(invoice);
+  const startedAt = statusTime(invoice, "unpaid") || session.started_at || statusTime(invoice, "paid");
+  if (!invoiceId || !startedAt) return null;
+  const payer = invoice.payer && typeof invoice.payer === "object" ? invoice.payer : {};
+  const payerId = clean(invoice.payerId ?? payer.id, 100);
+  let clickId = clickFromSession(invoice, config.clickParam).click_id, sourceId;
+  if (clickId) {
+    sourceId = "hubla_checkout:" + clickId;
+    if (!(await pool.query("SELECT 1 FROM dr_clicks WHERE click_id = $1", [clickId])).rows.length) {
+      if (!TAG_CLICK_ID.test(clickId)) return null; // codigo desconhecido fora do formato da tag: nao adivinha
+      const click = normalizeClick({ ...session, click_id: clickId, page_url: "checkout:hubla" });
+      if (!click) return null;
+      await saveClick(pool, click, { source: "checkout_recovered", occurredAt: startedAt });
+    }
+  } else {
+    if (!payerId) return null;
+    sourceId = "hubla_checkout:payer:" + payerId;
+    if ((await pool.query(`SELECT 1 FROM dr_events WHERE event_name = 'checkout_started'
+      AND raw_payload->>'source_event_id' = $1 LIMIT 1`, [sourceId])).rows.length) return null;
+    const click = normalizeClick({ ...session, click_id: NO_ORIGIN_PREFIX + invoiceId, page_url: "checkout:hubla" });
+    if (!click) return null;
+    await saveClick(pool, click, { source: "checkout_sem_origem", occurredAt: startedAt });
+    clickId = click.click_id;
+  }
+  // Sem email/telefone de proposito: o checkout nao cria nem altera lead (o lead do comprador continua vindo da venda,
+  // com os dados que ele confirmou ao pagar). Contato de quem nao pagou fica no relatorio de checkout da Hubla.
+  const input = normalizeFunnelEvent({ event_name: "checkout_started", event_id: sourceId, click_id: clickId,
+    occurred_at: startedAt }, now);
+  if ((await pool.query("SELECT 1 FROM dr_events WHERE event_id = $1", [input.event_id])).rows.length) return null;
+  return ingestFunnelEvent(pool, input, hooks);
+}
+async function recordCheckoutSafely(pool, row, config, hooks, now) {
+  try { return await recordCheckout(pool, row, config, hooks, now); }
+  catch (error) { console.error("Hubla: checkout nao registrado (" + (error.statusCode || error.code || "erro") + ")"); return null; }
+}
 // Decide e aplica o efeito de um aviso. Idempotente: pode ser repetido apos falha ou fora de ordem.
 async function processHublaEvent(pool, row, config, hooks, now = new Date()) {
   const interpreted = interpretInvoice(row.payload, config);
@@ -334,6 +382,7 @@ async function processHublaEvent(pool, row, config, hooks, now = new Date()) {
         ? sale.kind + ", R$ " + sale.value.toFixed(2) + ", " + (sale.click_id ? "com click_id" : "sem click_id")
         : interpreted.outcome + " - " + interpreted.reason) };
   }
+  await recordCheckoutSafely(pool, row, config, hooks, now);
   if (interpreted.outcome !== "ok") return { status: interpreted.outcome, code: interpreted.code, reason: interpreted.reason };
   // Todo aviso carrega o historico de status: o pagamento e garantido mesmo se o aviso "paid" se perdeu.
   const blocked = await ensurePaidOrder(pool, sale, hooks, now);
@@ -430,6 +479,13 @@ function processHublaQueue(pool, hooks, options = {}) {
 }
 async function runHublaQueue(pool, hooks, options = {}) {
   const config = options.config || hublaConfig(), limit = Math.min(Math.max(Number(options.limit) || 25, 1), 100);
+  if (options.backfillCheckouts) {
+    const { rows } = await pool.query(`SELECT * FROM dr_hubla_events WHERE sandbox = FALSE AND event_type = $1
+      ORDER BY id LIMIT 5000`, [FINANCIAL_TRAIL]);
+    let recorded = 0;
+    for (const row of rows) if (await recordCheckoutSafely(pool, row, config, hooks, new Date())) recorded++;
+    return { backfill: rows.length, recorded };
+  }
   // Aviso que derruba o processamento repetidamente sai do ciclo automatico e fica visivel para revisao.
   await pool.query(`UPDATE dr_hubla_events SET status = 'needs_review', reason_code = 'stuck', locked_at = NULL, next_attempt_at = NULL,
     reason = 'processamento interrompido repetidamente; exige revisao', updated_at = NOW()
@@ -459,6 +515,8 @@ function startHublaWorker(pool, hooks, options = {}) {
     } catch { console.error("Hubla worker tick failed"); }
     finally { running = false; }
   };
+  // Checkouts de avisos antigos (anteriores a contagem de checkout): registrados uma vez, na mesma fila serial.
+  processHublaQueue(pool, hooks, { backfillCheckouts: true }).catch(() => console.error("Hubla worker: falha ao registrar checkouts antigos"));
   // Produtos recem-configurados: avisos antes sem mapeamento voltam para a fila a cada inicializacao.
   pool.query("UPDATE dr_hubla_events SET next_attempt_at = NOW(), status = 'unmapped_product' WHERE status = 'unmapped_product'")
     .catch(() => console.error("Hubla worker: falha ao reabrir avisos sem produto")).finally(() => {
@@ -581,4 +639,4 @@ function registerHublaRoutes(app, pool, hooks, runtime = {}) {
 }
 module.exports = { ENDPOINT, REQUIRED_EVENTS, REFUND_GRACE_MS, hublaConfig, tokenMatches, isSandbox, looksLikeTest, sanitizePayload,
   idempotencyKey, envelope, interpretInvoice, clickFromSession, initHublaDb, storeHublaEvent, processHublaEvent,
-  processHublaQueue, startHublaWorker, registerHublaRoutes };
+  processHublaQueue, startHublaWorker, registerHublaRoutes, recordCheckout };
