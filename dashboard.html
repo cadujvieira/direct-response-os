@@ -445,7 +445,25 @@
     }
 
     .overview-metrics {
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .overview-metrics > .card {
+      container-type: inline-size;
+      min-width: 0;
+    }
+
+    .overview-metrics .metric-value {
+      font-size: clamp(18px, 13cqi, 31px);
+      white-space: nowrap;
+    }
+
+    .profit .metric-value {
+      color: var(--green);
+    }
+
+    .profit.loss .metric-value {
+      color: var(--red);
     }
 
     .stage-metrics {
@@ -603,7 +621,7 @@
 
     @media (max-width: 1180px) {
       .overview-metrics {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .stage-metrics {
@@ -615,6 +633,10 @@
       .overview-metrics,
       .stage-metrics {
         grid-template-columns: repeat(2, 1fr);
+      }
+
+      .overview-metrics > .card:last-child {
+        grid-column: 1 / -1;
       }
 
       .overview-chart-head {
@@ -636,6 +658,10 @@
       .overview-metrics,
       .stage-metrics {
         grid-template-columns: 1fr;
+      }
+
+      .overview-metrics > .card:last-child {
+        grid-column: auto;
       }
 
       .trend-stack {
@@ -3872,6 +3898,12 @@
           <div class="metric-label" data-tooltip="Receita front-end do período menos os reembolsos e chargebacks do período. ROAS e CPA usam estes valores líquidos.">Receita</div>
           <div class="metric-value" id="overviewRevenue">R$ 0</div>
           <div class="metric-sub" id="overviewRevenueSub">Receita front-end</div>
+        </div>
+
+        <div class="card profit" id="overviewProfitCard">
+          <div class="metric-label" data-tooltip="Receita front-end líquida de reembolsos menos o investimento em mídia, no período selecionado. Ainda não desconta taxas da plataforma de pagamento, impostos nem a receita de mentoria (essa aparece no LTV).">Lucro</div>
+          <div class="metric-value" id="overviewProfit">R$ 0</div>
+          <div class="metric-sub" id="overviewProfitSub">Receita − investimento</div>
         </div>
 
         <div class="card">
@@ -9406,6 +9438,14 @@ function initBreakdownControls() {
         document.getElementById("overviewRevenue").textContent = formatMoney(revenue);
         document.getElementById("overviewRoas").textContent = formatRoas(summary.roas);
         document.getElementById("overviewCpa").textContent = formatCurrency(summary.cpa);
+
+        // Lucro = receita líquida de reembolsos − investimento em mídia (antes de taxas e impostos).
+        const profit = Math.round((revenue - spend) * 100) / 100;
+        document.getElementById("overviewProfit").textContent = formatMoney(profit);
+        document.getElementById("overviewProfitCard").classList.toggle("loss", profit < 0);
+        document.getElementById("overviewProfitSub").textContent = revenue > 0
+          ? "Margem de " + Math.round((profit / revenue) * 100) + "%"
+          : "Receita − investimento";
 
         document.getElementById("clicks").textContent = clicks;
         document.getElementById("stageClicksLeads").textContent = leads;
