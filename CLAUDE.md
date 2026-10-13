@@ -259,6 +259,7 @@ CPA Maximum rules:
 - display initial zero costs as unconfirmed rather than treating unknown fees/split as zero validated cost;
 - dashboard refresh must not overwrite unsaved settings; stale requests cannot replace newer period/level selections.
 
+- Refunds are net in the dashboard reports (owner's decision 13/10/2026). `/api/summary`, `/api/overview/timeseries`, `/api/campaigns`, `/api/adsets` and `/api/ads` use the `events_tagged` CTE from `refundsSql.js`: front refunds/chargebacks (and legacy refunds without a linked order) are subtracted from revenue, and the refund that completes a full refund of a front order subtracts 1 purchase. Partial refunds subtract value only. Mentorship refunds stay out (these reports are front-only). Refunds count on their own event date, like every other event. `/api/summary` also returns `purchases_gross`, `revenue_gross`, `refunds` and `refunded_purchases`; `purchases`, `revenue`, `cpa` and `roas` are net. Covered by `validation/refunds.integration.js`.
 - Never multiply metrics through fanout joins.
 - Aggregate tracking/event/spend data before joining.
 - Prefer campaign/adset/ad IDs when available.

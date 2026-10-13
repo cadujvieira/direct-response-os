@@ -3863,15 +3863,15 @@
         </div>
 
         <div class="card">
-          <div class="metric-label" data-tooltip="Quantidade de compras front-end aprovadas no período.">Vendas</div>
+          <div class="metric-label" data-tooltip="Compras front-end aprovadas no período, já sem as que foram reembolsadas por inteiro (o reembolso conta no dia em que aconteceu).">Vendas</div>
           <div class="metric-value" id="overviewPurchases">0</div>
-          <div class="metric-sub">Compras aprovadas</div>
+          <div class="metric-sub" id="overviewPurchasesSub">Compras aprovadas</div>
         </div>
 
         <div class="card revenue">
-          <div class="metric-label" data-tooltip="Receita front-end atribuída às compras aprovadas no período.">Receita</div>
+          <div class="metric-label" data-tooltip="Receita front-end do período menos os reembolsos e chargebacks do período. ROAS e CPA usam estes valores líquidos.">Receita</div>
           <div class="metric-value" id="overviewRevenue">R$ 0</div>
-          <div class="metric-sub">Receita front-end</div>
+          <div class="metric-sub" id="overviewRevenueSub">Receita front-end</div>
         </div>
 
         <div class="card">
@@ -3993,8 +3993,8 @@
 
     <section class="dashboard-view" data-view="purchases" id="purchases-view">
       <div class="metrics stage-metrics">
-        <div class="card"><div class="metric-label" data-tooltip="Compras front-end aprovadas.">Vendas</div><div class="metric-value" id="purchases">0</div><div class="metric-sub">Compras aprovadas</div></div>
-        <div class="card revenue"><div class="metric-label" data-tooltip="Receita front-end rastreada no período.">Receita</div><div class="metric-value" id="revenue">R$ 0</div><div class="metric-sub">Receita rastreada</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Compras front-end aprovadas, já sem as que foram reembolsadas por inteiro.">Vendas</div><div class="metric-value" id="purchases">0</div><div class="metric-sub" id="purchasesSub">Compras aprovadas</div></div>
+        <div class="card revenue"><div class="metric-label" data-tooltip="Receita front-end do período menos os reembolsos e chargebacks do período.">Receita</div><div class="metric-value" id="revenue">R$ 0</div><div class="metric-sub" id="revenueSub">Receita rastreada</div></div>
         <div class="card"><div class="metric-label" data-tooltip="Investimento dividido pelas compras aprovadas.">CPA</div><div class="metric-value" id="cpa">—</div><div class="metric-sub">Custo por aquisição</div></div>
         <div class="card"><div class="metric-label" data-tooltip="Receita front-end dividida pelo investimento em mídia.">ROAS</div><div class="metric-value" id="roas">—</div><div class="metric-sub">Retorno front-end</div></div>
       </div>
@@ -9414,6 +9414,20 @@ function initBreakdownControls() {
         document.getElementById("checkouts").textContent = checkouts;
         document.getElementById("purchases").textContent = purchases;
         document.getElementById("revenue").textContent = formatMoney(revenue);
+
+        // Vendas e receita ja chegam liquidas de reembolso; o subtitulo mostra de onde vem a diferenca.
+        const refundedPurchases = Number(summary.refunded_purchases || 0);
+        const refunds = Number(summary.refunds || 0);
+        const purchasesSub = refundedPurchases > 0
+          ? Number(summary.purchases_gross || 0) + " aprovadas · " + refundedPurchases + (refundedPurchases === 1 ? " reembolsada" : " reembolsadas")
+          : "Compras aprovadas";
+        const revenueSub = refunds > 0
+          ? "Bruto " + formatMoney(Number(summary.revenue_gross || 0)) + " · reembolsos " + formatMoney(refunds)
+          : null;
+        document.getElementById("overviewPurchasesSub").textContent = purchasesSub;
+        document.getElementById("purchasesSub").textContent = purchasesSub;
+        document.getElementById("overviewRevenueSub").textContent = revenueSub || "Receita front-end";
+        document.getElementById("revenueSub").textContent = revenueSub || "Receita rastreada";
 
         document.getElementById("cpl").textContent = formatCurrency(summary.cpl);
         document.getElementById("cpa").textContent = formatCurrency(summary.cpa);

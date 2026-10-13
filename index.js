@@ -39,6 +39,7 @@ const { normalizeTracking, ingestTracking } = require("./trackingIngestion");
 const { initFunnelDb, registerFunnelRoutes } = require("./funnelIntegration");
 const { initHublaDb, registerHublaRoutes, startHublaWorker } = require("./hublaWebhook");
 const { registerHublaCheckoutReport } = require("./hublaCheckoutReport");
+const { EVENTS_TAGGED_CTE } = require("./refundsSql");
 const { initClickCaptureDb, registerClickRoutes, hasAdminSecret, publicEventAllowed, requireAdmin } = require("./clickCapture");
 const { initMonitorDb, createMonitor, startHealthWatch, registerHealthRoutes } = require("./operationHealth");
 const { startUtmifySpendFeed, registerSpendFeedRoutes } = require("./utmifySpendFeed");
@@ -331,7 +332,8 @@ app.get("/api/summary", async (req, res) => {
     const { from, to } = parseReportRange(req.query);
 
     const result = await pool.query(`
-      WITH base AS (
+      WITH ${EVENTS_TAGGED_CTE},
+      base AS (
         SELECT
           (
             SELECT COUNT(*)
@@ -372,48 +374,47 @@ app.get("/api/summary", async (req, res) => {
                 ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
               )
           )::int AS checkouts,
-          (
-            SELECT COUNT(*)
-            FROM dr_events
-            WHERE event_name = 'purchase'
-              AND (
-                $1::date IS NULL OR
-                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
-              )
-              AND (
-                $2::date IS NULL OR
-                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
-              )
-          )::int AS purchases,
-          (
-            SELECT COALESCE(SUM(value), 0)
-            FROM dr_events
-            WHERE event_name = 'purchase'
-              AND (
-                $1::date IS NULL OR
-                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
-              )
-              AND (
-                $2::date IS NULL OR
-                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
-              )
-          )::numeric AS revenue,
+          sales.purchases_gross, sales.revenue_gross, sales.refunds, sales.refunded_purchases,
           (
             SELECT COALESCE(SUM(spend), 0)
             FROM dr_ad_spend
             WHERE ($1::date IS NULL OR spend_date >= $1::date)
               AND ($2::date IS NULL OR spend_date <= $2::date)
           )::numeric AS spend
+        FROM (
+          SELECT
+            (COUNT(*) FILTER (WHERE event_name = 'purchase'))::int AS purchases_gross,
+            COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)::numeric AS revenue_gross,
+            COALESCE(SUM(value) FILTER (WHERE front_refund), 0)::numeric AS refunds,
+            (COUNT(*) FILTER (WHERE completes_refund))::int AS refunded_purchases
+          FROM events_tagged
+          WHERE (event_name = 'purchase' OR front_refund)
+            AND (
+              $1::date IS NULL OR
+              ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+            )
+            AND (
+              $2::date IS NULL OR
+              ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+            )
+        ) sales
+      ),
+      net AS (
+        SELECT base.*,
+          GREATEST(purchases_gross - refunded_purchases, 0)::int AS purchases,
+          (revenue_gross - refunds)::numeric AS revenue
+        FROM base
       )
       SELECT
         clicks, leads, checkouts, purchases, revenue, spend,
+        purchases_gross, revenue_gross, refunds, refunded_purchases,
         CASE WHEN leads > 0 AND spend > 0
           THEN ROUND(spend / leads, 2) ELSE NULL END AS cpl,
         CASE WHEN purchases > 0 AND spend > 0
           THEN ROUND(spend / purchases, 2) ELSE NULL END AS cpa,
         CASE WHEN spend > 0
           THEN ROUND(revenue / spend, 4) ELSE NULL END AS roas
-      FROM base
+      FROM net
     `, [from, to]);
 
     res.json({
@@ -463,12 +464,14 @@ app.get("/api/overview/timeseries", async (req, res) => {
         WHERE spend_date BETWEEN bounds.from_date AND bounds.to_date
         GROUP BY spend_date
       ),
+      ${EVENTS_TAGGED_CTE},
       sales AS (
         SELECT
           (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date) AS day,
-          COUNT(*) FILTER (WHERE event_name = 'purchase')::int AS purchases,
-          COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)::numeric AS revenue
-        FROM dr_events, bounds
+          (COUNT(*) FILTER (WHERE event_name = 'purchase') - COUNT(*) FILTER (WHERE completes_refund))::int AS purchases,
+          (COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)
+            - COALESCE(SUM(value) FILTER (WHERE front_refund), 0))::numeric AS revenue
+        FROM events_tagged, bounds
         WHERE (((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date)
           BETWEEN bounds.from_date AND bounds.to_date
         GROUP BY 1
@@ -621,6 +624,7 @@ app.get("/api/campaigns", async (req, res) => {
 
     const result = await pool.query(`
       WITH
+      ${EVENTS_TAGGED_CTE},
       lead_by_click AS (
         SELECT click_id, COUNT(*)::int AS leads
         FROM dr_leads
@@ -640,12 +644,10 @@ app.get("/api/campaigns", async (req, res) => {
         SELECT
           click_id,
           COUNT(*) FILTER (WHERE event_name = 'checkout_started')::int AS checkouts,
-          COUNT(*) FILTER (WHERE event_name = 'purchase')::int AS purchases,
-          COALESCE(
-            SUM(value) FILTER (WHERE event_name = 'purchase'),
-            0
-          )::numeric AS revenue
-        FROM dr_events
+          (COUNT(*) FILTER (WHERE event_name = 'purchase') - COUNT(*) FILTER (WHERE completes_refund))::int AS purchases,
+          (COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)
+            - COALESCE(SUM(value) FILTER (WHERE front_refund), 0))::numeric AS revenue
+        FROM events_tagged
         WHERE click_id IS NOT NULL
           AND (
             $1::date IS NULL OR
@@ -742,8 +744,8 @@ app.get("/api/campaigns", async (req, res) => {
           COUNT(DISTINCT r.click_id) FILTER (WHERE r.click_in_range) > 0
           OR COALESCE(SUM(l.leads), 0) > 0
           OR COALESCE(SUM(e.checkouts), 0) > 0
-          OR COALESCE(SUM(e.purchases), 0) > 0
-          OR COALESCE(SUM(e.revenue), 0) > 0
+          OR COALESCE(SUM(e.purchases), 0) <> 0
+          OR COALESCE(SUM(e.revenue), 0) <> 0
       ),
 
       spend_resolved AS (

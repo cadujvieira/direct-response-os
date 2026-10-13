@@ -1,3 +1,5 @@
+const { EVENTS_TAGGED_CTE } = require("./refundsSql");
+
 function createBreakdownService(pool) {
   function buildQuery(level) {
     const isAd = level === "ad";
@@ -84,6 +86,7 @@ function createBreakdownService(pool) {
 
     return `
       WITH
+      ${EVENTS_TAGGED_CTE},
       lead_by_click AS (
         SELECT click_id, COUNT(*)::int AS leads
         FROM dr_leads
@@ -103,12 +106,10 @@ function createBreakdownService(pool) {
         SELECT
           click_id,
           COUNT(*) FILTER (WHERE event_name = 'checkout_started')::int AS checkouts,
-          COUNT(*) FILTER (WHERE event_name = 'purchase')::int AS purchases,
-          COALESCE(
-            SUM(value) FILTER (WHERE event_name = 'purchase'),
-            0
-          )::numeric AS revenue
-        FROM dr_events
+          (COUNT(*) FILTER (WHERE event_name = 'purchase') - COUNT(*) FILTER (WHERE completes_refund))::int AS purchases,
+          (COALESCE(SUM(value) FILTER (WHERE event_name = 'purchase'), 0)
+            - COALESCE(SUM(value) FILTER (WHERE front_refund), 0))::numeric AS revenue
+        FROM events_tagged
         WHERE click_id IS NOT NULL
           AND (
             $1::date IS NULL OR
@@ -198,8 +199,8 @@ function createBreakdownService(pool) {
           COUNT(DISTINCT r.click_id) FILTER (WHERE r.click_in_range) > 0
           OR COALESCE(SUM(l.leads), 0) > 0
           OR COALESCE(SUM(e.checkouts), 0) > 0
-          OR COALESCE(SUM(e.purchases), 0) > 0
-          OR COALESCE(SUM(e.revenue), 0) > 0
+          OR COALESCE(SUM(e.purchases), 0) <> 0
+          OR COALESCE(SUM(e.revenue), 0) <> 0
       ),
 
       spend_resolved AS (
