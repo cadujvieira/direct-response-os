@@ -1,6 +1,6 @@
-/* Oferta DR - tag das paginas (versao 3).
-   Cria o click_id na propria pagina quando ele nao veio na URL, avisa o Oferta DR em segundo plano e
-   repassa click_id e UTMs para o link do checkout. Nada aqui bloqueia a pagina: se o aviso falhar, a
+/* Oferta DR - tag das paginas (versao 4).
+   Cria o click_id na propria pagina quando ele nao veio na URL, avisa o Oferta DR em segundo plano,
+   repassa click_id e UTMs para o link do checkout e avisa o clique no botao de compra (v4). Nada aqui bloqueia a pagina: se o aviso falhar, a
    venda segue normalmente e o clique e recuperado depois pelo aviso do checkout.
    Uso: colada direto no <head> da pagina (forma recomendada: funciona mesmo quando um bloqueador impede o
    GTM de carregar), tag script apontando para /assets/dr-checkout.js, ou colada no GTM. Se carregar mais de
@@ -138,10 +138,40 @@
       if (next !== links[i].getAttribute("href")) links[i].setAttribute("href", next);
     }
   }
+  /* Clique no botao de compra: o mesmo momento do "checkout iniciado" da Meta. Avisa uma vez por pagina;
+     o servidor conta uma vez por clique. sendBeacon sobrevive a troca de pagina e nao atrasa a ida ao checkout. */
+  var checkoutReported = false;
+  function reportCheckout(url) {
+    if (checkoutReported || !ENDPOINT || !data.click_id) return;
+    checkoutReported = true;
+    var body = {};
+    ["click_id"].concat(SIGNALS).forEach(function (key) { if (data[key]) body[key] = data[key]; });
+    body.page_url = window.location.origin + window.location.pathname;
+    body.to = url.hostname.toLowerCase();
+    var text = JSON.stringify(body);
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon(ENDPOINT + "/v1/go", new Blob([text], { type: "text/plain;charset=UTF-8" }))) return;
+    } catch (e) { /* tenta o fetch */ }
+    try {
+      if (typeof window.fetch === "function") {
+        window.fetch(ENDPOINT + "/v1/go", { method: "POST", mode: "cors", credentials: "omit", keepalive: true,
+          headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: text })["catch"](function () { /* nao bloqueia a compra */ });
+      }
+    } catch (e) { /* idem */ }
+  }
   function onIntent(event) {
     var node = event.target;
     while (node && node !== document) {
-      if (node.tagName === "A" && node.getAttribute("href")) { node.setAttribute("href", decorate(node.getAttribute("href"))); return; }
+      if (node.tagName === "A" && node.getAttribute("href")) {
+        var href = decorate(node.getAttribute("href"));
+        node.setAttribute("href", href);
+        if (event.type === "click" || (event.type === "auxclick" && event.button === 1)) {
+          var url = null;
+          try { url = new URL(href, window.location.href); } catch (e) { /* link invalido */ }
+          if (url && kind(url) === "checkout") reportCheckout(url);
+        }
+        return;
+      }
       node = node.parentNode;
     }
   }
@@ -149,9 +179,10 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { decorateAll(); });
   else decorateAll();
   /* Botoes liberados depois (delay do video) sao tratados no momento do clique. */
-  ["mousedown", "touchstart", "click", "keydown"].forEach(function (name) {
+  ["mousedown", "touchstart", "click", "auxclick", "keydown"].forEach(function (name) {
     document.addEventListener(name, onIntent, true);
   });
   window.DRTracking = { get: function () { return JSON.parse(JSON.stringify(data)); }, decorate: decorate, refresh: decorateAll,
-    reported: function () { return Boolean(record && record.sent); } };
+    reported: function () { return Boolean(record && record.sent); },
+    checkoutReported: function () { return checkoutReported; } };
 })();

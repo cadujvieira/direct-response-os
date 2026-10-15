@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { normalizeClick, idFromUtm, saveClick, createRateLimiter, publicEventAllowed, hasAdminSecret, registerClickRoutes,
-  TAG_CLICK_ID, newClickId } = require("./clickCapture");
+  TAG_CLICK_ID, newClickId, beaconBody, saveCheckoutClick, CHECKOUT_CLICK } = require("./clickCapture");
 
 test("click_id precisa ter formato seguro; campos sao limitados e limpos", () => {
   for (const bad of [null, [], {}, { click_id: "" }, { click_id: "tem espaco aqui" }, { click_id: "x".repeat(201) },
@@ -70,7 +70,9 @@ test("eventos de receita e pos-compra nao sao publicos; navegacao continua", () 
 test("rota de clique valida, limita volume e nao expoe erro interno", async () => {
   let handler; const saved = [];
   const pool = { query: async (sql, values) => { saved.push(values); return { rows: [{ created: true }] }; } };
-  registerClickRoutes({ post: (path, fn) => { assert.deepEqual(path, ["/track/click", "/v1/visit"]); handler = fn; } }, pool, ip => "hash:" + ip);
+  const paths = [];
+  registerClickRoutes({ post: (path, ...fns) => { paths.push(path); if (Array.isArray(path)) handler = fns[fns.length - 1]; } }, pool, ip => "hash:" + ip);
+  assert.deepEqual(paths, ["/v1/go", ["/track/click", "/v1/visit"]]);
   const call = (body, ip = "1.1.1.1") => new Promise(resolve => {
     const res = { set: () => res, status: code => ({ json: json => resolve({ status: code, json }) }), json: json => resolve({ status: 200, json }) };
     handler({ body, headers: { "x-forwarded-for": ip + ", 10.0.0.1", "user-agent": "UA" }, socket: {} }, res);
@@ -82,7 +84,51 @@ test("rota de clique valida, limita volume e nao expoe erro interno", async () =
   assert.equal((await call({ click_id: "antigo-123" }, "2.2.2.2")).status, 200); assert.equal(saved[1][15], "legacy");
   let last; for (let n = 0; n < 125; n++) last = await call({ click_id: newClickId() }, "3.3.3.3");
   assert.equal(last.status, 429);
-  registerClickRoutes({ post: (path, fn) => { handler = fn; } }, { query: async () => { throw Object.assign(new Error("senha=abc"), { code: "57P01" }); } }, ip => ip);
+  registerClickRoutes({ post: (path, ...fns) => { if (Array.isArray(path)) handler = fns[fns.length - 1]; } }, { query: async () => { throw Object.assign(new Error("senha=abc"), { code: "57P01" }); } }, ip => ip);
   const failed = await call({ click_id: newClickId() }, "4.4.4.4");
+  assert.equal(failed.status, 500); assert.equal(JSON.stringify(failed.json).includes("senha"), false);
+});
+
+test("clique no botao de compra: corpo do sendBeacon, uma vez por clique e sem dado indevido", async () => {
+  assert.deepEqual(beaconBody('{"click_id":"dr_x"}'), { click_id: "dr_x" });
+  assert.equal(beaconBody("nao e json"), null); assert.equal(beaconBody("123"), null);
+  assert.deepEqual(beaconBody({ a: 1 }), { a: 1 }); assert.equal(beaconBody(undefined), null);
+  assert.equal(publicEventAllowed({ event_name: "checkout_click" }), false);
+  const queries = [];
+  let inserted = true;
+  const db = { query: async (sql, values) => { queries.push({ sql, values });
+    if (sql.includes("INSERT INTO dr_events")) return { rows: inserted ? [{ id: 1 }] : [] };
+    return { rows: [{ created: false }] }; } };
+  const click = normalizeClick({ click_id: newClickId(), utm_source: "FB", page_url: "https://felipelona-vsl.com/" });
+  assert.equal((await saveCheckoutClick(db, click, { source: "tag", to: "PAY.hub.la" })).created, true);
+  assert.match(queries[0].sql, /INSERT INTO dr_clicks/);
+  const event = queries[1];
+  assert.equal(event.values[0], "checkout_click:" + click.click_id); assert.equal(event.values[2], CHECKOUT_CLICK);
+  assert.deepEqual(JSON.parse(event.values[3]), { source: "tag", page_url: "https://felipelona-vsl.com/", checkout_host: "pay.hub.la" });
+  assert.match(event.sql, /ON CONFLICT \(event_id\) DO NOTHING/);
+  inserted = false;
+  assert.equal((await saveCheckoutClick(db, click, { to: "https://evil.com/x?y" })).created, false);
+  assert.equal(JSON.parse(queries[3].values[3]).checkout_host, null);
+});
+test("rota /v1/go aceita text/plain, recusa clique invalido e nao expoe erro", async () => {
+  let handler, middleware; const saved = [];
+  const pool = { query: async (sql, values) => { saved.push({ sql, values }); return { rows: sql.includes("dr_events") ? [{ id: 1 }] : [{ created: true }] }; } };
+  registerClickRoutes({ post: (path, ...fns) => { if (path === "/v1/go") { middleware = fns[0]; handler = fns[1]; } } }, pool, ip => "hash:" + ip);
+  assert.equal(typeof middleware, "function");
+  const call = (body, ip = "5.5.5.5") => new Promise(resolve => {
+    const res = { set: () => res, status: code => ({ json: json => resolve({ status: code, json }) }), json: json => resolve({ status: 200, json }) };
+    handler({ body, headers: { "x-forwarded-for": ip, "user-agent": "UA" }, socket: {} }, res);
+  });
+  assert.equal((await call("lixo")).status, 400);
+  assert.equal((await call({ click_id: "com espaco" })).status, 400);
+  assert.equal(saved.length, 0);
+  const id = newClickId();
+  const ok = await call(JSON.stringify({ click_id: id, utm_campaign: "C|123456789", to: "pay.hub.la" }));
+  assert.deepEqual(ok, { status: 200, json: { ok: true, counted: true } });
+  assert.equal(saved[0].values[15], "tag"); assert.equal(saved[0].values[6], "123456789");
+  let last; for (let n = 0; n < 125; n++) last = await call({ click_id: newClickId() }, "6.6.6.6");
+  assert.equal(last.status, 429);
+  registerClickRoutes({ post: (path, ...fns) => { if (path === "/v1/go") handler = fns[1]; } }, { query: async () => { throw Object.assign(new Error("senha=abc"), { code: "57P01" }); } }, ip => ip);
+  const failed = await call({ click_id: newClickId() }, "7.7.7.7");
   assert.equal(failed.status, 500); assert.equal(JSON.stringify(failed.json).includes("senha"), false);
 });

@@ -207,3 +207,10 @@ Corrigido para aprovação: esses números agora são líquidos. Reembolso total
 ## 13/10/2026 — Checkout passa a ser contado
 
 Pedido do titular: a aba Checkout mostrava 0 checkouts. Causa: o número vinha só de eventos "checkout iniciado" enviados pela página, e nada enviava esse evento. Agora cada fatura do produto front na Hubla (paga ou não) registra o checkout daquela pessoa, uma vez por clique (as duas faturas do parcelado e as novas tentativas contam uma vez); sem código do clique, uma vez por comprador. Vale também para os avisos antigos (registrados na inicialização). Não cria nem altera lead e não muda vendas. Testado com `validation/checkout.integration.js`, roteiro completo da Hubla, reembolso, funil, checkout e investimento sem regressão e testes automáticos.
+
+## 15/10/2026 — Clique no botão de compra (igual ao IC da Meta)
+
+Pedido do titular: o Gerenciador da Meta marca "checkout iniciado" (IC) e o sistema não. Causa: são momentos diferentes. A Meta conta o IC no clique do botão de compra (GTM da Black Track); o sistema contava checkout só quando a pessoa preenchia o checkout da Hubla e gerava fatura. Quem clicava e saía sem preencher não aparecia.
+
+Entregue para aprovação: tag das páginas versão 4 avisa o clique no botão de compra (POST `/v1/go`, sendBeacon, uma vez por página; o servidor conta uma vez por clique e registra o clique se a visita não tiver chegado). Novo `checkout_clicks` no `/api/summary`. Aba Checkout: Cliques no botão de compra → Preencheram o checkout (% de quem clicou) → Pagaram (% de quem preencheu) → Desistiram (sem preencher · sem pagar). Funil dos cliques com a linha "Botão de compra". Não muda vendas, receita, checkouts da Hubla nem leads. Testado com testes automáticos, `validation/checkoutClick.integration.js`, todos os roteiros em banco novo, navegador real (Chromium: computador com nova aba, celular com toque na mesma aba, aviso da visita bloqueado, botão liberado depois do vídeo, link que não é do checkout) e tela em computador e celular. Para valer, a tag v4 precisa substituir a v3 no `<head>` da VSL e da LP de bio (depois do deploy do servidor).
+

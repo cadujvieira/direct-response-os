@@ -1,6 +1,7 @@
 // Registro de cliques vindos da tag das paginas (sem redirecionamento) e recuperacao pelo checkout.
 // O primeiro registro de um click_id vale: reenvios so completam campos vazios, nunca trocam a origem.
 const crypto = require("crypto");
+const express = require("express");
 const { requireAdmin } = require("./trackingHealth");
 const { secretMatches } = require("./metaAds");
 
@@ -13,7 +14,8 @@ const TAG_CLICK_ID = /^dr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 const SOURCES = new Set(["tag", "router", "checkout_recovered", "checkout_sem_origem", "legacy"]);
 const RATE_WINDOW_MS = 60000, RATE_MAX = 120, RATE_KEYS_MAX = 50000, RATE_GLOBAL_MAX = 6000;
 // Eventos que so um servidor confiavel pode gravar. Os demais (ex.: landing_view) continuam publicos.
-const PROTECTED_EVENTS = new Set(["purchase", "mentorship_purchase", "order_bump_purchase", "refund",
+// checkout_click so entra pela rota /v1/go (uma vez por clique), nunca pelo /track/event publico.
+const PROTECTED_EVENTS = new Set(["purchase", "mentorship_purchase", "order_bump_purchase", "refund", "checkout_click",
   "call_booked", "call_attended", "call_no_show", "mentorship_offer"]);
 
 function field(value, max = 500) {
@@ -101,8 +103,47 @@ function publicEventAllowed(body) {
   const value = body?.value == null || body.value === "" ? 0 : Number(body.value);
   return !PROTECTED_EVENTS.has(name) && value === 0;
 }
+// Clique no botao de compra (o mesmo momento do "checkout iniciado" da Meta): a tag avisa quando a pessoa clica
+// num link do checkout. Conta uma vez por clique (event_id fixo por click_id), sem valor, sem lead e sem automacao.
+// Diferente de checkout_started, que so existe quando a pessoa gera a fatura na Hubla.
+const CHECKOUT_CLICK = "checkout_click";
+const HOST = /^[a-z0-9.-]{1,200}$/;
+// sendBeacon envia text/plain (sem pre-voo de CORS); o corpo e o mesmo JSON do aviso de visita.
+function beaconBody(body) {
+  if (typeof body !== "string") return body && typeof body === "object" ? body : null;
+  try { const parsed = JSON.parse(body); return parsed && typeof parsed === "object" ? parsed : null; } catch { return null; }
+}
+async function saveCheckoutClick(db, click, options = {}) {
+  // O clique da visita pode nao ter chegado (aviso bloqueado); entao ele e registrado aqui antes do evento.
+  await saveClick(db, click, options);
+  const to = typeof options.to === "string" && HOST.test(options.to.trim().toLowerCase()) ? options.to.trim().toLowerCase() : null;
+  const result = await db.query(`INSERT INTO dr_events (event_id, click_id, event_name, value, currency, raw_payload, created_at)
+    VALUES ($1, $2, $3, 0, 'BRL', $4::jsonb, NOW() AT TIME ZONE 'UTC')
+    ON CONFLICT (event_id) DO NOTHING RETURNING id`,
+  [CHECKOUT_CLICK + ":" + click.click_id, click.click_id, CHECKOUT_CLICK,
+    JSON.stringify({ source: "tag", page_url: click.page_url, checkout_host: to })]);
+  return { created: result.rows.length > 0 };
+}
 function registerClickRoutes(app, pool, hashIp) {
   const allow = createRateLimiter();
+  const allowCheckout = createRateLimiter();
+  const clientIpHash = req => hashIp(String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "");
+  app.post("/v1/go", express.text({ type: "text/plain", limit: "8kb" }), async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      const body = beaconBody(req.body);
+      const click = normalizeClick(body);
+      if (!click) return res.status(400).json({ ok: false, error: "click_id obrigatorio e em formato valido" });
+      const ipHash = clientIpHash(req);
+      if (!allowCheckout(ipHash)) return res.status(429).json({ ok: false, error: "muitas requisicoes" });
+      const source = TAG_CLICK_ID.test(click.click_id) ? "tag" : "legacy";
+      const saved = await saveCheckoutClick(pool, click, { source, userAgent: req.headers["user-agent"], ipHash, to: body.to });
+      res.json({ ok: true, counted: saved.created });
+    } catch (error) {
+      console.error("v1/go: falha ao registrar clique no botao de compra (" + (error.code || "erro interno") + ")");
+      res.status(500).json({ ok: false, error: "erro interno" });
+    }
+  });
   // /v1/visit e o mesmo aviso com caminho neutro (a tag v3 usa este; bloqueadores costumam barrar "track").
   app.post(["/track/click", "/v1/visit"], async (req, res) => {
     res.set("Cache-Control", "no-store");
@@ -121,5 +162,5 @@ function registerClickRoutes(app, pool, hashIp) {
     }
   });
 }
-module.exports = { CLICK_ID, TAG_CLICK_ID, PROTECTED_EVENTS, normalizeClick, idFromUtm, initClickCaptureDb, saveClick,
+module.exports = { CLICK_ID, TAG_CLICK_ID, PROTECTED_EVENTS, CHECKOUT_CLICK, normalizeClick, beaconBody, saveCheckoutClick, idFromUtm, initClickCaptureDb, saveClick,
   createRateLimiter, hasAdminSecret, publicEventAllowed, registerClickRoutes, requireAdmin, newClickId: () => "dr_" + crypto.randomUUID() };

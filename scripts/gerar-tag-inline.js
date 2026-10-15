@@ -8,4 +8,4 @@ const source = fs.readFileSync(path.join(__dirname, "..", "checkoutLinks.js"), "
 if (!source.includes('"__DR_ENDPOINT__"')) { console.error("marcador do endereco nao encontrado na tag"); process.exit(1); }
 const code = source.replace('"__DR_ENDPOINT__"', JSON.stringify(endpoint));
 if (code.includes("</script")) { console.error("a tag nao pode conter </script>"); process.exit(1); }
-process.stdout.write("<!-- Oferta DR: tag das paginas (v3) direto na pagina; nao depende do GTM -->\n<script>\n" + code.trim() + "\n</script>\n");
+process.stdout.write("<!-- Oferta DR: tag das paginas (v4) direto na pagina; nao depende do GTM -->\n<script>\n" + code.trim() + "\n</script>\n");

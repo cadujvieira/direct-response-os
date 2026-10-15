@@ -374,6 +374,20 @@ app.get("/api/summary", async (req, res) => {
                 ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
               )
           )::int AS checkouts,
+          (
+            -- Clique no botao de compra (mesmo momento do "checkout iniciado" da Meta), uma vez por clique.
+            SELECT COUNT(DISTINCT click_id)
+            FROM dr_events
+            WHERE event_name = 'checkout_click'
+              AND (
+                $1::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date >= $1::date
+              )
+              AND (
+                $2::date IS NULL OR
+                ((created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date <= $2::date
+              )
+          )::int AS checkout_clicks,
           sales.purchases_gross, sales.revenue_gross, sales.refunds, sales.refunded_purchases,
           (
             SELECT COALESCE(SUM(spend), 0)
@@ -406,7 +420,7 @@ app.get("/api/summary", async (req, res) => {
         FROM base
       )
       SELECT
-        clicks, leads, checkouts, purchases, revenue, spend,
+        clicks, leads, checkout_clicks, checkouts, purchases, revenue, spend,
         purchases_gross, revenue_gross, refunds, refunded_purchases,
         CASE WHEN leads > 0 AND spend > 0
           THEN ROUND(spend / leads, 2) ELSE NULL END AS cpl,

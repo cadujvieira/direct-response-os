@@ -3975,6 +3975,7 @@
         <div class="funnel">
           <div class="funnel-row"><div class="funnel-name">Cliques</div><div class="bar-track"><div class="bar" id="barClicks"></div></div><div class="funnel-number" id="funnelClicks">0</div></div>
           <div class="funnel-row"><div class="funnel-name">Leads</div><div class="bar-track"><div class="bar" id="barLeads"></div></div><div class="funnel-number" id="funnelLeads">0</div></div>
+          <div class="funnel-row"><div class="funnel-name">Botão de compra</div><div class="bar-track"><div class="bar" id="barCheckoutClicks"></div></div><div class="funnel-number" id="funnelCheckoutClicks">0</div></div>
           <div class="funnel-row"><div class="funnel-name">Checkouts</div><div class="bar-track"><div class="bar" id="barCheckouts"></div></div><div class="funnel-number" id="funnelCheckouts">0</div></div>
           <div class="funnel-row"><div class="funnel-name">Compras</div><div class="bar-track"><div class="bar" id="barPurchases"></div></div><div class="funnel-number" id="funnelPurchases">0</div></div>
         </div>
@@ -3992,10 +3993,10 @@
 
     <section class="dashboard-view" data-view="checkout" id="checkout-view">
       <div class="metrics stage-metrics">
-        <div class="card"><div class="metric-label" data-tooltip="Pessoas que chegaram ao checkout da Hubla (geraram Pix ou boleto ou passaram cartão), contadas uma vez por clique; quem compra também conta. A Meta conta &quot;checkout iniciado&quot; já no clique do botão, por isso o número dela é maior.">Checkouts</div><div class="metric-value" id="checkouts">0</div><div class="metric-sub">Chegaram ao pagamento</div></div>
-        <div class="card"><div class="metric-label" data-tooltip="Percentual de leads que chegaram ao checkout.">Lead → Checkout</div><div class="metric-value" id="convCheckout">0%</div><div class="metric-sub">Conversão intermediária</div></div>
-        <div class="card"><div class="metric-label" data-tooltip="Percentual dos checkouts que se converteram em compra aprovada.">Checkout → Venda</div><div class="metric-value" id="convSale">0%</div><div class="metric-sub">Eficiência do checkout</div></div>
-        <div class="card"><div class="metric-label" data-tooltip="Checkouts iniciados que ainda não resultaram em compra no período.">Abandono estimado</div><div class="metric-value" id="stageCheckoutAbandon">0</div><div class="metric-sub">Checkout sem compra</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Pessoas que clicaram no botão de compra da página, contadas uma vez por clique. É o mesmo momento em que a Meta registra o &quot;checkout iniciado&quot; (IC), então os números devem ficar próximos. Só conta nas páginas com a tag v4.">Cliques no botão de compra</div><div class="metric-value" id="checkoutClicks">0</div><div class="metric-sub" id="checkoutClicksSub">Mesmo momento do IC da Meta</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Pessoas que preencheram o checkout da Hubla (geraram Pix ou boleto ou passaram cartão), contadas uma vez por clique; quem compra também conta. Quem clicou no botão e saiu sem preencher não entra aqui.">Preencheram o checkout</div><div class="metric-value" id="checkouts">0</div><div class="metric-sub" id="convCheckout">Geraram fatura na Hubla</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Compras aprovadas no período e a porcentagem de quem preencheu o checkout e pagou.">Pagaram</div><div class="metric-value" id="checkoutPaid">0</div><div class="metric-sub" id="convSale">Compras aprovadas</div></div>
+        <div class="card"><div class="metric-label" data-tooltip="Quem não terminou: clicou no botão e saiu sem preencher o checkout, ou preencheu e não pagou (Pix/boleto não pago, cartão recusado). Estimativa pelo período.">Desistiram</div><div class="metric-value" id="stageCheckoutAbandon">0</div><div class="metric-sub" id="stageCheckoutAbandonSub">Checkout sem compra</div></div>
       </div>
 
       <div class="panel hubla-checkout-panel" id="hublaCheckoutPanel">
@@ -5745,6 +5746,7 @@ const crmSegmentLabels = {
 };
 
 const crmEventLabels = {
+  checkout_click: "Clicou no botão de compra",
   checkout_started: "Checkout iniciado",
   purchase: "Compra front-end",
   call_booked: "Call agendada",
@@ -9429,6 +9431,7 @@ function initBreakdownControls() {
         const clicks = Number(summary.clicks || 0);
         const leads = Number(summary.leads || 0);
         const checkouts = Number(summary.checkouts || 0);
+        const checkoutClicks = Number(summary.checkout_clicks || 0);
         const purchases = Number(summary.purchases || 0);
         const revenue = Number(summary.revenue || 0);
         const spend = Number(summary.spend || 0);
@@ -9480,16 +9483,33 @@ function initBreakdownControls() {
         const estimatedAbandonment = Math.max(checkouts - purchases, 0);
 
         document.getElementById("convLead").textContent = formatPercent(clickToLead);
-        document.getElementById("convCheckout").textContent = formatPercent(leadToCheckout);
-        document.getElementById("convSale").textContent = formatPercent(checkoutToSale);
+        // Aba Checkout: botão de compra (IC da Meta) → preencheu o checkout → pagou.
+        // O botão só é contado a partir da tag v4; em períodos anteriores ele fica abaixo dos checkouts.
+        const buttonComplete = checkoutClicks > 0 && checkoutClicks >= checkouts;
+        document.getElementById("checkoutClicks").textContent = checkoutClicks;
+        document.getElementById("checkoutClicksSub").textContent = checkoutClicks === 0
+          ? "Conta a partir da tag v4 nas páginas"
+          : buttonComplete ? "Mesmo momento do IC da Meta" : "Período antes da tag v4: incompleto";
+        document.getElementById("convCheckout").textContent = buttonComplete
+          ? formatPercent(percentage(checkouts, checkoutClicks)) + " de quem clicou"
+          : "Geraram fatura na Hubla";
+        document.getElementById("checkoutPaid").textContent = purchases;
+        document.getElementById("convSale").textContent = checkouts > 0
+          ? formatPercent(checkoutToSale) + " de quem preencheu"
+          : "Compras aprovadas";
         document.getElementById("convTotal").textContent = formatPercent(clickToSale);
         document.getElementById("stageLeadToCheckout").textContent =
           formatPercent(leadToCheckout);
+        const leftBeforeFilling = buttonComplete ? checkoutClicks - checkouts : 0;
         document.getElementById("stageCheckoutAbandon").textContent =
-          estimatedAbandonment;
+          leftBeforeFilling + estimatedAbandonment;
+        document.getElementById("stageCheckoutAbandonSub").textContent = buttonComplete
+          ? leftBeforeFilling + " sem preencher · " + estimatedAbandonment + " sem pagar"
+          : "Checkout sem compra";
 
         document.getElementById("funnelClicks").textContent = clicks;
         document.getElementById("funnelLeads").textContent = leads;
+        document.getElementById("funnelCheckoutClicks").textContent = checkoutClicks;
         document.getElementById("funnelCheckouts").textContent = checkouts;
         document.getElementById("funnelPurchases").textContent = purchases;
 
@@ -9498,6 +9518,8 @@ function initBreakdownControls() {
         document.getElementById("barClicks").style.width = "100%";
         document.getElementById("barLeads").style.width =
           Math.max(percentage(leads, max), 2) + "%";
+        document.getElementById("barCheckoutClicks").style.width =
+          Math.max(percentage(checkoutClicks, max), 2) + "%";
         document.getElementById("barCheckouts").style.width =
           Math.max(percentage(checkouts, max), 2) + "%";
         document.getElementById("barPurchases").style.width =
