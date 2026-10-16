@@ -18,7 +18,7 @@
   var ENDPOINT = attr("data-endpoint", "") || origin(script && script.src) || "__DR_ENDPOINT__";
   if (ENDPOINT.indexOf("__") === 0) ENDPOINT = "";
   ENDPOINT = ENDPOINT.replace(/\/+$/, "");
-  var HOSTS = hosts(attr("data-checkout-hosts", "pay.hub.la,hub.la,app.hub.la"));
+  var HOSTS = hosts(attr("data-checkout-hosts", "pay.hub.la,hub.la,app.hub.la,lastlink.com"));
   var OWN = hosts(attr("data-own-hosts", "felipelona.com,felipelona-vsl.com"));
   var CLICK = attr("data-click-param", "click_id");
   var CREATE = attr("data-create-click", "true") !== "false";
